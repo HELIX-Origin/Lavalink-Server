@@ -8,10 +8,10 @@ import {
   setCachedYouTubeOAuthState
 } from './redis.js';
 
-// YouTube OAuth uses the plugin's built-in web client secret only for the plugin's own
-// client, so the client identifier (YOUTUBE_API_KEY, a "TVs and Limited Input devices"
-// OAuth Client ID) is what the host must configure.
-const CLIENT_ID = '861556708454-d6dlm3lh05idd8npek18k6be8ba3oc68.apps.googleusercontent.com';
+// YouTube OAuth uses the plugin's built-in web client secret only as the fallback for
+// the token exchange, so the client identifier (YOUTUBE_API_KEY, a "TVs and Limited
+// Input devices" OAuth Client ID) is what the host must configure. When the host
+// supplies YOUTUBE_API_SECRET, it is used instead (matched to the host Client ID).
 const CLIENT_SECRET = 'SboVhoG9s0rNafixCSGGKXAT';
 const SCOPE = 'http://gdata.youtube.com https://www.googleapis.com/auth/youtube';
 const DEVICE_CODE_URL = 'https://www.youtube.com/o/oauth2/device/code';
@@ -336,14 +336,10 @@ function startPolling(pollId: number, deviceCode: string, intervalSeconds: numbe
     try {
       const payload: Record<string, string> = {
         client_id: getOAuthClientId(),
+        client_secret: config.youtubeApiSecret || CLIENT_SECRET,
         code: deviceCode,
         grant_type: 'http://oauth.net/grant_type/device/1.0'
       };
-      // Limited-Input/public clients (user-supplied Client IDs) have no client secret;
-      // only the plugin's built-in client uses the shared web client secret for the exchange.
-      if (getOAuthClientId() === CLIENT_ID) {
-        payload.client_secret = CLIENT_SECRET;
-      }
 
       const res = await fetch(TOKEN_URL, {
         method: 'POST',

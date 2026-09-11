@@ -9,6 +9,7 @@ export interface ServerConfig {
   lavalinkPass: string;
   adminKey: string;
   youtubeApiKey: string;
+  youtubeApiSecret: string;
   dbPath: string;
   isProduction: boolean;
   keepAliveEnabled: boolean;
@@ -53,6 +54,7 @@ export const config: ServerConfig = {
   lavalinkPass: lavaPass,
   adminKey: process.env.ADMIN_KEY || process.env.ADMIN_PASSWORD || lavaPass,
   youtubeApiKey: (process.env.YOUTUBE_API_KEY || '').trim(),
+  youtubeApiSecret: (process.env.YOUTUBE_API_SECRET || '').trim(),
   dbPath: process.env.SQLITE_PATH || path.resolve(process.cwd(), 'data', 'lavalink.sqlite'),
   isProduction: process.env.NODE_ENV === 'production',
   keepAliveEnabled: process.env.KEEP_ALIVE_ENABLED?.toLowerCase() !== 'false',
