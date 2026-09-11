@@ -1,0 +1,44 @@
+{
+  "name": "Lavalink-Server",
+  "description": "Standalone Lavalink v4 audio server with TypeScript Dashboard, YouTube and Spotify plugins.",
+  "keywords": ["lavalink", "discord", "music", "audio", "spring-boot", "typescript"],
+  "repository": "https://github.com/HELIX-Origin/Lavalink-Server",
+  "stack": "container",
+  "env": {
+    "LAVA_PASS": {
+      "description": "Password used by Discord bots to authenticate with this Lavalink server",
+      "value": "youshallnotpass",
+      "required": true
+    },
+    "YOUTUBE_REFRESH_TOKEN": {
+      "description": "YouTube OAuth 2.0 refresh token for authenticated playback",
+      "required": false
+    },
+    "YOUTUBE_API_KEY": {
+      "description": "Optional YouTube Data API v3 key",
+      "required": false
+    },
+    "YOUTUBE_CIPHER_URL": {
+      "description": "Remote cipher endpoint for YouTube signature deciphering",
+      "value": "https://cipher.kikkia.dev/",
+      "required": false
+    },
+    "YOUTUBE_CIPHER_PASSWORD": {
+      "description": "Optional password for self-hosted yt-cipher (leave empty for default public endpoint)",
+      "required": false
+    },
+    "SPOTIFY_CLIENT_ID": {
+      "description": "Spotify Developer Application Client ID",
+      "required": false
+    },
+    "SPOTIFY_CLIENT_SECRET": {
+      "description": "Spotify Developer Application Client Secret",
+      "required": false
+    },
+    "KEEP_ALIVE_ENABLED": {
+      "description": "Periodic background ping to keep container active",
+      "value": "true",
+      "required": false
+    }
+  }
+}

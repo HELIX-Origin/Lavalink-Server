@@ -1,23 +1,47 @@
-# 🖥️ Deployment Guide
+# 🚀 Deployment Guide
 
-This guide details how to deploy your dedicated Lavalink v4 audio server using **Docker**, **Docker Compose**, or a **Dedicated Linux VPS**.
+This guide details how to deploy your dedicated Lavalink v4 audio server using **Heroku** (1-click container deployment), **Docker Compose**, or a **Dedicated Linux VPS**.
 
 ---
 
 > [!WARNING]
-> ### ⚠️ Cloud Hosting Ban Advisory (Render, Railway, Heroku, Fly.io)
-> **Do NOT deploy Lavalink to free shared cloud platforms (such as Render, Heroku, Railway, or Fly.io).**
-> Free and serverless PaaS providers strictly prohibit audio streaming proxies, continuous WebSockets, and scraping YouTube streams under their Acceptable Use Policies. Hosting Lavalink on these platforms will result in an immediate **account ban**, deletion of services, and potential IP blacklisting.
+> ### ⚠️ Cloud Hosting Ban Advisory (Render, Railway, Fly.io)
+> **Do NOT deploy Lavalink to free shared cloud platforms like Render or Railway.**
+> Platforms like Render and Railway aggressively flag and ban user accounts for running continuous audio streaming proxies and YouTube scraping containers.
 >
-> **Recommended Hosting Options:**
-> - **Dedicated / Virtual Private Server (VPS):** Hetzner Cloud (~€3-4/mo), DigitalOcean ($4-6/mo), Linode, OVHcloud, or Oracle Cloud Free Tier VM.
-> - **Home Server / Self-Hosted:** Run on your local network or Raspberry Pi via Docker.
+> **Supported Hosting Options:**
+> - **Heroku:** Supported via container stack (`app.json` & `heroku.yml`) with dedicated dyno allocation.
+> - **Dedicated VPS:** Highly recommended for production bots (Hetzner, DigitalOcean, Linode, OVHcloud, Oracle Cloud Free Tier VM).
+> - **Self-Hosted:** Run locally or on a private server via Docker Compose.
 
 ---
 
-## 1. 🐳 Quick Start: Docker Compose (Recommended)
+## 1. 🟪 Heroku (`heroku.com`) - 1-Click Deployment
 
-Docker Compose is the fastest and most reliable way to run Lavalink on your server.
+Heroku allows deploying the full containerized Lavalink server using the official container stack defined by `heroku.yml` and `app.json`.
+
+### Deploying via 1-Click Button:
+
+[![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/HELIX-Origin/Lavalink-Server)
+
+### Step-by-Step Instructions:
+1. Click the **Deploy to Heroku** button above.
+2. Choose an App Name (e.g. `my-lavalink-node`).
+3. Fill in your environment variables:
+   - `LAVA_PASS`: Choose a strong password (defaults to `youshallnotpass`).
+   - `YOUTUBE_REFRESH_TOKEN`: *(Optional)* If you have an existing YouTube OAuth refresh token.
+   - `SPOTIFY_CLIENT_ID` & `SPOTIFY_CLIENT_SECRET`: *(Optional)* For Spotify link resolution.
+4. Click **Deploy app**. Heroku builds the Dockerfile and boots the TypeScript supervisor.
+5. Once deployed, connect your Discord bot using:
+   - **Host:** `your-app-name.herokuapp.com`
+   - **Port:** `443`
+   - **Secure:** `true`
+
+---
+
+## 2. 🐳 Quick Start: Docker Compose (Recommended for VPS)
+
+Docker Compose is the fastest and most reliable way to run Lavalink on your own server or VPS.
 
 ### Step 1: Clone the Repository
 ```bash
@@ -30,7 +54,7 @@ Copy the example environment file:
 ```bash
 cp .env.example .env
 ```
-Edit `.env` using `nano` or your preferred text editor:
+Edit `.env` using your preferred text editor:
 ```bash
 nano .env
 ```
@@ -44,8 +68,8 @@ Key settings to customize:
 docker compose up -d
 ```
 
-### Step 4: Verify Status and Logs
-Check that the container is running healthy:
+### Step 4: Verify Status and Dashboard
+Check that the container is running:
 ```bash
 docker compose ps
 docker compose logs -f
@@ -58,7 +82,7 @@ http://<your-server-ip>:2333
 
 ---
 
-## 2. 🐧 Linux VPS Setup (Ubuntu / Debian)
+## 3. 🐧 Linux VPS Setup (Ubuntu / Debian)
 
 If you are setting up a fresh VPS (e.g. on Hetzner or DigitalOcean):
 
@@ -88,11 +112,11 @@ sudo ufw enable
 ```
 
 ### Step 3: Run with Docker Compose
-Follow the steps in [Quick Start: Docker Compose](#1--quick-start-docker-compose-recommended) above.
+Follow the steps in [Quick Start: Docker Compose](#2--quick-start-docker-compose-recommended-for-vps) above.
 
 ---
 
-## 3. 🔒 Production Reverse Proxy with Nginx & Let's Encrypt (SSL/WSS)
+## 4. 🔒 Production Reverse Proxy with Nginx & Let's Encrypt (SSL/WSS)
 
 To securely connect your Discord bot over standard HTTPS/WSS on port `443` with a custom domain (e.g. `lavalink.yourdomain.com`):
 
@@ -153,11 +177,21 @@ sudo systemctl reload nginx
 
 ---
 
-## 4. 🤖 Connecting Your Discord Bot
+## 5. 🤖 Connecting Your Discord Bot
 
 Once your server is running, update your Discord bot's configuration (e.g. Master-Bot `.env`):
 
-### Option A: Direct Connection (Raw IP / Port 2333)
+### Option A: Heroku Deployment (Port 443, Secure)
+```env
+LAVA_ENABLED=true
+LAVA_EXTERNAL=true
+LAVA_HOST=your-app-name.herokuapp.com
+LAVA_PORT=443
+LAVA_PASS=your-chosen-password
+LAVA_SECURE=true
+```
+
+### Option B: Direct VPS Connection (Raw IP / Port 2333)
 ```env
 LAVA_ENABLED=true
 LAVA_EXTERNAL=true
@@ -167,7 +201,7 @@ LAVA_PASS=your-chosen-password
 LAVA_SECURE=false
 ```
 
-### Option B: Domain with SSL Reverse Proxy (Port 443)
+### Option C: VPS with Domain & SSL Reverse Proxy (Port 443)
 ```env
 LAVA_ENABLED=true
 LAVA_EXTERNAL=true

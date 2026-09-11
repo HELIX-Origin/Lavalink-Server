@@ -8,23 +8,23 @@ This guide explains how to connect various Discord bot frameworks and libraries 
 
 In Master-Bot, simply update your root `.env` file (or cloud dashboard environment variables):
 
+### Example A: Heroku Deployment (Port 443, SSL/WSS)
 ```env
-# Enable audio commands
 LAVA_ENABLED=true
-
-# MUST be set to true for external cloud hosting
 LAVA_EXTERNAL=true
-
-# Public hostname or IP of your Lavalink server (without http:// or /)
-LAVA_HOST="your-vps-ip-or-domain.com"
-
-# Port (2333 for direct VPS/Docker, or 443 if using an Nginx/SSL reverse proxy)
-LAVA_PORT=2333
-
-# Authentication password matching LAVA_PASS on your server
+LAVA_HOST="your-app-name.herokuapp.com"
+LAVA_PORT=443
 LAVA_PASS="youshallnotpass"
+LAVA_SECURE=true
+```
 
-# Set to true if using SSL/WSS reverse proxy (port 443), or false if connecting directly (port 2333)
+### Example B: Dedicated VPS or Local Docker (Port 2333)
+```env
+LAVA_ENABLED=true
+LAVA_EXTERNAL=true
+LAVA_HOST="your-vps-ip"
+LAVA_PORT=2333
+LAVA_PASS="youshallnotpass"
 LAVA_SECURE=false
 ```
 

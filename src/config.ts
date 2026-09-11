@@ -15,17 +15,11 @@ export interface ServerConfig {
 }
 
 function resolveHostDomain(): string {
-  if (process.env.RENDER_EXTERNAL_HOSTNAME) {
-    return process.env.RENDER_EXTERNAL_HOSTNAME;
-  }
-  if (process.env.RAILWAY_PUBLIC_DOMAIN) {
-    return process.env.RAILWAY_PUBLIC_DOMAIN;
-  }
   if (process.env.HEROKU_APP_DEFAULT_DOMAIN_NAME) {
     return process.env.HEROKU_APP_DEFAULT_DOMAIN_NAME;
   }
-  if (process.env.FLY_APP_NAME) {
-    return `${process.env.FLY_APP_NAME}.fly.dev`;
+  if (process.env.HEROKU_APP_NAME) {
+    return `${process.env.HEROKU_APP_NAME}.herokuapp.com`;
   }
   if (process.env.DOMAIN) {
     return process.env.DOMAIN;
@@ -61,7 +55,7 @@ export const config: ServerConfig = {
   isProduction: process.env.NODE_ENV === 'production',
   keepAliveEnabled: process.env.KEEP_ALIVE_ENABLED?.toLowerCase() !== 'false',
   keepAliveIntervalMs: Number.parseInt(
-    process.env.KEEP_ALIVE_INTERVAL_MS || String(5 * 60 * 1000), // Default 5 minutes (Render sleep threshold is 15m)
+    process.env.KEEP_ALIVE_INTERVAL_MS || String(5 * 60 * 1000), // Default 5 minutes (Heroku Eco Dyno sleep threshold is 30m)
     10
   )
 };

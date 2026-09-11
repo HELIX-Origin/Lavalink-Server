@@ -2,14 +2,19 @@
 
 Welcome to the official documentation for the **HELIX-Origin Lavalink v4 Server**.
 
-This project provides a pre-tuned, containerized **Lavalink v4** audio node with an ESM TypeScript dashboard and process supervisor, optimized for deployment on dedicated Linux VPS environments and self-hosted Docker installations.
+This project provides a pre-tuned, containerized **Lavalink v4** audio node with an ESM TypeScript dashboard and process supervisor, optimized for 1-click deployment on **Heroku** as well as dedicated Linux VPS environments and self-hosted Docker installations.
 
 ---
 
 > [!WARNING]
-> ### ⚠️ Cloud Hosting Ban Advisory (Render, Railway, Heroku, Fly.io)
-> **Do NOT deploy Lavalink to free shared cloud platforms (such as Render, Heroku, Railway, or Fly.io).**
-> Most serverless and free-tier cloud PaaS providers strictly prohibit audio streaming proxies, continuous WebSockets, and YouTube audio scraping. Hosting Lavalink on these platforms will result in an immediate **account ban** or service termination. Please deploy on a **Dedicated VPS** (e.g. Hetzner, DigitalOcean, Linode, OVH, Oracle Cloud VM) or **Self-Host locally with Docker**.
+> ### ⚠️ Cloud Hosting Ban Advisory (Render, Railway, Fly.io)
+> **Do NOT deploy Lavalink to free shared cloud platforms like Render or Railway.**
+> Platforms like Render and Railway aggressively flag and ban user accounts for running continuous audio streaming proxies and YouTube scraping containers.
+> 
+> **Supported Hosting Options:**
+> - **Heroku:** Supported via container stack (`app.json` & `heroku.yml`) with dedicated dyno allocation.
+> - **Dedicated VPS:** Recommended for production bots (Hetzner, DigitalOcean, Linode, OVH, Oracle Cloud VM).
+> - **Self-Hosted:** Run on your local network or server with Docker Compose.
 
 ---
 
@@ -62,7 +67,7 @@ flowchart LR
 
 ## 📖 Wiki Table of Contents
 
-- [**Deployment Guide**](Deployment.md): Complete instructions for Dedicated VPS setups, Docker Compose, firewall rules, and Nginx SSL reverse proxying.
+- [**Deployment Guide**](Deployment.md): Complete instructions for Heroku 1-click deployment, Dedicated VPS setups, Docker Compose, and Nginx SSL reverse proxying.
 - [**Configuration Reference**](Configuration.md): Comprehensive breakdown of `application.yml`, JVM tuning, and environment variable keys.
 - [**Plugins Guide**](Plugins.md): Setup instructions for YouTube Remote Cipher, YouTube OAuth2 authorization, and Spotify credentials.
 - [**Client Integration**](Client-Integration.md): Code examples connecting Master-Bot, Lavalink-Client, Shoukaku, and Kazagumo.

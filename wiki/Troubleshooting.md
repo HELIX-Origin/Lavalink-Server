@@ -15,16 +15,16 @@ This page documents common issues encountered when deploying and connecting to t
 ### `WebSocket connection failed: Error 1006 / Connection Refused`
 - **Cause:** Port mismatch or SSL/TLS protocol mismatch.
 - **Fix:**
-  - On cloud platforms (Render, Railway, Heroku), incoming connections route through port **`443`** (HTTPS/WSS).
+  - When deployed on Heroku or behind an Nginx reverse proxy, incoming connections route through port **`443`** (HTTPS/WSS).
   - In your bot, set `LAVA_PORT=443` and `LAVA_SECURE=true`.
-  - Do not use `2333` on public cloud URLs unless you are connecting directly via raw IP without an SSL proxy.
+  - Do not use `2333` on public Heroku URLs (`*.herokuapp.com`) because Heroku's router fronts all public traffic on port `443`.
 
 ---
 
 ## 2. YouTube Playback Errors
 
 ### `429 Too Many Requests / "Sign in to confirm you're not a bot"`
-- **Cause:** Cloud datacenter IP addresses (Render, Railway, DigitalOcean, AWS) are frequently rate-limited by YouTube's anti-scraping systems.
+- **Cause:** Cloud datacenter IP addresses are frequently rate-limited by YouTube's anti-scraping systems.
 - **Fix:**
   1. Ensure `YOUTUBE_CIPHER_URL` is set to an active remote cipher server (default: `https://cipher.kikkia.dev/`).
   2. Generate and configure a `YOUTUBE_REFRESH_TOKEN`:
@@ -38,12 +38,12 @@ This page documents common issues encountered when deploying and connecting to t
 
 ---
 
-## 3. VPS & Network Environment Notes
+## 3. VPS & Cloud Environment Notes
 
-### Cloud PaaS Account Suspensions (Render, Railway, Heroku)
-- **Problem:** Accounts getting banned or suspended when deploying Lavalink on free or shared cloud platforms.
-- **Cause:** Cloud platforms actively flag and ban accounts proxying continuous WebRTC/audio streams and running YouTube scraping processes.
-- **Fix:** Do not host Lavalink on shared cloud PaaS platforms. Deploy on a dedicated VPS (Hetzner, DigitalOcean, Linode, OVH, Oracle Cloud VM) or self-host via Docker on your own machine.
+### Account Suspensions on Free Cloud Providers (Render, Railway)
+- **Problem:** Accounts getting banned or suspended when deploying Lavalink on free or shared cloud platforms like Render or Railway.
+- **Cause:** Platforms like Render strictly prohibit high-bandwidth WebRTC audio proxying and YouTube scraping in their free tiers, leading to immediate account termination.
+- **Fix:** Do not deploy Lavalink to Render or Railway. Use **Heroku** (supported via container dynos) or deploy to a **Dedicated VPS** (Hetzner, DigitalOcean, Linode, OVH).
 
 ### Out of Memory (OOM) Crashes
 - **Cause:** Java process exceeded container RAM limit (512 MB).
