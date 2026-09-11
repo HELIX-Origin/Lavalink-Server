@@ -1,60 +1,15 @@
 # 🚀 Deployment Guide
 
-This guide details how to deploy your dedicated Lavalink v4 audio server using **Heroku** (manual CLI container deployment), **Docker Compose**, or a **Dedicated Linux VPS**.
+This guide covers how to run your dedicated Lavalink v4 audio server on hardware you control: **Docker Compose**, a **Dedicated Linux VPS**, or your **local network**. Cloud PaaS deployment (Heroku/Render/Railway) is not supported — shared datacenter IP ranges are aggressively blocked by YouTube's anti-scraping systems.
 
 ---
 
-> [!WARNING]
-> ### ⚠️ Cloud Hosting Ban Advisory (Render, Railway, Fly.io)
-> **Do NOT deploy Lavalink to free shared cloud platforms like Render or Railway.**
-> Platforms like Render and Railway aggressively flag and ban user accounts for running continuous audio streaming proxies and YouTube scraping containers.
->
-> **Supported Hosting Options:**
-> - **Heroku:** Supported via manual CLI deployment (`heroku.yml` & `Dockerfile`) with dedicated dyno allocation.
-> - **Dedicated VPS:** Highly recommended for production bots (Hetzner, DigitalOcean, Linode, OVHcloud, Oracle Cloud Free Tier VM).
-> - **Self-Hosted:** Run locally or on a private server via Docker Compose.
+> [!NOTE]
+> **Hosted / Self-Hosted Only.** Run everything yourself: a Dedicated VPS (Hetzner, DigitalOcean, Linode, OVH), a local server, or a private network. Do not deploy to free shared cloud platforms.
 
 ---
 
-## 1. 🟪 Heroku (`heroku.com`) - Manual CLI Deployment (Exclusive)
-
-Heroku runs the containerized Lavalink server using the container stack defined by `heroku.yml` and the repo's `Dockerfile`. **Heroku is our only supported cloud hosting platform, and deployment is done manually with the Heroku CLI so your `.env` configuration and `application.yml` are always used.**
-
-### Step-by-Step Instructions:
-1. Install and authenticate the [Heroku CLI](https://devcenter.heroku.com/articles/heroku-cli):
-   ```bash
-   heroku login
-   ```
-2. Clone the repository and configure your `.env`:
-   ```bash
-   git clone https://github.com/HELIX-Origin/Lavalink-Server.git
-   cd Lavalink-Server
-   cp .env.example .env
-   ```
-3. Create a Heroku app (the container stack is detected from `heroku.yml`):
-   ```bash
-   heroku create my-lavalink-node
-   ```
-4. Apply your `.env` configuration as Heroku config vars:
-   ```bash
-   heroku config:set LAVA_PASS=MySuperSecretLavaPass123! \
-     YOUTUBE_REFRESH_TOKEN=... \
-     SPOTIFY_CLIENT_ID=... \
-     SPOTIFY_CLIENT_SECRET=...
-   ```
-   Set only the variables you need — unset ones fall back to the defaults baked into `application.yml`.
-5. Deploy (Heroku builds the Dockerfile and boots the TypeScript supervisor):
-   ```bash
-   git push heroku main
-   ```
-6. Once deployed, connect your Discord bot using:
-   - **Host:** `your-app-name.herokuapp.com`
-   - **Port:** `443`
-   - **Secure:** `true`
-
----
-
-## 2. 🐳 Quick Start: Docker Compose (Recommended for VPS)
+## 1. 🐳 Quick Start: Docker Compose (Recommended for VPS)
 
 Docker Compose is the fastest and most reliable way to run Lavalink on your own server or VPS.
 
@@ -75,6 +30,7 @@ nano .env
 ```
 Key settings to customize:
 - `LAVA_PASS`: Choose a strong, secret authentication password (e.g. `MySuperSecretLavaPass123!`).
+- `DOMAIN`: Your public domain/host for the server (e.g. `lavalink.yourdomain.com`).
 - `YOUTUBE_REFRESH_TOKEN`: *(Optional)* If you already generated a YouTube OAuth refresh token.
 - `SPOTIFY_CLIENT_ID` & `SPOTIFY_CLIENT_SECRET`: *(Optional)* For Spotify link resolution.
 
@@ -97,9 +53,21 @@ http://<your-server-ip>:2333
 
 ---
 
-## 3. 🐧 Linux VPS Setup (Ubuntu / Debian)
+## 2. 🐧 Linux VPS Setup (Ubuntu / Debian)
 
-If you are setting up a fresh VPS (e.g. on Hetzner or DigitalOcean):
+### 🌐 Recommended Low-Cost Compatible VPS Providers
+
+For high-throughput WebRTC audio transcoding and unblocked YouTube streaming, we recommend dedicated KVM VPS providers over shared cloud PaaS:
+
+| Provider | Starting Price | Key Benefits | Recommended Plan |
+| :--- | :--- | :--- | :--- |
+| [**Hetzner Cloud**](https://www.hetzner.com/cloud) | ~€3.79 / mo | Top CPU performance for audio transcoding, EU/US locations | CX22 (2 vCPU, 4 GB RAM) |
+| [**OVHcloud**](https://www.ovhcloud.com/en/vps/) | ~$4.20 / mo | Unmetered bandwidth, strong anti-DDoS protection | Starter / Value VPS (2-4 GB RAM) |
+| [**DigitalOcean**](https://www.digitalocean.com/) | ~$4.00 - $6.00 / mo | 1-Click Docker droplets, low network jitter | Basic Droplet (1-2 GB RAM) |
+| [**Linode (Akamai)**](https://www.linode.com/) | ~$5.00 / mo | Reliable network throughput, global datacenters | Nanode 1GB / Shared 2GB |
+| [**Vultr**](https://www.vultr.com/) | ~$3.50 - $5.00 / mo | 30+ worldwide datacenters, high frequency compute | Cloud Compute (1-2 GB RAM) |
+
+---
 
 ### Step 1: Install Docker & Docker Compose
 ```bash
@@ -127,11 +95,11 @@ sudo ufw enable
 ```
 
 ### Step 3: Run with Docker Compose
-Follow the steps in [Quick Start: Docker Compose](#2--quick-start-docker-compose-recommended-for-vps) above.
+Follow the steps in [Quick Start: Docker Compose](#1--quick-start-docker-compose-recommended-for-vps) above.
 
 ---
 
-## 4. 🔒 Production Reverse Proxy with Nginx & Let's Encrypt (SSL/WSS)
+## 3. 🔒 Production Reverse Proxy with Nginx & Let's Encrypt (SSL/WSS)
 
 To securely connect your Discord bot over standard HTTPS/WSS on port `443` with a custom domain (e.g. `lavalink.yourdomain.com`):
 
@@ -192,21 +160,11 @@ sudo systemctl reload nginx
 
 ---
 
-## 5. 🤖 Connecting Your Discord Bot
+## 4. 🤖 Connecting Your Discord Bot
 
 Once your server is running, update your Discord bot's configuration (e.g. Master-Bot `.env`):
 
-### Option A: Heroku Deployment (Port 443, Secure)
-```env
-LAVA_ENABLED=true
-LAVA_EXTERNAL=true
-LAVA_HOST=your-app-name.herokuapp.com
-LAVA_PORT=443
-LAVA_PASS=your-chosen-password
-LAVA_SECURE=true
-```
-
-### Option B: Direct VPS Connection (Raw IP / Port 2333)
+### Option A: Direct VPS Connection (Raw IP / Port 2333)
 ```env
 LAVA_ENABLED=true
 LAVA_EXTERNAL=true
@@ -216,7 +174,7 @@ LAVA_PASS=your-chosen-password
 LAVA_SECURE=false
 ```
 
-### Option C: VPS with Domain & SSL Reverse Proxy (Port 443)
+### Option B: VPS with Domain & SSL Reverse Proxy (Port 443)
 ```env
 LAVA_ENABLED=true
 LAVA_EXTERNAL=true

@@ -1,4 +1,4 @@
-### 🔊 Lavalink v4 Cloud Server
+### 🔊 Lavalink v4 Audio Server
 - [Home](Home.md)
 
 ### 🚀 Getting Started

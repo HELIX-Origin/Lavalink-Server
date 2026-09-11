@@ -7,7 +7,7 @@ import { loadSavedOAuthToken, initiateDeviceFlow } from './youtubeOAuth.js';
 
 async function main(): Promise<void> {
   console.log('==================================================');
-  console.log('🔊 Lavalink v4 Cloud Audio Server & Dashboard');
+  console.log('🔊 Lavalink v4 Audio Server & Dashboard');
   console.log(`🌐 Resolved Host Domain: ${config.domain}`);
   console.log(`🔌 Gateway Port:         ${config.port}`);
   console.log(`📍 Internal Node Port:   ${config.lavalinkHost}:${config.lavalinkPort}`);
@@ -21,7 +21,7 @@ async function main(): Promise<void> {
     console.error('It must be an OAuth Client ID of app type "TVs and Limited Input devices";');
     console.error('the YouTube authorization URL cannot be issued without it,');
     console.error('so the YouTube plugin cannot authenticate and Lavalink playback fails.');
-    console.error('Set YOUTUBE_API_KEY in your environment (e.g. .env or Heroku config vars) and restart.');
+    console.error('Set YOUTUBE_API_KEY in your environment (e.g. .env) and restart.');
     console.error('======================================================================');
     process.exit(1);
   }

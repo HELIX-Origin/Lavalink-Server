@@ -6,19 +6,9 @@ This guide explains how to connect various Discord bot frameworks and libraries 
 
 ## 1. Master-Bot (Sapphire Framework)
 
-In Master-Bot, simply update your root `.env` file (or cloud dashboard environment variables):
+In Master-Bot, simply update your root `.env` file (or hosting dashboard environment variables):
 
-### Example A: Heroku Deployment (Port 443, SSL/WSS)
-```env
-LAVA_ENABLED=true
-LAVA_EXTERNAL=true
-LAVA_HOST="your-app-name.herokuapp.com"
-LAVA_PORT=443
-LAVA_PASS="youshallnotpass"
-LAVA_SECURE=true
-```
-
-### Example B: Dedicated VPS or Local Docker (Port 2333)
+### Example A: Dedicated VPS or Local Docker (Port 2333)
 ```env
 LAVA_ENABLED=true
 LAVA_EXTERNAL=true
@@ -26,6 +16,16 @@ LAVA_HOST="your-vps-ip"
 LAVA_PORT=2333
 LAVA_PASS="youshallnotpass"
 LAVA_SECURE=false
+```
+
+### Example B: VPS with Domain & SSL Reverse Proxy (Port 443)
+```env
+LAVA_ENABLED=true
+LAVA_EXTERNAL=true
+LAVA_HOST="lavalink.yourdomain.com"
+LAVA_PORT=443
+LAVA_PASS="youshallnotpass"
+LAVA_SECURE=true
 ```
 
 > [!IMPORTANT]

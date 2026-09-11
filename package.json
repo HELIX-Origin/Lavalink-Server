@@ -1,7 +1,7 @@
 {
   "name": "lavalink-server",
   "version": "1.0.0",
-  "description": "Standalone Lavalink v4 cloud audio server with ESM TypeScript management dashboard and supervisor",
+  "description": "Standalone Lavalink v4 audio server with ESM TypeScript management dashboard and supervisor",
   "type": "module",
   "main": "dist/index.js",
   "scripts": {

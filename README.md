@@ -11,45 +11,8 @@ A production-ready, standalone **Lavalink v4** audio server container with **ESM
 
 ---
 
-> [!WARNING]
-> ### ⚠️ Cloud Hosting Ban Advisory (Render, Railway, Fly.io)
-> **Do NOT deploy Lavalink to free shared cloud platforms like Render or Railway.**
-> Platforms like Render and Railway aggressively flag and ban user accounts for running continuous audio streaming proxies and YouTube scraping containers.
-> 
-> **Supported Hosting Options:**
-> - **Heroku:** Supported via manual CLI deployment (`heroku.yml` & `Dockerfile`) with dedicated dyno allocation.
-> - **Dedicated VPS:** Recommended for production bots (Hetzner, DigitalOcean, Linode, OVHcloud, Oracle Cloud VM).
-> - **Self-Hosted:** Run on your local network or server with Docker Compose.
-
----
-
-## ☁️ Cloud Deployment (Heroku CLI)
-
-Heroku is our **only supported cloud hosting platform**, and it is deployed manually via the **Heroku CLI** so your `.env` configuration and the repo's `application.yml` are used as-is.
-
-### Deploy with Heroku CLI
-
-```bash
-# 1. Install the Heroku CLI, log in, and clone this repository
-heroku login
-git clone https://github.com/HELIX-Origin/Lavalink-Server.git
-cd Lavalink-Server
-
-# 2. Create a Heroku app (container stack is detected from heroku.yml)
-heroku create your-app-name
-
-# 3. Copy your configuration and apply it as Heroku config vars
-cp .env.example .env
-heroku config:set LAVA_PASS=MySuperSecretLavaPass123! \
-  YOUTUBE_REFRESH_TOKEN=... \
-  SPOTIFY_CLIENT_ID=... \
-  SPOTIFY_CLIENT_SECRET=...
-
-# 4. Deploy - Heroku builds the Dockerfile and boots the TypeScript supervisor
-git push heroku main
-```
-
-Heroku runs the server containerized via `heroku.yml` and the `Dockerfile`, reading the committed `application.yml` (placeholders are resolved at runtime from the config vars you set), and automatically routing traffic through its HTTPS/WSS proxy on port **`443`**. Shared cloud PaaS providers (such as Render or Railway) are strictly unsupported due to audio streaming restrictions and account suspension risks. One-click deployment has been removed in favor of the CLI so environment configuration is never lost.
+> [!NOTE]
+> **Hosted / Self-Hosted Only.** This project is designed to run on hardware you control — a **Dedicated VPS** (Hetzner, DigitalOcean, Linode, OVH), a local server, or your own network — via Docker Compose. Cloud PaaS deployment has been removed; shared datacenter IP ranges are aggressively blocked by YouTube's anti-scraping systems.
 
 ---
 
@@ -69,6 +32,18 @@ cp .env.example .env
 docker compose up -d
 ```
 
+### 🌐 Recommended Low-Cost Compatible VPS Providers
+
+For high-throughput WebRTC audio transcoding and unblocked YouTube streaming (avoiding datacenter IP bans), we recommend the following low-cost VPS hosts:
+
+| Provider | Starting Price | Key Benefits | Recommended Plan |
+| :--- | :--- | :--- | :--- |
+| [**Hetzner Cloud**](https://www.hetzner.com/cloud) | ~€3.79 / mo | Exceptional CPU performance for audio transcoding, EU/US locations | CX22 (2 vCPU, 4 GB RAM) |
+| [**OVHcloud**](https://www.ovhcloud.com/en/vps/) | ~$4.20 / mo | Unmetered bandwidth, strong anti-DDoS protection | Starter / Value VPS (2-4 GB RAM) |
+| [**DigitalOcean**](https://www.digitalocean.com/) | ~$4.00 - $6.00 / mo | 1-Click Docker droplets, low network jitter | Basic Droplet (1-2 GB RAM) |
+| [**Linode (Akamai)**](https://www.linode.com/) | ~$5.00 / mo | Reliable network throughput, global datacenters | Nanode 1GB / Shared 2GB |
+| [**Vultr**](https://www.vultr.com/) | ~$3.50 - $5.00 / mo | 30+ worldwide datacenters, high frequency compute | Cloud Compute (1-2 GB RAM) |
+
 ---
 
 ## ⚡ Features & Pre-Configured Plugins
@@ -79,14 +54,14 @@ docker compose up -d
 - 🚀 **Pinned Lavalink JAR:** The official Lavalink v4 release JAR (currently **4.2.2**) is committed directly to the repository and copied into the image, so builds are reproducible and never depend on GitHub availability.
 - 📺 **YouTube Plugin (`youtube-plugin`):** Multi-client support (TV, MUSIC, ANDROID_VR, IOS, WEB) with remote cipher decoding and OAuth2 refresh token compatibility.
 - 🟢 **Spotify Metadata (`lavasrc-plugin`):** Seamless Spotify track, album, and playlist resolution through YouTube search providers.
-- ☁️ **Host Port & Domain Resolution:** Dynamically resolves Heroku domains (`$HEROKU_APP_DEFAULT_DOMAIN_NAME`, `$HEROKU_APP_NAME`), custom domains (`$DOMAIN`), and ports (`$PORT`) directly at runtime.
-- 🪶 **Resource Efficient:** Tuned with low memory footprint and JVM garbage collection optimization for smooth playback on 1GB VPS nodes or Heroku Dynos.
+- 🌐 **Host Port & Domain Resolution:** Dynamically resolves custom domains (`$DOMAIN`) and ports (`$PORT`) directly at runtime.
+- 🪶 **Resource Efficient:** Tuned with low memory footprint and JVM garbage collection optimization for smooth playback on 1GB VPS nodes.
 
 ---
 
 ## 🔐 Server Environment Variables
 
-The Lavalink server resolves **Port** (`$PORT`, defaulting to `2333`) and **Domain** (`$HEROKU_APP_DEFAULT_DOMAIN_NAME`, `$DOMAIN`, or `localhost`) directly from the environment.
+The Lavalink server resolves **Port** (`$PORT`, defaulting to `2333`) and **Domain** (`$DOMAIN`, `$HOST`, or `localhost`) directly from the environment.
 
 The following server configuration variables are exposed and supported:
 
@@ -110,16 +85,6 @@ The following server configuration variables are exposed and supported:
 
 Once your Lavalink server is running, configure your Discord bot's `.env` configuration:
 
-### For Heroku Deployment:
-```env
-LAVA_ENABLED=true
-LAVA_EXTERNAL=true
-LAVA_HOST=your-app-name.herokuapp.com
-LAVA_PORT=443
-LAVA_PASS=youshallnotpass
-LAVA_SECURE=true
-```
-
 ### For Dedicated VPS or Local Docker:
 ```env
 LAVA_ENABLED=true
@@ -132,7 +97,7 @@ LAVA_SECURE=false
 
 > 💡 **Note on Ports and SSL:**
 > - If connecting directly to your VPS or Docker host, use port **`2333`** with `LAVA_SECURE=false`.
-> - If deployed to Heroku or fronted by an Nginx/SSL proxy, connect via port **`443`** with `LAVA_SECURE=true`.
+> - If fronted by an Nginx/SSL reverse proxy, connect via port **`443`** with `LAVA_SECURE=true`.
 
 See the [Client Integration Wiki](wiki/Client-Integration.md) for code snippets with Lavalink-Client, Shoukaku, Kazagumo, and Poru.
 
@@ -159,7 +124,7 @@ docker run -p 2333:2333 -e LAVA_PASS=youshallnotpass lavalink-server
 
 Explore our detailed documentation pages:
 - [**Home & Architecture**](wiki/Home.md): High-level overview and supervisor architecture.
-- [**Deployment Guide**](wiki/Deployment.md): Detailed guides for Heroku, VPS, and Docker Compose.
+- [**Deployment Guide**](wiki/Deployment.md): Detailed guides for VPS and Docker Compose.
 - [**Configuration Reference**](wiki/Configuration.md): In-depth breakdown of `application.yml` and environment parameters.
 - [**Plugins Guide**](wiki/Plugins.md): Configuring YouTube Remote Cipher, OAuth, and Spotify metadata.
 - [**Client Integration**](wiki/Client-Integration.md): Connecting Master-Bot and popular Discord.js Lavalink wrappers.

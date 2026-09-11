@@ -20,12 +20,6 @@ function resolveHostDomain(): string {
   if (process.env.DOMAIN) {
     return process.env.DOMAIN;
   }
-  if (process.env.HEROKU_APP_DEFAULT_DOMAIN_NAME) {
-    return process.env.HEROKU_APP_DEFAULT_DOMAIN_NAME;
-  }
-  if (process.env.HEROKU_APP_NAME) {
-    return `${process.env.HEROKU_APP_NAME}.herokuapp.com`;
-  }
   if (process.env.HOST && process.env.HOST !== '0.0.0.0') {
     return process.env.HOST;
   }
@@ -59,7 +53,7 @@ export const config: ServerConfig = {
   isProduction: process.env.NODE_ENV === 'production',
   keepAliveEnabled: process.env.KEEP_ALIVE_ENABLED?.toLowerCase() !== 'false',
   keepAliveIntervalMs: Number.parseInt(
-    process.env.KEEP_ALIVE_INTERVAL_MS || String(5 * 60 * 1000), // Default 5 minutes (Heroku Eco Dyno sleep threshold is 30m)
+    process.env.KEEP_ALIVE_INTERVAL_MS || String(5 * 60 * 1000), // Default 5 minutes
     10
   )
 };

@@ -2,19 +2,12 @@
 
 Welcome to the official documentation for the **HELIX-Origin Lavalink v4 Server**.
 
-This project provides a pre-tuned, containerized **Lavalink v4** audio node with an ESM TypeScript dashboard and process supervisor, optimized for deployment on **Heroku** (via the Heroku CLI) as well as dedicated Linux VPS environments and self-hosted Docker installations.
+This project provides a pre-tuned, containerized **Lavalink v4** audio node with an ESM TypeScript dashboard and process supervisor, optimized for dedicated Linux VPS environments and self-hosted Docker installations.
 
 ---
 
-> [!WARNING]
-> ### ⚠️ Cloud Hosting Ban Advisory (Render, Railway, Fly.io)
-> **Do NOT deploy Lavalink to free shared cloud platforms like Render or Railway.**
-> Platforms like Render and Railway aggressively flag and ban user accounts for running continuous audio streaming proxies and YouTube scraping containers.
-> 
-> **Supported Hosting Options:**
-> - **Heroku:** Supported via manual CLI deployment (`heroku.yml` & `Dockerfile`) with dedicated dyno allocation.
-> - **Dedicated VPS:** Recommended for production bots (Hetzner, DigitalOcean, Linode, OVH, Oracle Cloud VM).
-> - **Self-Hosted:** Run on your local network or server with Docker Compose.
+> [!NOTE]
+> **Hosted / Self-Hosted Only.** This project runs on hardware you control — a dedicated Linux VPS, a local server, or your own network. Cloud PaaS deployment has been removed; shared datacenter IP ranges are aggressively blocked by YouTube's anti-scraping systems.
 
 ---
 
@@ -67,7 +60,7 @@ flowchart LR
 
 ## 📖 Wiki Table of Contents
 
-- [**Deployment Guide**](Deployment.md): Complete instructions for manual Heroku CLI deployment, Dedicated VPS setups, Docker Compose, and Nginx SSL reverse proxying.
+- [**Deployment Guide**](Deployment.md): Complete instructions for Dedicated VPS setups, Docker Compose, and Nginx SSL reverse proxying.
 - [**Configuration Reference**](Configuration.md): Comprehensive breakdown of `application.yml`, JVM tuning, and environment variable keys.
 - [**Plugins Guide**](Plugins.md): Setup instructions for YouTube Remote Cipher, YouTube OAuth2 authorization, and Spotify credentials.
 - [**Client Integration**](Client-Integration.md): Code examples connecting Master-Bot, Lavalink-Client, Shoukaku, and Kazagumo.

@@ -31,7 +31,7 @@ plugins:
 - You can host your own private cipher instance using [kikkia/cipher](https://github.com/kikkia-dev/cipher).
 
 ### YouTube OAuth2 Setup (Bypassing Bot IP Bans)
-To prevent YouTube `429 Too Many Requests` or "Sign in to confirm you're not a bot" errors on cloud IP ranges:
+To prevent YouTube `429 Too Many Requests` or "Sign in to confirm you're not a bot" errors on datacenter IP ranges:
 
 1. Set a valid `YOUTUBE_API_KEY` (a YouTube OAuth Client ID of app type "TVs and Limited Input devices" used to issue the authorization URL). It is **required** — the server refuses to start without it.
 2. Set `YOUTUBE_API_SECRET` to the Client Secret for that Client ID. It is needed for the token exchange (falls back to YouTube's built-in client secret when empty).

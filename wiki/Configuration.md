@@ -17,7 +17,7 @@ It is critical to distinguish between **Lavalink Server Variables** and **Discor
 
 ## 📋 Comprehensive Server Variables
 
-The Lavalink server resolves **Port** (`$PORT`, defaulting to `2333`) and **Domain** (`$HEROKU_APP_DEFAULT_DOMAIN_NAME`, `$HEROKU_APP_NAME`, `$DOMAIN`, `$HOST`, or `localhost`) directly from the system environment.
+The Lavalink server resolves **Port** (`$PORT`, defaulting to `2333`) and **Domain** (`$DOMAIN`, `$HOST`, or `localhost`) directly from the system environment.
 
 The following server configuration variables are exposed and supported:
 
@@ -32,7 +32,7 @@ The following server configuration variables are exposed and supported:
 | `YOUTUBE_CIPHER_PASSWORD` | *(empty)* | Optional password for self-hosted yt-cipher (leave empty for default public endpoint). |
 | `SPOTIFY_CLIENT_ID` | *(empty)* | Client ID from the [Spotify Developer Dashboard](https://developer.spotify.com/dashboard). |
 | `SPOTIFY_CLIENT_SECRET` | *(empty)* | Client Secret from the Spotify Developer Dashboard. |
-| `KEEP_ALIVE_ENABLED` | `true` | Periodic background pinger to `/health` (every 10m) to prevent cloud sleep throttling. |
+| `KEEP_ALIVE_ENABLED` | `true` | Periodic background pinger to `/health` (every 10m) to keep the node active. |
 
 ---
 
@@ -95,5 +95,5 @@ The Docker container starts with:
 ```bash
 java -Xmx512M -Djdk.tls.client.protocols=TLSv1.2,TLSv1.3 -jar Lavalink.jar
 ```
-- **`-Xmx512M`**: Restricts the maximum Java heap allocation to 512 MB, keeping total process RAM well within container memory limits (e.g. 512 MB on Heroku Eco/Basic Dynos or standard 1GB VPS nodes).
+- **`-Xmx512M`**: Restricts the maximum Java heap allocation to 512 MB, keeping total process RAM well within container memory limits (e.g. standard 1GB VPS nodes).
 - **`-Djdk.tls.client.protocols=TLSv1.2,TLSv1.3`**: Enforces modern, secure TLS negotiation with streaming content delivery networks.
