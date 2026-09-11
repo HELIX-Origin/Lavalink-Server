@@ -15,17 +15,17 @@ LAVA_ENABLED=true
 # MUST be set to true for external cloud hosting
 LAVA_EXTERNAL=true
 
-# Public hostname of your Lavalink server (without http:// or /)
-LAVA_HOST="your-lavalink-server.onrender.com"
+# Public hostname or IP of your Lavalink server (without http:// or /)
+LAVA_HOST="your-vps-ip-or-domain.com"
 
-# Standard HTTPS/WSS proxy port on cloud platforms
-LAVA_PORT=443
+# Port (2333 for direct VPS/Docker, or 443 if using an Nginx/SSL reverse proxy)
+LAVA_PORT=2333
 
 # Authentication password matching LAVA_PASS on your server
 LAVA_PASS="youshallnotpass"
 
-# Set to true for WSS/HTTPS cloud connections
-LAVA_SECURE=true
+# Set to true if using SSL/WSS reverse proxy (port 443), or false if connecting directly (port 2333)
+LAVA_SECURE=false
 ```
 
 > [!IMPORTANT]
@@ -44,9 +44,9 @@ const client = new LavalinkManager({
   nodes: [
     {
       authorization: process.env.LAVA_PASS || "youshallnotpass",
-      host: "your-lavalink-server.onrender.com",
-      port: 443,
-      secure: true, // true for cloud (wss://), false for local (ws://)
+      host: "your-vps-ip-or-domain.com",
+      port: 2333, // or 443 if using Nginx reverse proxy
+      secure: false, // true if using an SSL domain (wss://), false for direct IP (ws://)
       id: "main-node",
     },
   ],
@@ -71,10 +71,10 @@ import { Shoukaku, Connectors } from "shoukaku";
 
 const Nodes = [
   {
-    name: "cloud-node",
-    url: "your-lavalink-server.onrender.com:443",
+    name: "main-node",
+    url: "your-vps-ip-or-domain.com:2333", // or :443 if using SSL reverse proxy
     auth: "youshallnotpass",
-    secure: true,
+    secure: false, // true if SSL is enabled
   },
 ];
 
@@ -104,9 +104,9 @@ const kazagumo = new Kazagumo(
   [
     {
       name: "lavalink",
-      url: "your-lavalink-server.onrender.com:443",
+      url: "your-vps-ip-or-domain.com:2333", // or :443 if using SSL reverse proxy
       auth: "youshallnotpass",
-      secure: true,
+      secure: false,
     },
   ]
 );

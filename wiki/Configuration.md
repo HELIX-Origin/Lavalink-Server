@@ -10,14 +10,14 @@ It is critical to distinguish between **Lavalink Server Variables** and **Discor
 
 | Variable Type | Examples | Where It Is Configured | Purpose |
 | :--- | :--- | :--- | :--- |
-| **Server Variable** | `PORT`, `LAVA_PASS`, `YOUTUBE_CIPHER_URL`, `SPOTIFY_CLIENT_ID` | Lavalink Server (`render.yaml`, `app.json`, `.env`) | Tells Lavalink what port to bind to, what password to demand, and which external APIs to query. |
+| **Server Variable** | `PORT`, `LAVA_PASS`, `YOUTUBE_CIPHER_URL`, `SPOTIFY_CLIENT_ID` | Lavalink Server (`.env`, `docker-compose.yml`) | Tells Lavalink what port to bind to, what password to demand, and which external APIs to query. |
 | **Bot Client Variable** | `LAVA_ENABLED`, `LAVA_EXTERNAL`, `LAVA_HOST`, `LAVA_SECURE` | Discord Bot (`Master-Bot` `.env`) | Tells your Discord bot how to reach this external Lavalink server. **Never configured on the Lavalink server.** |
 
 ---
 
 ## 📋 Comprehensive Server Variables
 
-The Lavalink server resolves **Port** (`$PORT`, defaulting to `2333`) and **Domain** (`$RENDER_EXTERNAL_HOSTNAME`, `$RAILWAY_PUBLIC_DOMAIN`, `$HEROKU_APP_DEFAULT_DOMAIN_NAME`, `$FLY_APP_NAME`) directly from the cloud host environment.
+The Lavalink server resolves **Port** (`$PORT`, defaulting to `2333`) and **Domain** (`$DOMAIN`, `$HOST`, or fallback `localhost`) directly from the server environment.
 
 The following server configuration variables are exposed and supported:
 

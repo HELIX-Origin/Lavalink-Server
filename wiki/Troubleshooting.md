@@ -38,20 +38,18 @@ This page documents common issues encountered when deploying and connecting to t
 
 ---
 
-## 3. Cloud Provider Specifics
+## 3. VPS & Network Environment Notes
 
-### Render: Service Spun Down / First Command Takes 40s
-- **Cause:** Render's free tier spins down containers after 15 minutes of zero inbound HTTP traffic.
-- **Fix:**
-  - While your bot maintains an active WebSocket connection, Render will generally keep the service awake.
-  - If it falls asleep, the bot's reconnection loop will trigger a spin-up when a user executes a music command.
-  - To prevent sleep entirely, upgrade to Render's starter plan ($7/mo) or use a background ping service.
+### Cloud PaaS Account Suspensions (Render, Railway, Heroku)
+- **Problem:** Accounts getting banned or suspended when deploying Lavalink on free or shared cloud platforms.
+- **Cause:** Cloud platforms actively flag and ban accounts proxying continuous WebRTC/audio streams and running YouTube scraping processes.
+- **Fix:** Do not host Lavalink on shared cloud PaaS platforms. Deploy on a dedicated VPS (Hetzner, DigitalOcean, Linode, OVH, Oracle Cloud VM) or self-host via Docker on your own machine.
 
 ### Out of Memory (OOM) Crashes
 - **Cause:** Java process exceeded container RAM limit (512 MB).
 - **Fix:**
-  - Our Dockerfile enforces `-Xmx512M`.
-  - If running more than 20 concurrent voice players, allocate at least 1 GB of RAM to the container.
+  - Our default configuration allocates `-Xmx512M`.
+  - If running more than 20 concurrent voice players, allocate at least 1 GB of RAM to the container in `docker-compose.yml`.
 
 ---
 

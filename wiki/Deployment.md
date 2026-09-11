@@ -1,110 +1,121 @@
-# 🚀 Cloud Deployment Guide
+# 🖥️ Deployment Guide
 
-This guide details how to deploy the Lavalink v4 server to free and low-cost cloud platforms, container managers, and dedicated virtual private servers (VPS).
-
----
-
-## ☁️ 1-Click Cloud Deployment Matrix
-
-| Platform | Free Tier | Deploy Button |
-| :--- | :---: | :--- |
-| **Render** | ✅ 100% Free Web Service | [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/HELIX-Origin/Lavalink-Server) |
-| **Railway** | ✅ Free Starter Trial | [![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/new/template?template=https%3A%2F%2Fgithub.com%2FHELIX-Origin%2FLavalink-Server) |
-| **Heroku** | ✅ Eco Dyno Support | [![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/HELIX-Origin/Lavalink-Server) |
-| **Fly.io** | ✅ Free MicroVM Tier | [![Deploy to Fly.io](https://img.shields.io/badge/Deploy%20to-Fly.io-24185b?style=for-the-badge&logo=flydotio&logoColor=white)](#flyio) |
+This guide details how to deploy your dedicated Lavalink v4 audio server using **Docker**, **Docker Compose**, or a **Dedicated Linux VPS**.
 
 ---
 
-## 1. 🟣 Render (`render.com`)
-
-Render allows deploying Docker containers on its Free plan with zero credit card required.
-
-### Blueprint Deployment
-1. Click the **Deploy to Render** button above or navigate to [dashboard.render.com](https://dashboard.render.com) > **New +** > **Blueprint**.
-2. Connect the repository: `https://github.com/HELIX-Origin/Lavalink-Server`.
-3. Render will read `render.yaml` automatically:
-   - **Runtime:** `Docker`
-   - **Plan:** `Free`
-   - **Port:** Render automatically sets `PORT=10000`.
-4. Fill in any optional keys (e.g. `YOUTUBE_REFRESH_TOKEN`, `SPOTIFY_CLIENT_ID`) or leave them empty.
-5. Click **Apply**.
-6. Once deployed, note your service URL: `your-app-name.onrender.com`.
-
-> [!TIP]
-> **Zero Sleep Throttling via Keep-Alive Service**:
-> Render's free tier would normally spin down containers after 15 minutes of inbound HTTP inactivity. This server includes a built-in **Keep-Alive Service** (`KEEP_ALIVE_ENABLED=true`) that automatically pings `/health` every 10 minutes, generating the necessary inbound HTTP traffic to maintain 24/7 active status without manual intervention.
+> [!WARNING]
+> ### ⚠️ Cloud Hosting Ban Advisory (Render, Railway, Heroku, Fly.io)
+> **Do NOT deploy Lavalink to free shared cloud platforms (such as Render, Heroku, Railway, or Fly.io).**
+> Free and serverless PaaS providers strictly prohibit audio streaming proxies, continuous WebSockets, and scraping YouTube streams under their Acceptable Use Policies. Hosting Lavalink on these platforms will result in an immediate **account ban**, deletion of services, and potential IP blacklisting.
+>
+> **Recommended Hosting Options:**
+> - **Dedicated / Virtual Private Server (VPS):** Hetzner Cloud (~€3-4/mo), DigitalOcean ($4-6/mo), Linode, OVHcloud, or Oracle Cloud Free Tier VM.
+> - **Home Server / Self-Hosted:** Run on your local network or Raspberry Pi via Docker.
 
 ---
 
-## 2. 🚂 Railway (`railway.app`)
+## 1. 🐳 Quick Start: Docker Compose (Recommended)
 
-Railway deploys containerized applications with fast provisioning and automatic SSL certificate generation.
+Docker Compose is the fastest and most reliable way to run Lavalink on your server.
 
-### Step-by-Step
-1. Click the **Deploy on Railway** button above.
-2. Railway clones and builds the `Dockerfile` using Dockerfile builder mode.
-3. Under **Settings > Networking**, click **Generate Domain** (e.g. `lavalink-production.up.railway.app`).
-4. Under **Variables**, you can customize:
-   - `LAVA_PASS`: Set your custom authentication password.
-   - Any YouTube or Spotify plugin credentials.
-5. Connect your bot using:
-   - `Host`: `lavalink-production.up.railway.app`
-   - `Port`: `443`
-   - `Secure`: `true`
-
----
-
-## 3. 🟪 Heroku (`heroku.com`)
-
-Heroku builds and runs the container using `heroku.yml` and `app.json`.
-
-### Deploying via Button
-1. Click the **Deploy to Heroku** button above.
-2. Fill in your App Name.
-3. Verify your configuration variables (`LAVA_PASS`, etc.).
-4. Heroku will build the container using Docker stack.
-5. Connect using your Heroku app domain (`your-app.herokuapp.com`) on port `443` with TLS enabled.
-
----
-
-## 4. ✈️ Fly.io (`fly.io`)
-
-Fly.io launches the container inside lightweight global microVMs.
-
-### Deployment Steps
+### Step 1: Clone the Repository
 ```bash
-# Clone the repository
 git clone https://github.com/HELIX-Origin/Lavalink-Server.git
 cd Lavalink-Server
-
-# Launch Fly app (do not deploy immediately)
-fly launch --no-deploy
-
-# Set your secrets
-fly secrets set LAVA_PASS="youshallnotpass"
-
-# Deploy
-fly deploy
 ```
 
----
-
-## 5. 🖥️ Dedicated VPS / Docker Compose
-
-For high-volume production bots, hosting Lavalink on a small Linux VPS (Ubuntu/Debian) is recommended:
-
+### Step 2: Configure Environment Variables
+Copy the example environment file:
 ```bash
-git clone https://github.com/HELIX-Origin/Lavalink-Server.git
-cd Lavalink-Server
+cp .env.example .env
+```
+Edit `.env` using `nano` or your preferred text editor:
+```bash
+nano .env
+```
+Key settings to customize:
+- `LAVA_PASS`: Choose a strong, secret authentication password (e.g. `MySuperSecretLavaPass123!`).
+- `YOUTUBE_REFRESH_TOKEN`: *(Optional)* If you already generated a YouTube OAuth refresh token.
+- `SPOTIFY_CLIENT_ID` & `SPOTIFY_CLIENT_SECRET`: *(Optional)* For Spotify link resolution.
 
-# Start in background
+### Step 3: Start the Server
+```bash
 docker compose up -d
 ```
 
-### Reverse Proxy with Nginx & SSL (Let's Encrypt)
-To expose port `2333` securely over standard HTTPS/WSS on port `443`:
+### Step 4: Verify Status and Logs
+Check that the container is running healthy:
+```bash
+docker compose ps
+docker compose logs -f
+```
 
+You can view the real-time web dashboard at:
+```
+http://<your-server-ip>:2333
+```
+
+---
+
+## 2. 🐧 Linux VPS Setup (Ubuntu / Debian)
+
+If you are setting up a fresh VPS (e.g. on Hetzner or DigitalOcean):
+
+### Step 1: Install Docker & Docker Compose
+```bash
+sudo apt update && sudo apt upgrade -y
+sudo apt install -y curl git ufw
+
+# Install Docker Engine & Compose plugin
+curl -fsSL https://get.docker.com -o get-docker.sh
+sudo sh get-docker.sh
+sudo usermod -aG docker $USER
+newgrp docker
+```
+
+### Step 2: Configure Firewall (`ufw`)
+Ensure port `2333` (or `443` if using Nginx) and SSH are allowed:
+```bash
+sudo ufw allow OpenSSH
+# If connecting directly to Lavalink:
+sudo ufw allow 2333/tcp
+# If using Nginx reverse proxy with SSL:
+sudo ufw allow 80/tcp
+sudo ufw allow 443/tcp
+
+sudo ufw enable
+```
+
+### Step 3: Run with Docker Compose
+Follow the steps in [Quick Start: Docker Compose](#1--quick-start-docker-compose-recommended) above.
+
+---
+
+## 3. 🔒 Production Reverse Proxy with Nginx & Let's Encrypt (SSL/WSS)
+
+To securely connect your Discord bot over standard HTTPS/WSS on port `443` with a custom domain (e.g. `lavalink.yourdomain.com`):
+
+### Step 1: Install Nginx & Certbot
+```bash
+sudo apt install -y nginx certbot python3-certbot-nginx
+```
+
+### Step 2: Obtain an SSL Certificate
+Ensure your domain's DNS `A` record points to your VPS IP, then run:
+```bash
+sudo certbot certonly --nginx -d lavalink.yourdomain.com
+```
+
+### Step 3: Configure Nginx Reverse Proxy
+Create a configuration file at `/etc/nginx/sites-available/lavalink`:
 ```nginx
+server {
+    listen 80;
+    server_name lavalink.yourdomain.com;
+    return 301 https://$host$request_uri;
+}
+
 server {
     listen 443 ssl http2;
     server_name lavalink.yourdomain.com;
@@ -112,15 +123,58 @@ server {
     ssl_certificate /etc/letsencrypt/live/lavalink.yourdomain.com/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/lavalink.yourdomain.com/privkey.pem;
 
+    # Optimal SSL security settings
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_prefer_server_ciphers on;
+    ssl_ciphers "ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384";
+
     location / {
         proxy_pass http://127.0.0.1:2333;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
         proxy_set_header Host $host;
-        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
         proxy_set_header Authorization $http_authorization;
-        proxy_read_timeout 86400;
+        proxy_read_timeout 86400s;
+        proxy_send_timeout 86400s;
     }
 }
 ```
+
+Enable the configuration and reload Nginx:
+```bash
+sudo ln -s /etc/nginx/sites-available/lavalink /etc/nginx/sites-enabled/
+sudo nginx -t
+sudo systemctl reload nginx
+```
+
+---
+
+## 4. 🤖 Connecting Your Discord Bot
+
+Once your server is running, update your Discord bot's configuration (e.g. Master-Bot `.env`):
+
+### Option A: Direct Connection (Raw IP / Port 2333)
+```env
+LAVA_ENABLED=true
+LAVA_EXTERNAL=true
+LAVA_HOST=your-vps-ip
+LAVA_PORT=2333
+LAVA_PASS=your-chosen-password
+LAVA_SECURE=false
+```
+
+### Option B: Domain with SSL Reverse Proxy (Port 443)
+```env
+LAVA_ENABLED=true
+LAVA_EXTERNAL=true
+LAVA_HOST=lavalink.yourdomain.com
+LAVA_PORT=443
+LAVA_PASS=your-chosen-password
+LAVA_SECURE=true
+```
+
+For more details on connecting with popular client libraries, see the [Client Integration Guide](Client-Integration.md).

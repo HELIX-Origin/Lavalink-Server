@@ -5,24 +5,36 @@
 [![Docker](https://img.shields.io/badge/Docker-Alpine-blue.svg)](https://hub.docker.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-A production-ready, standalone **Lavalink v4** audio server container with **one-click cloud deployment** for **Render**, **Railway**, **Heroku**, and **Fly.io**. Maintained by [**HELIX Origin**](https://github.com/HELIX-Origin) for hosting external audio nodes for Discord music bots (including [Master-Bot](https://github.com/galnir/Master-Bot)).
+A production-ready, standalone **Lavalink v4** audio server container with **ESM TypeScript Management Dashboard** and supervisor. Maintained by [**HELIX Origin**](https://github.com/HELIX-Origin) for hosting dedicated audio nodes for Discord music bots (including [Master-Bot](https://github.com/galnir/Master-Bot)).
 
-📖 **Comprehensive Documentation:** Check out our [**Wiki**](wiki/Home.md) for detailed architecture, cloud deployment walk-throughs, configuration references, plugin setup, and troubleshooting.
+📖 **Comprehensive Documentation:** Check out our [**Wiki**](wiki/Home.md) for architecture, VPS setup walk-throughs, configuration references, plugin setup, and troubleshooting.
+
+---
+
+> [!WARNING]
+> ### ⚠️ Cloud Hosting Ban Advisory (Render, Railway, Heroku)
+> **Do NOT deploy Lavalink to free shared cloud platforms (such as Render, Heroku, or Railway).**
+> Most serverless and free-tier cloud PaaS providers strictly prohibit audio streaming proxies, Lavalink instances, and scraping YouTube streams. Hosting Lavalink on these platforms will result in an immediate **account ban** or service suspension.
+>
+> **Recommended Hosting:** Deploy on a **Dedicated VPS** (e.g. Hetzner, DigitalOcean, Linode, Oracle Cloud Free Tier Compute, OVHcloud) or **Self-Host locally via Docker**.
 
 ---
 
-## 🚀 One-Click Cloud Deployment (100% Free Tiers)
+## 🐳 Quick Start (Self-Hosted / VPS Docker)
 
-Deploy your external Lavalink v4 server instantly with zero server management:
+Deploy your external Lavalink v4 server on your own server or VPS in seconds:
 
-| Platform | Free Tier | Deploy Button |
-| :--- | :---: | :--- |
-| **Render** | ✅ 100% Free | [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/HELIX-Origin/Lavalink-Server) |
-| **Railway** | ✅ Free Starter | [![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/new/template?template=https%3A%2F%2Fgithub.com%2FHELIX-Origin%2FLavalink-Server) |
-| **Heroku** | ✅ Eco Dyno | [![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/HELIX-Origin/Lavalink-Server) |
-| **Fly.io** | ✅ Free MicroVM | [![Deploy to Fly.io](https://img.shields.io/badge/Deploy%20to-Fly.io-24185b?style=for-the-badge&logo=flydotio&logoColor=white)](wiki/Deployment.md#flyio) |
+```bash
+# 1. Clone the repository
+git clone https://github.com/HELIX-Origin/Lavalink-Server.git
+cd Lavalink-Server
 
----
+# 2. Configure environment (optional custom password)
+cp .env.example .env
+
+# 3. Start with Docker Compose
+docker compose up -d
+```
 
 ## ⚡ Features & Pre-Configured Plugins
 
@@ -32,14 +44,14 @@ Deploy your external Lavalink v4 server instantly with zero server management:
 - 🚀 **Always Up-To-Date:** The Docker build pulls the latest official Lavalink v4 release JAR directly from [lavalink-devs/Lavalink](https://github.com/lavalink-devs/Lavalink/releases).
 - 📺 **YouTube Plugin (`youtube-plugin`):** Multi-client support (TV, MUSIC, ANDROID_VR, IOS, WEB) with remote cipher decoding and OAuth2 refresh token compatibility.
 - 🟢 **Spotify Metadata (`lavasrc-plugin`):** Seamless Spotify track, album, and playlist resolution through YouTube search providers.
-- ☁️ **Host Port & Domain Resolution:** Dynamically resolves the host's public domain (`$RENDER_EXTERNAL_HOSTNAME`, `$RAILWAY_PUBLIC_DOMAIN`, etc.) and port (`$PORT`) directly at runtime.
-- 🪶 **Optimized for Free Tiers:** Tuned with a 512 MB memory ceiling for zero-cost cloud hosting on Render, Railway, Heroku, and Fly.io.
+- ☁️ **Host Port & Domain Resolution:** Dynamically resolves the host's public domain (`$DOMAIN`, `$HOST`, etc.) and port (`$PORT`) directly at runtime.
+- 🪶 **Resource Efficient:** Tuned with low memory footprint and JVM garbage collection optimization for smooth playback on 1GB VPS nodes.
 
 ---
 
 ## 🔐 Server Environment Variables
 
-The Lavalink server resolves **Port** (`$PORT`, defaulting to `2333`) and **Domain** (`$RENDER_EXTERNAL_HOSTNAME`, `$RAILWAY_PUBLIC_DOMAIN`, `$HEROKU_APP_DEFAULT_DOMAIN_NAME`, `$FLY_APP_NAME`) directly from the cloud host environment.
+The Lavalink server resolves **Port** (`$PORT`, defaulting to `2333`) and **Domain** (`$DOMAIN`, `$HOST`, or `localhost`) directly from the system environment.
 
 The following server configuration variables are exposed and supported:
 
@@ -52,7 +64,7 @@ The following server configuration variables are exposed and supported:
 | `YOUTUBE_CIPHER_PASSWORD` | *(empty)* | Optional password for self-hosted yt-cipher (leave empty for default public endpoint). |
 | `SPOTIFY_CLIENT_ID` | *(empty)* | Spotify Developer Application Client ID. |
 | `SPOTIFY_CLIENT_SECRET` | *(empty)* | Spotify Developer Application Client Secret. |
-| `KEEP_ALIVE_ENABLED` | `true` | Periodic background pinger to `/health` (every 10m) to prevent cloud sleep throttling. |
+| `KEEP_ALIVE_ENABLED` | `true` | Periodic background pinger to `/health` (every 10m) to keep memory active. |
 
 > ℹ️ **Notice:** Variables like `LAVA_EXTERNAL` or `LAVA_ENABLED` are **client-side bot settings** used by Discord bots (e.g. Master-Bot) to determine connection modes. They are not server variables and are never set on this Lavalink instance.
 
@@ -60,20 +72,21 @@ The following server configuration variables are exposed and supported:
 
 ## 🤖 Connecting to Your Discord Bot (e.g. Master-Bot)
 
-Once your Lavalink server is deployed, copy its public URL and configure your Discord bot's `.env` configuration:
+Once your Lavalink server is running, configure your Discord bot's `.env` configuration:
 
 ```env
 # Master-Bot client configuration:
 LAVA_ENABLED=true
 LAVA_EXTERNAL=true
-LAVA_HOST=your-lavalink-server.onrender.com
-LAVA_PORT=443
+LAVA_HOST=your-vps-ip-or-domain.com
+LAVA_PORT=2333
 LAVA_PASS=youshallnotpass
-LAVA_SECURE=true
+LAVA_SECURE=false
 ```
 
 > 💡 **Note on Ports and SSL:**
-> When deployed to cloud platforms (Render, Railway, Heroku), your server is automatically fronted by an HTTPS/WSS proxy on port **`443`**. Therefore, set `LAVA_PORT=443` and `LAVA_SECURE=true` in your Discord bot.
+> - If connecting directly to your VPS or Docker host, use port **`2333`** with `LAVA_SECURE=false`.
+> - If you configure an Nginx or Caddy reverse proxy with an SSL certificate (e.g. `lavalink.yourdomain.com`), set `LAVA_PORT=443` and `LAVA_SECURE=true`.
 
 See the [Client Integration Wiki](wiki/Client-Integration.md) for code snippets with Lavalink-Client, Shoukaku, Kazagumo, and Poru.
 
