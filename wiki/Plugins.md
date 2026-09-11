@@ -33,7 +33,7 @@ plugins:
 ### YouTube OAuth2 Setup (Bypassing Bot IP Bans)
 To prevent YouTube `429 Too Many Requests` or "Sign in to confirm you're not a bot" errors on cloud IP ranges:
 
-1. Set a valid `YOUTUBE_API_KEY` (the OAuth client identifier used to issue the authorization URL). It is **required** — the server refuses to start without it. No client secret is needed; the token exchange uses YouTube's built-in client credentials.
+1. Set a valid `YOUTUBE_API_KEY` (a YouTube OAuth Client ID of app type "TVs and Limited Input devices" used to issue the authorization URL). It is **required** — the server refuses to start without it. This Client ID is a public limited-input client, so no client secret is needed.
 2. On boot, the server prints the authorization URL + code to the console (and shows it on the dashboard). Open the URL, sign in with an authorized streaming Google account, and enter the code.
 3. The server exchanges the code for a **refresh token**, prints `YOUTUBE_REFRESH_TOKEN=...` to the console, and persists it to the SQLite database automatically (it is also applied to the running Lavalink node instantly).
 4. You can also pre-set the token yourself so it is loaded on the next start:

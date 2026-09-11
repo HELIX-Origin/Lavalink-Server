@@ -17,8 +17,9 @@ async function main(): Promise<void> {
 
   if (!config.youtubeApiKey) {
     console.error('======================================================================');
-    console.error('❌ [Fatal] YOUTUBE_API_KEY is required.');
-    console.error('The YouTube authorization URL cannot be issued without the API key,');
+    console.error('❌ [Fatal] YOUTUBE_API_KEY is required (YouTube OAuth Client ID).');
+    console.error('It must be an OAuth Client ID of app type "TVs and Limited Input devices";');
+    console.error('the YouTube authorization URL cannot be issued without it,');
     console.error('so the YouTube plugin cannot authenticate and Lavalink playback fails.');
     console.error('Set YOUTUBE_API_KEY in your environment (e.g. .env or Heroku config vars) and restart.');
     console.error('======================================================================');

@@ -94,7 +94,7 @@ The following server configuration variables are exposed and supported:
 | :--- | :--- | :--- |
 | `LAVA_PASS` | `youshallnotpass` | Authentication password clients must provide in the `Authorization` header. |
 | `YOUTUBE_REFRESH_TOKEN` | *(empty)* | YouTube OAuth 2.0 refresh token for authenticated streams (auto-captured and persisted after the device flow completes). |
-| `YOUTUBE_API_KEY` | **(required)** | YouTube OAuth client identifier used to issue the authorization URL. The server refuses to start without it. |
+| `YOUTUBE_API_KEY` | **(required)** | YouTube OAuth Client ID (app type: "TVs and Limited Input devices") used to issue the authorization URL. The server refuses to start without it. |
 | `YOUTUBE_CIPHER_URL` | `https://cipher.kikkia.dev/` | Remote cipher endpoint for YouTube signature deciphering. |
 | `YOUTUBE_CIPHER_PASSWORD` | *(empty)* | Optional password for self-hosted yt-cipher (leave empty for default public endpoint). |
 | `SPOTIFY_CLIENT_ID` | *(empty)* | Spotify Developer Application Client ID. |
