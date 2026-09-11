@@ -5,7 +5,7 @@
 [![Docker](https://img.shields.io/badge/Docker-Alpine-blue.svg)](https://hub.docker.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-A production-ready, standalone **Lavalink v4** audio server container with **one-click cloud deployment** for **Render**, **Railway**, **Heroku**, and **Fly.io**. Built specifically for hosting an external audio node for Discord music bots such as [Master-Bot](https://github.com/galnir/Master-Bot).
+A production-ready, standalone **Lavalink v4** audio server container with **one-click cloud deployment** for **Render**, **Railway**, **Heroku**, and **Fly.io**. Maintained by [**HELIX Origin**](https://github.com/HELIX-Origin) for hosting external audio nodes for Discord music bots (including [Master-Bot](https://github.com/galnir/Master-Bot)).
 
 📖 **Comprehensive Documentation:** Check out our [**Wiki**](wiki/Home.md) for detailed architecture, cloud deployment walk-throughs, configuration references, plugin setup, and troubleshooting.
 

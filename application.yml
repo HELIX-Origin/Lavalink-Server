@@ -1,6 +1,6 @@
 # Lavalink v4 Configuration
 # Official Lavalink Repository: https://github.com/lavalink-devs/Lavalink
-# Maintained for HELIX-Origin & Master-Bot
+# Maintained by HELIX Origin
 
 server:
   port: ${PORT:${LAVA_PORT:2333}}
