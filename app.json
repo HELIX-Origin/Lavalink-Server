@@ -10,11 +10,6 @@
       "value": "youshallnotpass",
       "required": true
     },
-    "LAVA_PORT": {
-      "description": "Lavalink server port (defaults to 2333; Heroku provides dynamic PORT)",
-      "value": "2333",
-      "required": false
-    },
     "YOUTUBE_REFRESH_TOKEN": {
       "description": "YouTube OAuth 2.0 refresh token for authenticated playback",
       "required": false

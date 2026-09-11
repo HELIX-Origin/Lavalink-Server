@@ -5,7 +5,6 @@ primary_region = "iad"
   dockerfile = "Dockerfile"
 
 [env]
-  LAVA_PORT = "2333"
   YOUTUBE_CIPHER_URL = "https://cipher.kikkia.dev/"
 
 [http_service]

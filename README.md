@@ -36,12 +36,13 @@ Deploy your external Lavalink v4 server instantly with zero server management:
 
 ## 🔐 Server Environment Variables
 
-The Lavalink server exposes and consumes these environment variables:
+The Lavalink server resolves **Port** (`$PORT`, defaulting to `2333`) and **Domain** (`$RENDER_EXTERNAL_HOSTNAME`, `$RAILWAY_PUBLIC_DOMAIN`, `$HEROKU_APP_DEFAULT_DOMAIN_NAME`, `$FLY_APP_NAME`) directly from the cloud host environment.
+
+The following server configuration variables are exposed and supported:
 
 | Variable | Default | Description |
 | :--- | :--- | :--- |
 | `LAVA_PASS` | `youshallnotpass` | Authentication password clients must provide in the `Authorization` header. |
-| `LAVA_PORT` / `PORT` | `2333` | Server listening port (automatically assigned by Render, Heroku, and Railway). |
 | `YOUTUBE_REFRESH_TOKEN` | *(empty)* | YouTube OAuth 2.0 refresh token for authenticated streams. |
 | `YOUTUBE_API_KEY` | *(empty)* | Optional YouTube Data API v3 key. |
 | `YOUTUBE_CIPHER_URL` | `https://cipher.kikkia.dev/` | Remote cipher endpoint for YouTube signature deciphering. |

@@ -6,11 +6,7 @@ services:
     region: oregon
     autoDeploy: true
     envVars:
-      - key: PORT
-        value: 10000
       - key: LAVA_PASS
-        sync: false
-      - key: LAVA_PORT
         sync: false
       - key: YOUTUBE_REFRESH_TOKEN
         sync: false

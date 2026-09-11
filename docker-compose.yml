@@ -5,11 +5,9 @@ services:
     build: .
     restart: unless-stopped
     ports:
-      - "${LAVA_PORT:-2333}:2333"
+      - "${PORT:-2333}:2333"
     environment:
-      - PORT=2333
       - LAVA_PASS=${LAVA_PASS:-youshallnotpass}
-      - LAVA_PORT=${LAVA_PORT:-2333}
       - YOUTUBE_REFRESH_TOKEN=${YOUTUBE_REFRESH_TOKEN:-}
       - YOUTUBE_API_KEY=${YOUTUBE_API_KEY:-}
       - YOUTUBE_CIPHER_URL=${YOUTUBE_CIPHER_URL:-https://cipher.kikkia.dev/}
