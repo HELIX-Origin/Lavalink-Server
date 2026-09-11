@@ -15,6 +15,16 @@ async function main(): Promise<void> {
   console.log(`⚡ Mode:                 ${config.isProduction ? 'production' : 'development'}`);
   console.log('==================================================');
 
+  if (!config.youtubeApiKey) {
+    console.error('======================================================================');
+    console.error('❌ [Fatal] YOUTUBE_API_KEY is required.');
+    console.error('The YouTube authorization URL cannot be issued without the API key,');
+    console.error('so the YouTube plugin cannot authenticate and Lavalink playback fails.');
+    console.error('Set YOUTUBE_API_KEY in your environment (e.g. .env or Heroku config vars) and restart.');
+    console.error('======================================================================');
+    process.exit(1);
+  }
+
   // 1. Initialize SQLite Database & Load In-Live Memory State
   initDatabase();
   const token = await loadSavedOAuthToken();

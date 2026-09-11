@@ -64,7 +64,8 @@ export class LavalinkSupervisor {
 
         // Intercept native YouTube plugin OAuth events from Java stdout
         if (line.includes('OAUTH INTEGRATION:')) {
-          const tokenMatch = line.match(/Token retrieved successfully.*?\((\S+)\)/i);
+          // Plugin logs: "OAUTH INTEGRATION: Token retrieved successfully. Store your refresh token as this can be reused. (TOKEN)"
+          const tokenMatch = line.match(/Store your refresh token as this can be reused\.\s*\(([^)\s]+)\)/i);
           if (tokenMatch && tokenMatch[1]) {
             const token = tokenMatch[1];
             console.log('\n======================================================================');

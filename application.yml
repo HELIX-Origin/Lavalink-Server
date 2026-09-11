@@ -88,7 +88,7 @@ plugins:
     oauth:
       enabled: true
       refreshToken: "${YOUTUBE_REFRESH_TOKEN:}"
-      skipInitialization: "${YOUTUBE_SKIP_INIT:false}"
+      skipInitialization: "${YOUTUBE_SKIP_INIT:true}"
   lavasrc:
     providers:
       - "ytmsearch:\"%ISRC%\""

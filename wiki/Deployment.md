@@ -1,6 +1,6 @@
 # 🚀 Deployment Guide
 
-This guide details how to deploy your dedicated Lavalink v4 audio server using **Heroku** (1-click container deployment), **Docker Compose**, or a **Dedicated Linux VPS**.
+This guide details how to deploy your dedicated Lavalink v4 audio server using **Heroku** (manual CLI container deployment), **Docker Compose**, or a **Dedicated Linux VPS**.
 
 ---
 
@@ -10,29 +10,44 @@ This guide details how to deploy your dedicated Lavalink v4 audio server using *
 > Platforms like Render and Railway aggressively flag and ban user accounts for running continuous audio streaming proxies and YouTube scraping containers.
 >
 > **Supported Hosting Options:**
-> - **Heroku:** Supported via container stack (`app.json` & `heroku.yml`) with dedicated dyno allocation.
+> - **Heroku:** Supported via manual CLI deployment (`heroku.yml` & `Dockerfile`) with dedicated dyno allocation.
 > - **Dedicated VPS:** Highly recommended for production bots (Hetzner, DigitalOcean, Linode, OVHcloud, Oracle Cloud Free Tier VM).
 > - **Self-Hosted:** Run locally or on a private server via Docker Compose.
 
 ---
 
-## 1. 🟪 Heroku (`heroku.com`) - 1-Click Deployment
+## 1. 🟪 Heroku (`heroku.com`) - Manual CLI Deployment (Exclusive)
 
-Heroku allows deploying the full containerized Lavalink server using the official container stack defined by `heroku.yml` and `app.json`.
-
-### Deploying via 1-Click Button:
-
-[![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/HELIX-Origin/Lavalink-Server)
+Heroku runs the containerized Lavalink server using the container stack defined by `heroku.yml` and the repo's `Dockerfile`. **Heroku is our only supported cloud hosting platform, and deployment is done manually with the Heroku CLI so your `.env` configuration and `application.yml` are always used.**
 
 ### Step-by-Step Instructions:
-1. Click the **Deploy to Heroku** button above.
-2. Choose an App Name (e.g. `my-lavalink-node`).
-3. Fill in your environment variables:
-   - `LAVA_PASS`: Choose a strong password (defaults to `youshallnotpass`).
-   - `YOUTUBE_REFRESH_TOKEN`: *(Optional)* If you have an existing YouTube OAuth refresh token.
-   - `SPOTIFY_CLIENT_ID` & `SPOTIFY_CLIENT_SECRET`: *(Optional)* For Spotify link resolution.
-4. Click **Deploy app**. Heroku builds the Dockerfile and boots the TypeScript supervisor.
-5. Once deployed, connect your Discord bot using:
+1. Install and authenticate the [Heroku CLI](https://devcenter.heroku.com/articles/heroku-cli):
+   ```bash
+   heroku login
+   ```
+2. Clone the repository and configure your `.env`:
+   ```bash
+   git clone https://github.com/HELIX-Origin/Lavalink-Server.git
+   cd Lavalink-Server
+   cp .env.example .env
+   ```
+3. Create a Heroku app (the container stack is detected from `heroku.yml`):
+   ```bash
+   heroku create my-lavalink-node
+   ```
+4. Apply your `.env` configuration as Heroku config vars:
+   ```bash
+   heroku config:set LAVA_PASS=MySuperSecretLavaPass123! \
+     YOUTUBE_REFRESH_TOKEN=... \
+     SPOTIFY_CLIENT_ID=... \
+     SPOTIFY_CLIENT_SECRET=...
+   ```
+   Set only the variables you need — unset ones fall back to the defaults baked into `application.yml`.
+5. Deploy (Heroku builds the Dockerfile and boots the TypeScript supervisor):
+   ```bash
+   git push heroku main
+   ```
+6. Once deployed, connect your Discord bot using:
    - **Host:** `your-app-name.herokuapp.com`
    - **Port:** `443`
    - **Secure:** `true`

@@ -17,19 +17,39 @@ A production-ready, standalone **Lavalink v4** audio server container with **ESM
 > Platforms like Render and Railway aggressively flag and ban user accounts for running continuous audio streaming proxies and YouTube scraping containers.
 > 
 > **Supported Hosting Options:**
-> - **Heroku:** Supported via container stack (`app.json` & `heroku.yml`) with dedicated dyno allocation.
+> - **Heroku:** Supported via manual CLI deployment (`heroku.yml` & `Dockerfile`) with dedicated dyno allocation.
 > - **Dedicated VPS:** Recommended for production bots (Hetzner, DigitalOcean, Linode, OVHcloud, Oracle Cloud VM).
 > - **Self-Hosted:** Run on your local network or server with Docker Compose.
 
 ---
 
-## 🚀 1-Click Cloud Deployment (Heroku)
+## ☁️ Cloud Deployment (Heroku CLI)
 
-Deploy your external Lavalink v4 server to Heroku instantly with one click:
+Heroku is our **only supported cloud hosting platform**, and it is deployed manually via the **Heroku CLI** so your `.env` configuration and the repo's `application.yml` are used as-is.
 
-[![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/HELIX-Origin/Lavalink-Server)
+### Deploy with Heroku CLI
 
-Heroku runs the server containerized via `heroku.yml` and `app.json`, automatically routing traffic through its HTTPS/WSS proxy on port **`443`**.
+```bash
+# 1. Install the Heroku CLI, log in, and clone this repository
+heroku login
+git clone https://github.com/HELIX-Origin/Lavalink-Server.git
+cd Lavalink-Server
+
+# 2. Create a Heroku app (container stack is detected from heroku.yml)
+heroku create your-app-name
+
+# 3. Copy your configuration and apply it as Heroku config vars
+cp .env.example .env
+heroku config:set LAVA_PASS=MySuperSecretLavaPass123! \
+  YOUTUBE_REFRESH_TOKEN=... \
+  SPOTIFY_CLIENT_ID=... \
+  SPOTIFY_CLIENT_SECRET=...
+
+# 4. Deploy - Heroku builds the Dockerfile and boots the TypeScript supervisor
+git push heroku main
+```
+
+Heroku runs the server containerized via `heroku.yml` and the `Dockerfile`, reading the committed `application.yml` (placeholders are resolved at runtime from the config vars you set), and automatically routing traffic through its HTTPS/WSS proxy on port **`443`**. Shared cloud PaaS providers (such as Render or Railway) are strictly unsupported due to audio streaming restrictions and account suspension risks. One-click deployment has been removed in favor of the CLI so environment configuration is never lost.
 
 ---
 
@@ -56,7 +76,7 @@ docker compose up -d
 - 📊 **ESM TypeScript Management Dashboard:** Real-time web dashboard at `/` tracking node health, JVM memory, CPU utilization, active players, and uptime.
 - ⚡ **Pure Node.js Supervisor (No Shell Scripts):** Robust ESM TypeScript supervisor managing Java process lifecycle, port/domain binding, and graceful signal handling without shell scripts.
 - 💾 **SQLite Persistence & ioredis-mock:** Embedded SQLite database for historical metrics and client audit sessions, paired with in-memory `ioredis-mock` for instant pub/sub and state caching.
-- 🚀 **Always Up-To-Date:** The Docker build pulls the latest official Lavalink v4 release JAR directly from [lavalink-devs/Lavalink](https://github.com/lavalink-devs/Lavalink/releases).
+- 🚀 **Pinned Lavalink JAR:** The official Lavalink v4 release JAR (currently **4.2.2**) is committed directly to the repository and copied into the image, so builds are reproducible and never depend on GitHub availability.
 - 📺 **YouTube Plugin (`youtube-plugin`):** Multi-client support (TV, MUSIC, ANDROID_VR, IOS, WEB) with remote cipher decoding and OAuth2 refresh token compatibility.
 - 🟢 **Spotify Metadata (`lavasrc-plugin`):** Seamless Spotify track, album, and playlist resolution through YouTube search providers.
 - ☁️ **Host Port & Domain Resolution:** Dynamically resolves Heroku domains (`$HEROKU_APP_DEFAULT_DOMAIN_NAME`, `$HEROKU_APP_NAME`), custom domains (`$DOMAIN`), and ports (`$PORT`) directly at runtime.
@@ -73,8 +93,8 @@ The following server configuration variables are exposed and supported:
 | Variable | Default | Description |
 | :--- | :--- | :--- |
 | `LAVA_PASS` | `youshallnotpass` | Authentication password clients must provide in the `Authorization` header. |
-| `YOUTUBE_REFRESH_TOKEN` | *(empty)* | YouTube OAuth 2.0 refresh token for authenticated streams. |
-| `YOUTUBE_API_KEY` | *(empty)* | Optional YouTube Data API v3 key. |
+| `YOUTUBE_REFRESH_TOKEN` | *(empty)* | YouTube OAuth 2.0 refresh token for authenticated streams (auto-captured and persisted after the device flow completes). |
+| `YOUTUBE_API_KEY` | **(required)** | YouTube OAuth client identifier used to issue the authorization URL. The server refuses to start without it. |
 | `YOUTUBE_CIPHER_URL` | `https://cipher.kikkia.dev/` | Remote cipher endpoint for YouTube signature deciphering. |
 | `YOUTUBE_CIPHER_PASSWORD` | *(empty)* | Optional password for self-hosted yt-cipher (leave empty for default public endpoint). |
 | `SPOTIFY_CLIENT_ID` | *(empty)* | Spotify Developer Application Client ID. |

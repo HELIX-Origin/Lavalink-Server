@@ -27,10 +27,9 @@ This page documents common issues encountered when deploying and connecting to t
 - **Cause:** Cloud datacenter IP addresses are frequently rate-limited by YouTube's anti-scraping systems.
 - **Fix:**
   1. Ensure `YOUTUBE_CIPHER_URL` is set to an active remote cipher server (default: `https://cipher.kikkia.dev/`).
-  2. Generate and configure a `YOUTUBE_REFRESH_TOKEN`:
-     - In Master-Bot, run `/youtube-auth` and authorize a Google streaming account.
-     - Add the resulting token as `YOUTUBE_REFRESH_TOKEN` on your Lavalink server.
-     - Restart the server.
+  2. Ensure `YOUTUBE_API_KEY` is set — it is required to issue the YouTube authorization URL; the server refuses to start without it.
+  3. Complete the built-in OAuth device flow (it auto-starts on boot): open the printed authorization URL, enter the displayed code, and the server captures the refresh token, prints it to the console, and persists it to the database.
+  4. (Optional) Or supply a pre-existing `YOUTUBE_REFRESH_TOKEN` (e.g. from Master-Bot's `/youtube-auth`) in your server environment and restart.
 
 ### `This video is unavailable in your country`
 - **Cause:** Content is geo-blocked in the cloud server's region (e.g. Frankfurt vs Oregon).

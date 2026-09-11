@@ -8,11 +8,16 @@ import {
   setCachedYouTubeOAuthState
 } from './redis.js';
 
-const CLIENT_ID = '861556708454-d6dlm3lh05idd8npek18k6be8ba3oc68.apps.googleusercontent.com';
+// YouTube OAuth uses the plugin's built-in web client secret for the token exchange,
+// so only the client identifier (YOUTUBE_API_KEY) must be configured by the host.
 const CLIENT_SECRET = 'SboVhoG9s0rNafixCSGGKXAT';
 const SCOPE = 'http://gdata.youtube.com https://www.googleapis.com/auth/youtube';
 const DEVICE_CODE_URL = 'https://www.youtube.com/o/oauth2/device/code';
 const TOKEN_URL = 'https://www.youtube.com/o/oauth2/token';
+
+function getOAuthClientId(): string {
+  return config.youtubeApiKey;
+}
 
 export interface OAuthState {
   status: 'idle' | 'pending' | 'authorized' | 'failed';
@@ -210,7 +215,7 @@ export async function initiateDeviceFlow(): Promise<OAuthState> {
 
   const deviceId = crypto.randomUUID().replace(/-/g, '');
   const payload = {
-    client_id: CLIENT_ID,
+    client_id: getOAuthClientId(),
     scope: SCOPE,
     device_id: deviceId,
     device_model: 'ytlr::'
@@ -247,7 +252,7 @@ export async function initiateDeviceFlow(): Promise<OAuthState> {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        client_id: CLIENT_ID,
+        client_id: getOAuthClientId(),
         scope: SCOPE
       })
     });
@@ -328,7 +333,7 @@ function startPolling(pollId: number, deviceCode: string, intervalSeconds: numbe
 
     try {
       const payload = {
-        client_id: CLIENT_ID,
+        client_id: getOAuthClientId(),
         client_secret: CLIENT_SECRET,
         code: deviceCode,
         grant_type: 'http://oauth.net/grant_type/device/1.0'
