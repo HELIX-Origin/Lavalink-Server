@@ -52,13 +52,28 @@ function maskToken(token: string): string {
 }
 
 /**
- * Loads saved token from Redis live cache or SQLite database on startup,
- * and sets process.env.YOUTUBE_REFRESH_TOKEN before Lavalink spawns.
+ * Loads saved token from environment, Redis live cache, or SQLite database on startup,
+ * giving priority to process.env.YOUTUBE_REFRESH_TOKEN, and sets it before Lavalink spawns.
  */
 export async function loadSavedOAuthToken(): Promise<string | null> {
-  // 1. Check Redis in-memory cache first
+  // 1. Check environment variable FIRST (e.g. user supplied YOUTUBE_REFRESH_TOKEN in .env or cloud config)
+  if (process.env.YOUTUBE_REFRESH_TOKEN && process.env.YOUTUBE_REFRESH_TOKEN.trim().length > 5) {
+    const envToken = process.env.YOUTUBE_REFRESH_TOKEN.trim();
+    saveSystemSetting('youtube_refresh_token', envToken);
+    await setCachedYouTubeToken(envToken);
+    state.hasToken = true;
+    state.status = 'authorized';
+    state.tokenPreview = maskToken(envToken);
+    state.updatedAt = new Date().toISOString();
+    console.log('======================================================================');
+    console.log(`[YouTube OAuth] Using refresh token loaded from environment: ${state.tokenPreview}`);
+    console.log('======================================================================');
+    return envToken;
+  }
+
+  // 2. Check Redis in-memory cache
   const cached = await getCachedYouTubeToken();
-  if (cached && cached.trim().length > 0) {
+  if (cached && cached.trim().length > 5) {
     const token = cached.trim();
     process.env.YOUTUBE_REFRESH_TOKEN = token;
     state.hasToken = true;
@@ -69,9 +84,9 @@ export async function loadSavedOAuthToken(): Promise<string | null> {
     return token;
   }
 
-  // 2. Check SQLite persistent database
+  // 3. Check SQLite persistent database
   const dbToken = getSystemSetting('youtube_refresh_token');
-  if (dbToken && dbToken.trim().length > 0) {
+  if (dbToken && dbToken.trim().length > 5) {
     const token = dbToken.trim();
     await setCachedYouTubeToken(token);
     process.env.YOUTUBE_REFRESH_TOKEN = token;
@@ -81,19 +96,6 @@ export async function loadSavedOAuthToken(): Promise<string | null> {
     state.updatedAt = new Date().toISOString();
     console.log(`[YouTube OAuth] Loaded token from SQLite database (${state.tokenPreview})`);
     return token;
-  }
-
-  // 3. Check environment variable (e.g. initial one-click deploy config)
-  if (process.env.YOUTUBE_REFRESH_TOKEN && process.env.YOUTUBE_REFRESH_TOKEN.trim().length > 0) {
-    const envToken = process.env.YOUTUBE_REFRESH_TOKEN.trim();
-    saveSystemSetting('youtube_refresh_token', envToken);
-    await setCachedYouTubeToken(envToken);
-    state.hasToken = true;
-    state.status = 'authorized';
-    state.tokenPreview = maskToken(envToken);
-    state.updatedAt = new Date().toISOString();
-    console.log(`[YouTube OAuth] Imported token from environment variable (${state.tokenPreview})`);
-    return envToken;
   }
 
   return null;
@@ -130,12 +132,14 @@ export async function saveYouTubeRefreshToken(token: string): Promise<boolean> {
 
     await setCachedYouTubeOAuthState(state as any);
 
-    console.log('======================================================================');
+    // Prominently output the full token to the console so the user can copy it into their env variables
+    console.log('\n======================================================================');
     console.log('✅ [YouTube OAuth] AUTHORIZATION SUCCESSFUL!');
-    console.log('💾 Persisted to SQLite Database (system_settings)');
-    console.log('⚡ Cached in Redis Live Memory');
-    console.log(`🔑 Token Preview: ${state.tokenPreview}`);
-    console.log('======================================================================');
+    console.log('💾 Persisted to SQLite Database (system_settings) & Redis Live Memory');
+    console.log('----------------------------------------------------------------------');
+    console.log('📋 Copy this token to your environment variables (e.g. .env or cloud config):');
+    console.log(`YOUTUBE_REFRESH_TOKEN=${trimmed}`);
+    console.log('======================================================================\n');
 
     logSystemEvent('info', 'YouTube OAuth refresh token saved to database & Redis', {
       tokenPreview: state.tokenPreview

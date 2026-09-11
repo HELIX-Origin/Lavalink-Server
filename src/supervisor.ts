@@ -66,8 +66,14 @@ export class LavalinkSupervisor {
         if (line.includes('OAUTH INTEGRATION:')) {
           const tokenMatch = line.match(/Token retrieved successfully.*?\((\S+)\)/i);
           if (tokenMatch && tokenMatch[1]) {
-            console.log('[Supervisor] Intercepted YouTube refresh token from stdout. Saving to SQLite & Redis...');
-            saveYouTubeRefreshToken(tokenMatch[1]).catch(() => {});
+            const token = tokenMatch[1];
+            console.log('\n======================================================================');
+            console.log('✅ [YouTube OAuth] REFRESH TOKEN RETRIEVED FROM LAVALINK!');
+            console.log('----------------------------------------------------------------------');
+            console.log('📋 Copy this token to your environment variables (e.g. .env or cloud config):');
+            console.log(`YOUTUBE_REFRESH_TOKEN=${token}`);
+            console.log('======================================================================\n');
+            saveYouTubeRefreshToken(token).catch(() => {});
           }
         }
       }
