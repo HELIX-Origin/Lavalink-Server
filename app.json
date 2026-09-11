@@ -4,42 +4,40 @@
   "keywords": ["lavalink", "discord", "music", "audio", "spring-boot"],
   "repository": "https://github.com/HELIX-Origin/Lavalink-Server",
   "stack": "container",
-  "formation": {
-    "web": {
-      "quantity": 1,
-      "size": "eco"
-    }
-  },
   "env": {
     "LAVA_PASS": {
       "description": "Password used by Discord bots to authenticate with this Lavalink server",
       "value": "youshallnotpass",
       "required": true
     },
+    "LAVA_PORT": {
+      "description": "Lavalink server port (defaults to 2333; Heroku provides dynamic PORT)",
+      "value": "2333",
+      "required": false
+    },
+    "YOUTUBE_REFRESH_TOKEN": {
+      "description": "YouTube OAuth 2.0 refresh token for authenticated playback",
+      "required": false
+    },
+    "YOUTUBE_API_KEY": {
+      "description": "Optional YouTube Data API v3 key",
+      "required": false
+    },
     "YOUTUBE_CIPHER_URL": {
-      "description": "Remote cipher decoding endpoint for YouTube streams",
+      "description": "Remote cipher endpoint for YouTube signature deciphering",
       "value": "https://cipher.kikkia.dev/",
       "required": false
     },
     "YOUTUBE_CIPHER_PASSWORD": {
-      "description": "Password for remote cipher service if protected",
-      "required": false
-    },
-    "YOUTUBE_REFRESH_TOKEN": {
-      "description": "YouTube OAuth2 Refresh Token for authenticated streams",
-      "required": false
-    },
-    "YOUTUBE_SKIP_INIT": {
-      "description": "Skip YouTube OAuth initialization on startup",
-      "value": "false",
+      "description": "Optional password for self-hosted yt-cipher (leave empty for default public endpoint)",
       "required": false
     },
     "SPOTIFY_CLIENT_ID": {
-      "description": "Spotify Application Client ID",
+      "description": "Spotify Developer Application Client ID",
       "required": false
     },
     "SPOTIFY_CLIENT_SECRET": {
-      "description": "Spotify Application Client Secret",
+      "description": "Spotify Developer Application Client Secret",
       "required": false
     }
   }

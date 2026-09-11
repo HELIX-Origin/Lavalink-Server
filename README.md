@@ -36,16 +36,16 @@ Deploy your external Lavalink v4 server instantly with zero server management:
 
 ## 🔐 Server Environment Variables
 
-The Lavalink server exposes and consumes only these environment variables:
+The Lavalink server exposes and consumes these environment variables:
 
 | Variable | Default | Description |
 | :--- | :--- | :--- |
-| `PORT` / `LAVA_PORT` | `2333` | Server listening port (automatically assigned by Render, Heroku, and Railway). |
 | `LAVA_PASS` | `youshallnotpass` | Authentication password clients must provide in the `Authorization` header. |
-| `YOUTUBE_CIPHER_URL` | `https://cipher.kikkia.dev/` | Remote cipher decoding endpoint for YouTube streams. |
-| `YOUTUBE_CIPHER_PASSWORD` | *(empty)* | Optional password for the remote cipher server. |
-| `YOUTUBE_REFRESH_TOKEN` | *(empty)* | Optional YouTube OAuth2 refresh token to bypass rate limits. |
-| `YOUTUBE_SKIP_INIT` | `false` | Skip OAuth initialization on startup. |
+| `LAVA_PORT` / `PORT` | `2333` | Server listening port (automatically assigned by Render, Heroku, and Railway). |
+| `YOUTUBE_REFRESH_TOKEN` | *(empty)* | YouTube OAuth 2.0 refresh token for authenticated streams. |
+| `YOUTUBE_API_KEY` | *(empty)* | Optional YouTube Data API v3 key. |
+| `YOUTUBE_CIPHER_URL` | `https://cipher.kikkia.dev/` | Remote cipher endpoint for YouTube signature deciphering. |
+| `YOUTUBE_CIPHER_PASSWORD` | *(empty)* | Optional password for self-hosted yt-cipher (leave empty for default public endpoint). |
 | `SPOTIFY_CLIENT_ID` | *(empty)* | Spotify Developer Application Client ID. |
 | `SPOTIFY_CLIENT_SECRET` | *(empty)* | Spotify Developer Application Client Secret. |
 
