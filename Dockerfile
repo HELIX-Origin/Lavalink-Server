@@ -1,22 +1,26 @@
 FROM eclipse-temurin:21-jre-alpine
 
-# Install curl
-RUN apk add --no-cache curl
+# Install curl, nodejs, npm
+RUN apk add --no-cache curl nodejs npm
 
 WORKDIR /opt/Lavalink
 
 # Download official latest Lavalink v4 JAR from https://github.com/lavalink-devs/Lavalink
 RUN curl -fSL "https://github.com/lavalink-devs/Lavalink/releases/latest/download/Lavalink.jar" -o Lavalink.jar
 
-# Copy configuration and entrypoint
-COPY application.yml /opt/Lavalink/application.yml
-COPY entrypoint.sh /opt/Lavalink/entrypoint.sh
+# Install dependencies and build ESM TypeScript dashboard & supervisor
+COPY package.json ./
+RUN npm install
 
-# Ensure entrypoint is executable
-RUN chmod +x /opt/Lavalink/entrypoint.sh
+COPY tsconfig.json ./
+COPY src/ ./src/
+RUN npm run build && npm prune --production
 
-# Expose default Lavalink port
+# Copy configuration
+COPY application.yml ./application.yml
+
+# Expose default gateway port
 EXPOSE 2333
 
-# Start Lavalink via entrypoint script resolving host port, domain, and prod profile
-ENTRYPOINT ["/opt/Lavalink/entrypoint.sh"]
+# Start the ESM TypeScript dashboard and supervisor directly with Node.js
+CMD ["node", "dist/index.js"]

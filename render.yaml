@@ -20,3 +20,5 @@ services:
         sync: false
       - key: SPOTIFY_CLIENT_SECRET
         sync: false
+      - key: KEEP_ALIVE_ENABLED
+        value: "true"

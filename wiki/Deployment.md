@@ -30,8 +30,9 @@ Render allows deploying Docker containers on its Free plan with zero credit card
 5. Click **Apply**.
 6. Once deployed, note your service URL: `your-app-name.onrender.com`.
 
-> [!NOTE]
-> Render's free tier spins down after 15 minutes of inbound HTTP inactivity. However, while your Discord bot maintains an active WebSocket connection with Lavalink, the connection remains alive. If the instance goes idle, the first connection request from your bot may take 30–50 seconds while the container spins back up.
+> [!TIP]
+> **Zero Sleep Throttling via Keep-Alive Service**:
+> Render's free tier would normally spin down containers after 15 minutes of inbound HTTP inactivity. This server includes a built-in **Keep-Alive Service** (`KEEP_ALIVE_ENABLED=true`) that automatically pings `/health` every 10 minutes, generating the necessary inbound HTTP traffic to maintain 24/7 active status without manual intervention.
 
 ---
 

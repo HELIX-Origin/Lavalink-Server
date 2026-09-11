@@ -1,0 +1,56 @@
+import path from 'node:path';
+
+export interface ServerConfig {
+  port: number;
+  host: string;
+  domain: string;
+  lavalinkHost: string;
+  lavalinkPort: number;
+  lavalinkPass: string;
+  dbPath: string;
+  isProduction: boolean;
+}
+
+function resolveHostDomain(): string {
+  if (process.env.RENDER_EXTERNAL_HOSTNAME) {
+    return process.env.RENDER_EXTERNAL_HOSTNAME;
+  }
+  if (process.env.RAILWAY_PUBLIC_DOMAIN) {
+    return process.env.RAILWAY_PUBLIC_DOMAIN;
+  }
+  if (process.env.HEROKU_APP_DEFAULT_DOMAIN_NAME) {
+    return process.env.HEROKU_APP_DEFAULT_DOMAIN_NAME;
+  }
+  if (process.env.FLY_APP_NAME) {
+    return `${process.env.FLY_APP_NAME}.fly.dev`;
+  }
+  if (process.env.DOMAIN) {
+    return process.env.DOMAIN;
+  }
+  if (process.env.HOST && process.env.HOST !== '0.0.0.0') {
+    return process.env.HOST;
+  }
+  return 'localhost';
+}
+
+function resolveHostPort(): number {
+  const portStr = process.env.PORT || process.env.SERVER_PORT;
+  if (portStr) {
+    const parsed = parseInt(portStr, 10);
+    if (!isNaN(parsed) && parsed > 0 && parsed <= 65535) {
+      return parsed;
+    }
+  }
+  return 2333;
+}
+
+export const config: ServerConfig = {
+  port: resolveHostPort(),
+  host: '0.0.0.0',
+  domain: resolveHostDomain(),
+  lavalinkHost: '127.0.0.1',
+  lavalinkPort: 23333,
+  lavalinkPass: process.env.LAVA_PASS || 'youshallnotpass',
+  dbPath: process.env.SQLITE_PATH || path.resolve(process.cwd(), 'data', 'lavalink.sqlite'),
+  isProduction: process.env.NODE_ENV === 'production'
+};

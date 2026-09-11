@@ -30,6 +30,7 @@ The following server configuration variables are exposed and supported:
 | `YOUTUBE_CIPHER_PASSWORD` | *(empty)* | Optional password for self-hosted yt-cipher (leave empty for default public endpoint). |
 | `SPOTIFY_CLIENT_ID` | *(empty)* | Client ID from the [Spotify Developer Dashboard](https://developer.spotify.com/dashboard). |
 | `SPOTIFY_CLIENT_SECRET` | *(empty)* | Client Secret from the Spotify Developer Dashboard. |
+| `KEEP_ALIVE_ENABLED` | `true` | Periodic background pinger to `/health` (every 10m) to prevent cloud sleep throttling. |
 
 ---
 

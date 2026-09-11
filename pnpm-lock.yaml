@@ -1,0 +1,221 @@
+lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .:
+    dependencies:
+      ioredis-mock:
+        specifier: ^8.13.1
+        version: 8.13.1(@types/ioredis-mock@8.2.8(ioredis@5.11.1))(ioredis@5.11.1)
+      ws:
+        specifier: ^8.18.0
+        version: 8.21.3
+    devDependencies:
+      '@types/ioredis-mock':
+        specifier: ^8.2.8
+        version: 8.2.8
+      '@types/node':
+        specifier: ^22.13.4
+        version: 22.20.2
+      '@types/ws':
+        specifier: ^8.5.14
+        version: 8.18.1
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+
+packages:
+
+  '@ioredis/as-callback@3.0.0':
+    resolution: {integrity: sha512-Kqv1rZ3WbgOrS+hgzJ5xG5WQuhvzzSTRYvNeyPMLOAM78MHSnuKI20JeJGbpuAt//LCuP0vsexZcorqW7kWhJg==}
+
+  '@ioredis/commands@1.10.0':
+    resolution: {integrity: sha512-UmeW7z4LfctwoQ5wkhVzgq8tXkreED2xZGpX+Bg+zA+WJFZCT6c062AfCK/Dfk81xZnnwdhJCUMkitihRaoC2Q==}
+
+  '@ioredis/commands@1.11.0':
+    resolution: {integrity: sha512-tuMmOu6dtyGFv/fzCjtapCJj/zgoHaFsqs3wKsroJSRXtlLmyL/t+B7uaQiavGk1F3WWFQcUqZwk92bpp9jKcA==}
+
+  '@types/ioredis-mock@8.2.8':
+    resolution: {integrity: sha512-Nxr1CXk8NtGVzWQ8WoGCOyo+HARd4CFc/Nt2+ITt3WWLNlj1InW38SzZwOJNqzA38iplrpBFp6Ny4KjPfeI+bA==}
+    peerDependencies:
+      ioredis: ^5
+
+  '@types/node@22.20.2':
+    resolution: {integrity: sha512-xlvWf4Vs9n1PEVYwP1n4vvG07M6y8WgvJ2t0vbrWTmijsIHp1cS+uJ2kMIRdY3nHZK0nCYKrPeD171+SzF4/zw==}
+
+  '@types/ws@8.18.1':
+    resolution: {integrity: sha512-ThVF6DCVhA8kUGy+aazFQ4kXQ7E1Ty7A3ypFOe0IcJV8O/M511G99AW24irKrW56Wt44yG9+ij8FaqoBGkuBXg==}
+
+  cluster-key-slot@1.1.1:
+    resolution: {integrity: sha512-rwHwUfXL40Chm1r08yrhU3qpUvdVlgkKNeyeGPOxnW8/SyVDvgRaed/Uz54AqWNaTCAThlj6QAs3TZcKI0xDEw==}
+    engines: {node: '>=0.10.0'}
+
+  debug@4.4.3:
+    resolution: {integrity: sha512-RGwwWnwQvkVfavKVt22FGLw+xYSdzARwm0ru6DhTVA3umU5hZc28V3kO4stgYryrTlLpuvgI9GiijltAjNbcqA==}
+    engines: {node: '>=6.0'}
+    peerDependencies:
+      supports-color: '*'
+    peerDependenciesMeta:
+      supports-color:
+        optional: true
+
+  denque@2.1.0:
+    resolution: {integrity: sha512-HVQE3AAb/pxF8fQAoiqpvg9i3evqug3hoiwakOyZAwJm+6vZehbkYXZ0l4JxS+I3QxM97v5aaRNhj8v5oBhekw==}
+    engines: {node: '>=0.10'}
+
+  fengari-interop@0.1.4:
+    resolution: {integrity: sha512-4/CW/3PJUo3ebD4ACgE1g/3NGEYSq7OQAyETyypsAl/WeySDBbxExikkayNkZzbpgyC9GyJp8v1DU2VOXxNq7Q==}
+    peerDependencies:
+      fengari: ^0.1.0
+
+  fengari@0.1.5:
+    resolution: {integrity: sha512-0DS4Nn4rV8qyFlQCpKK8brT61EUtswynrpfFTcgLErcilBIBskSMQ86fO2WVuybr14ywyKdRjv91FiRZwnEuvQ==}
+
+  ioredis-mock@8.13.1:
+    resolution: {integrity: sha512-Wsi50AU+cMiI32nAgfwpUaJVBtb4iQdVsOHl9M6R3tePCO/8vGsToCVIG82XWAxN4Se55TZoOzVseu+QngFLyw==}
+    engines: {node: '>=12.22'}
+    peerDependencies:
+      '@types/ioredis-mock': ^8
+      ioredis: ^5
+
+  ioredis@5.11.1:
+    resolution: {integrity: sha512-ehuGcf94bQXhfagULNXrJdfnWO38v070jxSx/qE87Kjzmu2fU7ro5EFAb+OPituLqgfyuQaym5DlrNydW2sJ9A==}
+    engines: {node: '>=12.22.0'}
+
+  ms@2.1.3:
+    resolution: {integrity: sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==}
+
+  readline-sync@1.4.10:
+    resolution: {integrity: sha512-gNva8/6UAe8QYepIQH/jQ2qn91Qj0B9sYjMBBs3QOB8F2CXcKgLxQaJRP76sWVRQt+QU+8fAkCbCvjjMFu7Ycw==}
+    engines: {node: '>= 0.8.0'}
+
+  redis-errors@1.2.0:
+    resolution: {integrity: sha512-1qny3OExCf0UvUV/5wpYKf2YwPcOqXzkwKKSmKHiE6ZMQs5heeE/c8eXK+PNllPvmjgAbfnsbpkGZWy8cBpn9w==}
+    engines: {node: '>=4'}
+
+  redis-parser@3.0.0:
+    resolution: {integrity: sha512-DJnGAeenTdpMEH6uAJRK/uiyEIH9WVsUmoLwzudwGJUwZPp80PDBWPHXSAGNPwNvIXAbe7MSUB1zQFugFml66A==}
+    engines: {node: '>=4'}
+
+  semver@7.8.5:
+    resolution: {integrity: sha512-Y7/KDsb8LjooZpwaqGyulO6DQlksgCncchHGk+sZIY4SBvUocMBEFH5Ur1fI4dV+Jvl0w6cjvucaIi40puRioA==}
+    engines: {node: '>=10'}
+    hasBin: true
+
+  sprintf-js@1.1.3:
+    resolution: {integrity: sha512-Oo+0REFV59/rz3gfJNKQiBlwfHaSESl1pcGyABQsnnIfWOFt6JNj5gCog2U6MLZ//IGYD+nA8nI+mTShREReaA==}
+
+  standard-as-callback@2.1.0:
+    resolution: {integrity: sha512-qoRRSyROncaz1z0mvYqIE4lCd9p2R90i6GxW3uZv5ucSu8tU7B5HXUP1gG8pVZsYNVaXjk8ClXHPttLyxAL48A==}
+
+  tmp@0.2.7:
+    resolution: {integrity: sha512-e0votIpp4Uo2AJYSzVHV6xCcawuiez3DzqDAbrTc3YxBkplN6e+dM13ZeIcZnDg/QpSuU2zfZ3rzwY8ukEnaXw==}
+    engines: {node: '>=14.14'}
+
+  typescript@5.9.3:
+    resolution: {integrity: sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw==}
+    engines: {node: '>=14.17'}
+    hasBin: true
+
+  undici-types@6.21.0:
+    resolution: {integrity: sha512-iwDZqg0QAGrg9Rav5H4n0M64c3mkR59cJ6wQp+7C4nI0gsmExaedaYLNO44eT4AtBBwjbTiGPMlt2Md0T9H9JQ==}
+
+  ws@8.21.3:
+    resolution: {integrity: sha512-201TZ/kPWxoPr/OKWjquZR1SWKXcvxdH+e1xrx89b3YbmzLMFCLfnaG1HFIgWzJOEWZ7MvpK++odZufgYR50Rw==}
+    engines: {node: '>=10.0.0'}
+    peerDependencies:
+      bufferutil: ^4.0.1
+      utf-8-validate: '>=5.0.2'
+    peerDependenciesMeta:
+      bufferutil:
+        optional: true
+      utf-8-validate:
+        optional: true
+
+snapshots:
+
+  '@ioredis/as-callback@3.0.0': {}
+
+  '@ioredis/commands@1.10.0': {}
+
+  '@ioredis/commands@1.11.0': {}
+
+  '@types/ioredis-mock@8.2.8(ioredis@5.11.1)':
+    dependencies:
+      ioredis: 5.11.1
+
+  '@types/node@22.20.2':
+    dependencies:
+      undici-types: 6.21.0
+
+  '@types/ws@8.18.1':
+    dependencies:
+      '@types/node': 22.20.2
+
+  cluster-key-slot@1.1.1: {}
+
+  debug@4.4.3:
+    dependencies:
+      ms: 2.1.3
+
+  denque@2.1.0: {}
+
+  fengari-interop@0.1.4(fengari@0.1.5):
+    dependencies:
+      fengari: 0.1.5
+
+  fengari@0.1.5:
+    dependencies:
+      readline-sync: 1.4.10
+      sprintf-js: 1.1.3
+      tmp: 0.2.7
+
+  ioredis-mock@8.13.1(@types/ioredis-mock@8.2.8(ioredis@5.11.1))(ioredis@5.11.1):
+    dependencies:
+      '@ioredis/as-callback': 3.0.0
+      '@ioredis/commands': 1.11.0
+      '@types/ioredis-mock': 8.2.8(ioredis@5.11.1)
+      fengari: 0.1.5
+      fengari-interop: 0.1.4(fengari@0.1.5)
+      ioredis: 5.11.1
+      semver: 7.8.5
+
+  ioredis@5.11.1:
+    dependencies:
+      '@ioredis/commands': 1.10.0
+      cluster-key-slot: 1.1.1
+      debug: 4.4.3
+      denque: 2.1.0
+      redis-errors: 1.2.0
+      redis-parser: 3.0.0
+      standard-as-callback: 2.1.0
+    transitivePeerDependencies:
+      - supports-color
+
+  ms@2.1.3: {}
+
+  readline-sync@1.4.10: {}
+
+  redis-errors@1.2.0: {}
+
+  redis-parser@3.0.0:
+    dependencies:
+      redis-errors: 1.2.0
+
+  semver@7.8.5: {}
+
+  sprintf-js@1.1.3: {}
+
+  standard-as-callback@2.1.0: {}
+
+  tmp@0.2.7: {}
+
+  typescript@5.9.3: {}
+
+  undici-types@6.21.0: {}
+
+  ws@8.21.3: {}

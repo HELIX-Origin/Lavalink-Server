@@ -3,6 +3,11 @@ plugins/
 logs/
 .youtube-oauth.json
 
+# Node & TypeScript
+node_modules/
+dist/
+data/
+
 # OS & Editor
 .DS_Store
 Thumbs.db

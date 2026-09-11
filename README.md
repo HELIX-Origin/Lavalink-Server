@@ -26,11 +26,14 @@ Deploy your external Lavalink v4 server instantly with zero server management:
 
 ## ⚡ Features & Pre-Configured Plugins
 
+- 📊 **ESM TypeScript Management Dashboard:** Real-time web dashboard at `/` tracking node health, JVM memory, CPU utilization, active players, and uptime.
+- ⚡ **Pure Node.js Supervisor (No Shell Scripts):** Robust ESM TypeScript supervisor managing Java process lifecycle, port/domain binding, and graceful signal handling without shell scripts.
+- 💾 **SQLite Persistence & ioredis-mock:** Embedded SQLite database for historical metrics and client audit sessions, paired with in-memory `ioredis-mock` for instant pub/sub and state caching.
 - 🚀 **Always Up-To-Date:** The Docker build pulls the latest official Lavalink v4 release JAR directly from [lavalink-devs/Lavalink](https://github.com/lavalink-devs/Lavalink/releases).
 - 📺 **YouTube Plugin (`youtube-plugin`):** Multi-client support (TV, MUSIC, ANDROID_VR, IOS, WEB) with remote cipher decoding and OAuth2 refresh token compatibility.
 - 🟢 **Spotify Metadata (`lavasrc-plugin`):** Seamless Spotify track, album, and playlist resolution through YouTube search providers.
-- ☁️ **Dynamic Port Binding:** Automatically binds to cloud provider-injected `PORT` (Render, Heroku, Railway) or falls back to standard `LAVA_PORT` (`2333`).
-- 🪶 **Ultra Lightweight:** Runs on `eclipse-temurin:21-jre-alpine` with a 512 MB memory ceiling tuned for free-tier cloud containers.
+- ☁️ **Host Port & Domain Resolution:** Dynamically resolves the host's public domain (`$RENDER_EXTERNAL_HOSTNAME`, `$RAILWAY_PUBLIC_DOMAIN`, etc.) and port (`$PORT`) directly at runtime.
+- 🪶 **Optimized for Free Tiers:** Tuned with a 512 MB memory ceiling for zero-cost cloud hosting on Render, Railway, Heroku, and Fly.io.
 
 ---
 
@@ -49,6 +52,7 @@ The following server configuration variables are exposed and supported:
 | `YOUTUBE_CIPHER_PASSWORD` | *(empty)* | Optional password for self-hosted yt-cipher (leave empty for default public endpoint). |
 | `SPOTIFY_CLIENT_ID` | *(empty)* | Spotify Developer Application Client ID. |
 | `SPOTIFY_CLIENT_SECRET` | *(empty)* | Spotify Developer Application Client Secret. |
+| `KEEP_ALIVE_ENABLED` | `true` | Periodic background pinger to `/health` (every 10m) to prevent cloud sleep throttling. |
 
 > ℹ️ **Notice:** Variables like `LAVA_EXTERNAL` or `LAVA_ENABLED` are **client-side bot settings** used by Discord bots (e.g. Master-Bot) to determine connection modes. They are not server variables and are never set on this Lavalink instance.
 

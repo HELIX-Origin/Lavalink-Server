@@ -34,6 +34,11 @@
     "SPOTIFY_CLIENT_SECRET": {
       "description": "Spotify Developer Application Client Secret",
       "required": false
+    },
+    "KEEP_ALIVE_ENABLED": {
+      "description": "Ping /health every 10 minutes to prevent cloud sleep throttling",
+      "value": "true",
+      "required": false
     }
   }
 }
