@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  lavalink:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "${PORT:-2333}:2333"
+    environment:
+      - PORT=2333
+      - LAVA_PASS=${LAVA_PASS:-youshallnotpass}
+      - YOUTUBE_CIPHER_URL=${YOUTUBE_CIPHER_URL:-https://cipher.kikkia.dev/}
+      - YOUTUBE_CIPHER_PASSWORD=${YOUTUBE_CIPHER_PASSWORD:-}
+      - YOUTUBE_REFRESH_TOKEN=${YOUTUBE_REFRESH_TOKEN:-}
+      - YOUTUBE_SKIP_INIT=${YOUTUBE_SKIP_INIT:-false}
+      - SPOTIFY_CLIENT_ID=${SPOTIFY_CLIENT_ID:-}
+      - SPOTIFY_CLIENT_SECRET=${SPOTIFY_CLIENT_SECRET:-}

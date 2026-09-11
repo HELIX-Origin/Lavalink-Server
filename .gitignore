@@ -1,0 +1,10 @@
+# Lavalink runtime files
+plugins/
+logs/
+.youtube-oauth.json
+
+# OS & Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

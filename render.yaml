@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: lavalink-server
+    runtime: docker
+    plan: free
+    region: oregon
+    autoDeploy: true
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: LAVA_PASS
+        value: youshallnotpass
+      - key: YOUTUBE_CIPHER_URL
+        value: https://cipher.kikkia.dev/
+      - key: YOUTUBE_CIPHER_PASSWORD
+        sync: false
+      - key: YOUTUBE_REFRESH_TOKEN
+        sync: false
+      - key: YOUTUBE_SKIP_INIT
+        value: "false"
+      - key: SPOTIFY_CLIENT_ID
+        sync: false
+      - key: SPOTIFY_CLIENT_SECRET
+        sync: false

@@ -1,0 +1,46 @@
+{
+  "name": "Lavalink-Server",
+  "description": "Standalone Lavalink v4 audio server with YouTube and Spotify plugins.",
+  "keywords": ["lavalink", "discord", "music", "audio", "spring-boot"],
+  "repository": "https://github.com/HELIX-Origin/Lavalink-Server",
+  "stack": "container",
+  "formation": {
+    "web": {
+      "quantity": 1,
+      "size": "eco"
+    }
+  },
+  "env": {
+    "LAVA_PASS": {
+      "description": "Password used by Discord bots to authenticate with this Lavalink server",
+      "value": "youshallnotpass",
+      "required": true
+    },
+    "YOUTUBE_CIPHER_URL": {
+      "description": "Remote cipher decoding endpoint for YouTube streams",
+      "value": "https://cipher.kikkia.dev/",
+      "required": false
+    },
+    "YOUTUBE_CIPHER_PASSWORD": {
+      "description": "Password for remote cipher service if protected",
+      "required": false
+    },
+    "YOUTUBE_REFRESH_TOKEN": {
+      "description": "YouTube OAuth2 Refresh Token for authenticated streams",
+      "required": false
+    },
+    "YOUTUBE_SKIP_INIT": {
+      "description": "Skip YouTube OAuth initialization on startup",
+      "value": "false",
+      "required": false
+    },
+    "SPOTIFY_CLIENT_ID": {
+      "description": "Spotify Application Client ID",
+      "required": false
+    },
+    "SPOTIFY_CLIENT_SECRET": {
+      "description": "Spotify Application Client Secret",
+      "required": false
+    }
+  }
+}
