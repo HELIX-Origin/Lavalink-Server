@@ -17,14 +17,14 @@ export interface ServerConfig {
 }
 
 function resolveHostDomain(): string {
+  if (process.env.DOMAIN) {
+    return process.env.DOMAIN;
+  }
   if (process.env.HEROKU_APP_DEFAULT_DOMAIN_NAME) {
     return process.env.HEROKU_APP_DEFAULT_DOMAIN_NAME;
   }
   if (process.env.HEROKU_APP_NAME) {
     return `${process.env.HEROKU_APP_NAME}.herokuapp.com`;
-  }
-  if (process.env.DOMAIN) {
-    return process.env.DOMAIN;
   }
   if (process.env.HOST && process.env.HOST !== '0.0.0.0') {
     return process.env.HOST;
