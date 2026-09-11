@@ -26,7 +26,11 @@ async function main(): Promise<void> {
   await supervisor.start();
 
   // 3. Start Public Gateway Server (Dashboard + Audio Proxy)
-  const { server } = createProxyServer();
+  const { server } = createProxyServer({
+    onRestart: async () => {
+      await supervisor.restart();
+    }
+  });
 
   server.listen(config.port, config.host, () => {
     console.log(`[Gateway] Server listening on http://${config.host}:${config.port}`);

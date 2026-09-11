@@ -211,4 +211,11 @@ export class LavalinkSupervisor {
     await setCachedStatus('offline');
     logSystemEvent('info', 'Lavalink supervisor stopped');
   }
+
+  public async restart(): Promise<void> {
+    console.log('[Supervisor] Restarting Lavalink supervisor...');
+    logSystemEvent('info', 'Lavalink supervisor restart triggered');
+    await this.stop();
+    await this.start();
+  }
 }

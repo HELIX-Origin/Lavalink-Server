@@ -7,8 +7,11 @@ export interface ServerConfig {
   lavalinkHost: string;
   lavalinkPort: number;
   lavalinkPass: string;
+  adminKey: string;
   dbPath: string;
   isProduction: boolean;
+  keepAliveEnabled: boolean;
+  keepAliveIntervalMs: number;
 }
 
 function resolveHostDomain(): string {
@@ -44,13 +47,22 @@ function resolveHostPort(): number {
   return 2333;
 }
 
+const lavaPass = process.env.LAVA_PASS || 'youshallnotpass';
+
 export const config: ServerConfig = {
   port: resolveHostPort(),
   host: '0.0.0.0',
   domain: resolveHostDomain(),
   lavalinkHost: '127.0.0.1',
   lavalinkPort: 23333,
-  lavalinkPass: process.env.LAVA_PASS || 'youshallnotpass',
+  lavalinkPass: lavaPass,
+  adminKey: process.env.ADMIN_KEY || process.env.ADMIN_PASSWORD || lavaPass,
   dbPath: process.env.SQLITE_PATH || path.resolve(process.cwd(), 'data', 'lavalink.sqlite'),
-  isProduction: process.env.NODE_ENV === 'production'
+  isProduction: process.env.NODE_ENV === 'production',
+  keepAliveEnabled: process.env.KEEP_ALIVE_ENABLED?.toLowerCase() !== 'false',
+  keepAliveIntervalMs: Number.parseInt(
+    process.env.KEEP_ALIVE_INTERVAL_MS || String(5 * 60 * 1000), // Default 5 minutes (Render sleep threshold is 15m)
+    10
+  )
 };
+

@@ -1,24 +1,39 @@
+import http from 'node:http';
 import { config } from './config.js';
 import { logSystemEvent } from './db.js';
 import { appendRecentLog } from './redis.js';
 
-let keepAliveTimer: NodeJS.Timeout | null = null;
+export interface KeepAliveState {
+  enabled: boolean;
+  targetUrl: string;
+  intervalMs: number;
+  lastPingTimestamp: number | null;
+  lastPingStatus: number | null;
+  lastPingLatencyMs: number | null;
+  lastPingError: string | null;
+  successPings: number;
+  failedPings: number;
+  jvmWarmupCount: number;
+}
+
+const state: KeepAliveState = {
+  enabled: false,
+  targetUrl: '',
+  intervalMs: config.keepAliveIntervalMs,
+  lastPingTimestamp: null,
+  lastPingStatus: null,
+  lastPingLatencyMs: null,
+  lastPingError: null,
+  successPings: 0,
+  failedPings: 0,
+  jvmWarmupCount: 0
+};
+
+let externalPingTimer: NodeJS.Timeout | null = null;
 let initialTimeout: NodeJS.Timeout | null = null;
+let jvmWarmupTimer: NodeJS.Timeout | null = null;
 
-/**
- * Starts a background keep-alive pinger designed to prevent cloud hosts
- * like Render from putting the web service to sleep due to inbound HTTP inactivity.
- *
- * Render spins down free-tier web services after 15 minutes of zero inbound HTTP traffic.
- * This service pings the public `/health` endpoint every 10 minutes to maintain 24/7 liveness.
- */
-export function startKeepAlive(): void {
-  if (process.env.KEEP_ALIVE_ENABLED?.toLowerCase() === 'false') {
-    console.log('[KeepAlive] Keep-alive service disabled via KEEP_ALIVE_ENABLED=false.');
-    return;
-  }
-
-  // Resolve target ping URL
+function resolveTargetUrl(): string {
   let baseUrl = process.env.KEEP_ALIVE_URL?.trim();
   if (!baseUrl) {
     if (process.env.RENDER_EXTERNAL_URL) {
@@ -29,54 +44,146 @@ export function startKeepAlive(): void {
       baseUrl = `http://localhost:${config.port}`;
     }
   }
+  return baseUrl.replace(/\/+$/, '');
+}
 
-  baseUrl = baseUrl.replace(/\/+$/, '');
-  const pingUrl = `${baseUrl}/health`;
+/**
+ * Triggers an external HTTP ping against the public /health endpoint.
+ * Resets the inactivity timer on cloud hosts (e.g. Render free tier).
+ */
+export async function triggerKeepAlivePing(): Promise<{
+  success: boolean;
+  status?: number;
+  latencyMs?: number;
+  error?: string;
+}> {
+  const targetUrl = `${state.targetUrl || resolveTargetUrl()}/health`;
+  const startTime = Date.now();
 
-  const intervalMs = Number.parseInt(
-    process.env.KEEP_ALIVE_INTERVAL_MS || String(10 * 60 * 1000), // Default 10 minutes
-    10
-  );
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 12000);
 
-  console.log(`[KeepAlive] Service active. Target: ${pingUrl} (Interval: ${Math.round(intervalMs / 60000)} min)`);
-  logSystemEvent('info', `Keep-alive service active on ${pingUrl}`, { intervalMs });
-
-  const ping = async () => {
-    try {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 10000);
-
-      const res = await fetch(pingUrl, {
-        signal: controller.signal,
-        headers: {
-          'User-Agent': 'Lavalink-KeepAlive/1.0',
-          'Accept': 'application/json'
-        }
-      });
-      clearTimeout(timeout);
-
-      if (res.ok) {
-        const msg = `[KeepAlive] Ping successful to ${pingUrl} (HTTP ${res.status})`;
-        console.log(msg);
-        appendRecentLog(msg).catch(() => {});
-      } else {
-        const msg = `[KeepAlive] Ping responded with HTTP ${res.status}`;
-        console.warn(msg);
-        appendRecentLog(msg).catch(() => {});
+    const res = await fetch(targetUrl, {
+      signal: controller.signal,
+      headers: {
+        'User-Agent': 'Lavalink-KeepAlive/2.0 (+https://github.com/HELIX-Origin/Lavalink-Server)',
+        'Accept': 'application/json',
+        'X-KeepAlive-Trigger': 'automated'
       }
-    } catch (err: unknown) {
-      const errorMsg = err instanceof Error ? err.message : String(err);
-      const msg = `[KeepAlive] Ping notice (${pingUrl}): ${errorMsg}`;
+    });
+    clearTimeout(timeout);
+
+    const latencyMs = Date.now() - startTime;
+    state.lastPingTimestamp = Date.now();
+    state.lastPingStatus = res.status;
+    state.lastPingLatencyMs = latencyMs;
+    state.lastPingError = null;
+
+    if (res.ok) {
+      state.successPings++;
+      const msg = `[KeepAlive] Ping successful to ${targetUrl} (HTTP ${res.status}, ${latencyMs}ms)`;
       console.log(msg);
       appendRecentLog(msg).catch(() => {});
+      return { success: true, status: res.status, latencyMs };
+    } else {
+      state.failedPings++;
+      const msg = `[KeepAlive] Ping received non-200 HTTP ${res.status} (${latencyMs}ms)`;
+      console.warn(msg);
+      appendRecentLog(msg).catch(() => {});
+      return { success: false, status: res.status, latencyMs };
     }
-  };
+  } catch (err: unknown) {
+    const latencyMs = Date.now() - startTime;
+    const errorMsg = err instanceof Error ? err.message : String(err);
 
-  // First ping after 30 seconds to allow initial boot, then recurring
+    state.lastPingTimestamp = Date.now();
+    state.lastPingStatus = null;
+    state.lastPingLatencyMs = latencyMs;
+    state.lastPingError = errorMsg;
+    state.failedPings++;
+
+    const msg = `[KeepAlive] Ping error (${targetUrl}): ${errorMsg}`;
+    console.log(msg);
+    appendRecentLog(msg).catch(() => {});
+    return { success: false, latencyMs, error: errorMsg };
+  }
+}
+
+/**
+ * Internal JVM warm-up ping.
+ * Prevents Linux container cgroup CPU quota throttling and JIT cache eviction
+ * when no players are actively streaming.
+ */
+async function warmUpJvmNode(): Promise<void> {
+  return new Promise((resolve) => {
+    const req = http.request(
+      {
+        hostname: config.lavalinkHost,
+        port: config.lavalinkPort,
+        path: '/v4/info',
+        method: 'GET',
+        headers: {
+          Authorization: config.lavalinkPass,
+          Accept: 'application/json'
+        },
+        timeout: 4000
+      },
+      (res) => {
+        res.resume(); // Discard stream
+        res.on('end', () => {
+          state.jvmWarmupCount++;
+          resolve();
+        });
+      }
+    );
+
+    req.on('error', () => resolve());
+    req.on('timeout', () => {
+      req.destroy();
+      resolve();
+    });
+    req.end();
+  });
+}
+
+/**
+ * Starts the dual-action keep-alive service:
+ * 1. Public endpoint ping to prevent cloud provider sleep (Render spins down after 15m).
+ * 2. Internal loop to warm up JRE threads and avoid CPU cgroup throttles.
+ */
+export function startKeepAlive(): void {
+  if (!config.keepAliveEnabled) {
+    console.log('[KeepAlive] Service disabled via KEEP_ALIVE_ENABLED=false.');
+    state.enabled = false;
+    return;
+  }
+
+  state.enabled = true;
+  state.targetUrl = resolveTargetUrl();
+  state.intervalMs = config.keepAliveIntervalMs;
+
+  const pingUrl = `${state.targetUrl}/health`;
+  const intervalMin = Math.round(state.intervalMs / 60000);
+
+  console.log(`[KeepAlive] Service active. Target: ${pingUrl} (Interval: ${intervalMin}m)`);
+  logSystemEvent('info', `Keep-alive service active on ${pingUrl}`, {
+    intervalMs: state.intervalMs,
+    targetUrl: pingUrl
+  });
+
+  // 1. Initial delayed ping (give server 25s to finish booting)
   initialTimeout = setTimeout(() => {
-    void ping();
-    keepAliveTimer = setInterval(() => void ping(), intervalMs);
-  }, 30000);
+    void triggerKeepAlivePing();
+    externalPingTimer = setInterval(() => {
+      void triggerKeepAlivePing();
+    }, state.intervalMs);
+  }, 25000);
+
+  // 2. Internal JVM warm-up loop every 2 minutes
+  jvmWarmupTimer = setInterval(() => {
+    void warmUpJvmNode();
+  }, 120000);
 }
 
 export function stopKeepAlive(): void {
@@ -84,9 +191,18 @@ export function stopKeepAlive(): void {
     clearTimeout(initialTimeout);
     initialTimeout = null;
   }
-  if (keepAliveTimer) {
-    clearInterval(keepAliveTimer);
-    keepAliveTimer = null;
+  if (externalPingTimer) {
+    clearInterval(externalPingTimer);
+    externalPingTimer = null;
   }
+  if (jvmWarmupTimer) {
+    clearInterval(jvmWarmupTimer);
+    jvmWarmupTimer = null;
+  }
+  state.enabled = false;
   console.log('[KeepAlive] Keep-alive service stopped.');
+}
+
+export function getKeepAliveState(): KeepAliveState {
+  return { ...state };
 }

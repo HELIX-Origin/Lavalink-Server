@@ -4,20 +4,22 @@ export function renderDashboardHtml(): string {
   const isSsl = config.domain !== 'localhost';
   const botPort = isSsl ? 443 : config.port;
   const botSecure = isSsl ? 'true' : 'false';
+  const wsProto = isSsl ? 'wss' : 'ws';
+  const wsUrl = `${wsProto}://${config.domain}${isSsl ? '' : `:${config.port}`}/v4/websocket`;
 
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lavalink v4 Cloud Audio Node — Dashboard</title>
+  <title>Lavalink v4 Cloud Audio Node — Public Gateway & Dashboard</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     :root {
       --bg: #090d16;
-      --card-bg: rgba(17, 24, 39, 0.75);
+      --card-bg: rgba(17, 24, 39, 0.78);
       --card-border: rgba(255, 255, 255, 0.08);
       --primary: #06b6d4;
       --primary-glow: rgba(6, 182, 212, 0.25);
@@ -42,9 +44,9 @@ export function renderDashboardHtml(): string {
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
       background-color: var(--bg);
       background-image: 
-        radial-gradient(at 0% 0%, rgba(139, 92, 246, 0.12) 0px, transparent 50%),
-        radial-gradient(at 100% 0%, rgba(6, 182, 212, 0.12) 0px, transparent 50%),
-        radial-gradient(at 50% 100%, rgba(16, 185, 129, 0.08) 0px, transparent 50%);
+        radial-gradient(at 0% 0%, rgba(139, 92, 246, 0.14) 0px, transparent 50%),
+        radial-gradient(at 100% 0%, rgba(6, 182, 212, 0.14) 0px, transparent 50%),
+        radial-gradient(at 50% 100%, rgba(16, 185, 129, 0.1) 0px, transparent 50%);
       background-attachment: fixed;
       color: var(--text-main);
       min-height: 100vh;
@@ -100,6 +102,12 @@ export function renderDashboardHtml(): string {
       color: var(--text-muted);
     }
 
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
     .status-badge {
       display: inline-flex;
       align-items: center;
@@ -139,9 +147,36 @@ export function renderDashboardHtml(): string {
       100% { transform: scale(0.95); opacity: 0.8; }
     }
 
+    .btn-auth {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--card-border);
+      color: #fff;
+      padding: 0.5rem 1rem;
+      border-radius: 9999px;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.2s ease;
+      backdrop-filter: blur(12px);
+    }
+
+    .btn-auth:hover {
+      background: rgba(255, 255, 255, 0.16);
+      border-color: rgba(255, 255, 255, 0.25);
+    }
+
+    .btn-auth.active {
+      background: rgba(139, 92, 246, 0.2);
+      border-color: var(--accent);
+      color: #c4b5fd;
+    }
+
     .grid-stats {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
       gap: 1.25rem;
       margin-bottom: 2rem;
     }
@@ -176,7 +211,7 @@ export function renderDashboardHtml(): string {
     }
 
     .card-value {
-      font-size: 1.875rem;
+      font-size: 1.75rem;
       font-weight: 800;
       letter-spacing: -0.03em;
       color: #fff;
@@ -206,7 +241,7 @@ export function renderDashboardHtml(): string {
 
     .main-grid {
       display: grid;
-      grid-template-columns: 1.2fr 1fr;
+      grid-template-columns: 1.25fr 1fr;
       gap: 1.5rem;
       margin-bottom: 2rem;
     }
@@ -224,6 +259,18 @@ export function renderDashboardHtml(): string {
       display: flex;
       align-items: center;
       gap: 0.5rem;
+    }
+
+    .badge-public {
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid var(--success);
+      color: #6ee7b7;
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 0.15rem 0.5rem;
+      border-radius: 9999px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
 
     .config-box {
@@ -298,15 +345,71 @@ export function renderDashboardHtml(): string {
       color: #fff;
     }
 
-    .logs-card {
-      margin-top: 1.5rem;
+    /* Admin Secure Section */
+    .owner-section {
+      margin-top: 2rem;
+    }
+
+    .owner-locked-banner {
+      background: rgba(17, 24, 39, 0.6);
+      border: 1px dashed rgba(255, 255, 255, 0.15);
+      border-radius: 16px;
+      padding: 2.5rem 1.5rem;
+      text-align: center;
+    }
+
+    .owner-locked-banner h3 {
+      font-size: 1.125rem;
+      margin-bottom: 0.5rem;
+      color: #f3f4f6;
+    }
+
+    .owner-locked-banner p {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      max-width: 500px;
+      margin: 0 auto 1.25rem;
+    }
+
+    .owner-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .action-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--card-border);
+      color: #fff;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.2s ease;
+    }
+
+    .action-btn:hover {
+      background: var(--primary);
+      color: #000;
+    }
+
+    .action-btn.danger:hover {
+      background: var(--danger);
+      color: #fff;
     }
 
     .log-viewport {
       background: var(--code-bg);
       border: 1px solid var(--card-border);
       border-radius: 12px;
-      height: 220px;
+      height: 280px;
       overflow-y: auto;
       padding: 1rem;
       font-family: 'JetBrains Mono', monospace;
@@ -320,6 +423,113 @@ export function renderDashboardHtml(): string {
       line-height: 1.6;
       white-space: pre-wrap;
       word-break: break-all;
+    }
+
+    /* Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(6px);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+
+    .modal-overlay.open {
+      display: flex;
+    }
+
+    .modal-card {
+      background: #111827;
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 2rem;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-card h2 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .modal-card p {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+    }
+
+    .form-group {
+      margin-bottom: 1.25rem;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+    }
+
+    .form-input {
+      width: 100%;
+      background: var(--code-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      color: #fff;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.875rem;
+      outline: none;
+      transition: border-color 0.2s ease;
+    }
+
+    .form-input:focus {
+      border-color: var(--primary);
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.75rem;
+    }
+
+    .btn-cancel {
+      background: transparent;
+      border: 1px solid var(--card-border);
+      color: var(--text-muted);
+      padding: 0.6rem 1.2rem;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn-submit {
+      background: var(--primary);
+      border: none;
+      color: #000;
+      padding: 0.6rem 1.2rem;
+      border-radius: 8px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .auth-error {
+      color: var(--danger);
+      font-size: 0.8125rem;
+      margin-top: 0.5rem;
+      display: none;
     }
 
     footer {
@@ -347,21 +557,28 @@ export function renderDashboardHtml(): string {
       <div class="brand">
         <div class="brand-icon">🔊</div>
         <div>
-          <h1>Lavalink v4 Audio Node</h1>
-          <p>Managed Node &bull; HELIX Origin Cloud Architecture</p>
+          <h1>Lavalink v4 Public Node</h1>
+          <p>Managed Cloud Gateway &bull; High-Performance Audio Streaming</p>
         </div>
       </div>
-      <div class="status-badge">
-        <span class="status-dot" id="status-dot"></span>
-        <span id="status-text">INITIALIZING</span>
+      <div class="header-actions">
+        <button class="btn-auth" id="btn-auth-toggle" onclick="handleAuthClick()">
+          <span id="auth-icon">🔑</span>
+          <span id="auth-text">Host Login</span>
+        </button>
+        <div class="status-badge">
+          <span class="status-dot" id="status-dot"></span>
+          <span id="status-text">INITIALIZING</span>
+        </div>
       </div>
     </header>
 
+    <!-- Top Stats Row -->
     <div class="grid-stats">
       <div class="card">
         <div class="card-label">Active Players</div>
         <div class="card-value" id="val-players">0</div>
-        <div class="card-subtext"><span id="val-playing">0</span> playing audio</div>
+        <div class="card-subtext"><span id="val-playing">0</span> currently playing</div>
       </div>
 
       <div class="card">
@@ -387,66 +604,210 @@ export function renderDashboardHtml(): string {
         <div class="card-value" id="val-uptime">0m</div>
         <div class="card-subtext">Supervisor running</div>
       </div>
+
+      <div class="card">
+        <div class="card-label">Keep-Alive Service</div>
+        <div class="card-value" style="font-size: 1.4rem;" id="val-keepalive-status">Active</div>
+        <div class="card-subtext" id="val-keepalive-sub">Anti-throttling active (5m)</div>
+      </div>
     </div>
 
+    <!-- Main Public Configuration & Network Information -->
     <div class="main-grid">
       <div class="card">
-        <div class="section-title">🤖 Connect Your Discord Bot (e.g. Master-Bot)</div>
+        <div class="section-title">
+          <span>🤖 Connect Your Discord Bot (Public)</span>
+          <span class="badge-public">Open Connection</span>
+        </div>
         <p style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 1rem;">
-          Add these exact variables to your bot's <code>.env</code> file (or cloud dashboard):
+          This node is public. Add these exact environment variables to your Discord bot's <code>.env</code> (Master-Bot, Shoukaku, Lavalink.js, etc.):
         </p>
         <div class="config-box">
           <button class="copy-btn" onclick="copyConfig()">Copy</button>
-          <div class="config-code" id="config-env-code"><span class="comment"># Master-Bot Lavalink Node Config</span>
+          <div class="config-code" id="config-env-code"><span class="comment"># Public Lavalink Server Configuration</span>
 <span class="key">LAVA_ENABLED</span>=<span class="val">true</span>
 <span class="key">LAVA_EXTERNAL</span>=<span class="val">true</span>
 <span class="key">LAVA_HOST</span>=<span class="val">"${config.domain}"</span>
 <span class="key">LAVA_PORT</span>=<span class="val">${botPort}</span>
 <span class="key">LAVA_PASS</span>=<span class="val">"${config.lavalinkPass}"</span>
-<span class="key">LAVA_SECURE</span>=<span class="val">${botSecure}</span></div>
+<span class="key">LAVA_SECURE</span>=<span class="val">${botSecure}</span>
+<span class="key">LAVA_WS_URL</span>=<span class="val">"${wsUrl}"</span></div>
         </div>
       </div>
 
       <div class="card">
-        <div class="section-title">🌐 Host & Network Topology</div>
+        <div class="section-title">
+          <span>🌐 Public Network Topology</span>
+        </div>
         <div class="info-list">
           <div class="info-item">
-            <span class="info-key">Resolved Host Domain</span>
+            <span class="info-key">Public Host Domain</span>
             <span class="info-val">${config.domain}</span>
           </div>
           <div class="info-item">
-            <span class="info-key">Public Gateway Port</span>
-            <span class="info-val">${config.port}</span>
-          </div>
-          <div class="info-item">
-            <span class="info-key">Internal Node Port</span>
-            <span class="info-val">127.0.0.1:${config.lavalinkPort}</span>
+            <span class="info-key">Gateway Port</span>
+            <span class="info-val">${botPort} (SSL: ${botSecure})</span>
           </div>
           <div class="info-item">
             <span class="info-key">WebSocket Endpoint</span>
             <span class="info-val">/v4/websocket</span>
           </div>
           <div class="info-item">
-            <span class="info-key">Persistence Engine</span>
-            <span class="info-val">SQLite WAL + ioredis-mock</span>
+            <span class="info-key">Lavalink Password</span>
+            <span class="info-val" style="color: #34d399;">${config.lavalinkPass}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-key">Inactivity Keep-Alive</span>
+            <span class="info-val" style="color: var(--primary);">Self-Ping Every 5m</span>
           </div>
         </div>
       </div>
     </div>
 
-    <div class="card logs-card">
-      <div class="section-title">📜 Node Event Stream</div>
-      <div class="log-viewport" id="log-viewport">
-        <div class="log-line">Waiting for events...</div>
+    <!-- Owner Only Diagnostic Section -->
+    <div class="owner-section">
+      <div id="owner-locked-container" class="owner-locked-banner">
+        <h3>🔒 Host Account Owner Console</h3>
+        <p>Live stdout/stderr stream, SQLite audit history, and node power controls are restricted to the host owner.</p>
+        <button class="action-btn" onclick="openLoginModal()">🔑 Unlock Owner Console</button>
+      </div>
+
+      <div id="owner-unlocked-container" class="card" style="display: none;">
+        <div class="owner-toolbar">
+          <div class="section-title" style="margin-bottom: 0;">
+            <span>👑 Host Owner Diagnostics &amp; Live Logs</span>
+          </div>
+          <div style="display: flex; gap: 0.5rem;">
+            <button class="action-btn" onclick="triggerPingNow()">⚡ Ping Keep-Alive</button>
+            <button class="action-btn danger" onclick="restartNode()">🔄 Restart Node</button>
+            <button class="action-btn" onclick="logoutOwner()">🔒 Lock</button>
+          </div>
+        </div>
+
+        <div style="margin-bottom: 0.75rem; font-size: 0.8125rem; color: var(--text-muted);">
+          Live stdout &amp; supervisor log buffer (real-time):
+        </div>
+
+        <div class="log-viewport" id="log-viewport">
+          <div class="log-line">Connecting to event stream...</div>
+        </div>
       </div>
     </div>
 
     <footer>
-      Lavalink v4 Cloud Audio Server &bull; Maintained by <a href="https://github.com/HELIX-Origin" target="_blank">HELIX Origin</a> &bull; Powered by ESM TypeScript
+      Lavalink v4 Public Cloud Audio Server &bull; Maintained by <a href="https://github.com/HELIX-Origin" target="_blank">HELIX Origin</a> &bull; Powered by ESM TypeScript &amp; Anti-Throttling Keep-Alive
     </footer>
   </div>
 
+  <!-- Login Modal -->
+  <div class="modal-overlay" id="login-modal">
+    <div class="modal-card">
+      <h2>🔑 Host Owner Login</h2>
+      <p>Enter your <code>ADMIN_KEY</code> or <code>LAVA_PASS</code> to access the live log stream and node controls.</p>
+      <form onsubmit="handleLoginSubmit(event)">
+        <div class="form-group">
+          <label class="form-label" for="owner-pass">Master Password / Admin Key</label>
+          <input type="password" id="owner-pass" class="form-input" placeholder="Enter password" required autofocus autocomplete="current-password">
+          <div class="auth-error" id="auth-error">Invalid password. Please verify your environment settings.</div>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-cancel" onclick="closeLoginModal()">Cancel</button>
+          <button type="submit" class="btn-submit" id="btn-login-submit">Unlock Console</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script>
+    let authToken = localStorage.getItem('lavalink_admin_token') || null;
+    let isOwnerLoggedIn = false;
+
+    function handleAuthClick() {
+      if (isOwnerLoggedIn) {
+        logoutOwner();
+      } else {
+        openLoginModal();
+      }
+    }
+
+    function openLoginModal() {
+      document.getElementById('auth-error').style.display = 'none';
+      document.getElementById('owner-pass').value = '';
+      document.getElementById('login-modal').classList.add('open');
+      setTimeout(() => document.getElementById('owner-pass').focus(), 100);
+    }
+
+    function closeLoginModal() {
+      document.getElementById('login-modal').classList.remove('open');
+    }
+
+    async function handleLoginSubmit(e) {
+      e.preventDefault();
+      const password = document.getElementById('owner-pass').value.trim();
+      const errEl = document.getElementById('auth-error');
+      const submitBtn = document.getElementById('btn-login-submit');
+
+      submitBtn.innerText = 'Verifying...';
+      errEl.style.display = 'none';
+
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password })
+        });
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+          authToken = data.token;
+          localStorage.setItem('lavalink_admin_token', authToken);
+          isOwnerLoggedIn = true;
+          closeLoginModal();
+          updateOwnerUi();
+          pollStatus();
+        } else {
+          errEl.innerText = data.error || 'Authentication failed.';
+          errEl.style.display = 'block';
+        }
+      } catch (err) {
+        errEl.innerText = 'Network error connecting to auth server.';
+        errEl.style.display = 'block';
+      } finally {
+        submitBtn.innerText = 'Unlock Console';
+      }
+    }
+
+    function logoutOwner() {
+      authToken = null;
+      localStorage.removeItem('lavalink_admin_token');
+      isOwnerLoggedIn = false;
+      document.cookie = 'admin_token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+      updateOwnerUi();
+      pollStatus();
+    }
+
+    function updateOwnerUi() {
+      const lockedBanner = document.getElementById('owner-locked-container');
+      const unlockedBanner = document.getElementById('owner-unlocked-container');
+      const authBtn = document.getElementById('btn-auth-toggle');
+      const authIcon = document.getElementById('auth-icon');
+      const authText = document.getElementById('auth-text');
+
+      if (isOwnerLoggedIn) {
+        lockedBanner.style.display = 'none';
+        unlockedBanner.style.display = 'block';
+        authBtn.classList.add('active');
+        authIcon.innerText = '👑';
+        authText.innerText = 'Sign Out (Owner)';
+      } else {
+        lockedBanner.style.display = 'block';
+        unlockedBanner.style.display = 'none';
+        authBtn.classList.remove('active');
+        authIcon.innerText = '🔑';
+        authText.innerText = 'Host Login';
+      }
+    }
+
     function copyConfig() {
       const code = document.getElementById('config-env-code').innerText;
       navigator.clipboard.writeText(code).then(() => {
@@ -467,11 +828,68 @@ export function renderDashboardHtml(): string {
       return \`\${m}m \${s}s\`;
     }
 
+    async function triggerPingNow() {
+      if (!authToken) return;
+      try {
+        const res = await fetch('/api/admin/action', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': \`Bearer \${authToken}\`
+          },
+          body: JSON.stringify({ action: 'ping' })
+        });
+        const data = await res.json();
+        if (data.success) {
+          alert('⚡ Keep-Alive ping successfully sent to public /health endpoint!');
+          pollStatus();
+        } else {
+          alert('Ping failed: ' + (data.error || 'Unknown error'));
+        }
+      } catch (err) {
+        alert('Network error triggering keep-alive ping');
+      }
+    }
+
+    async function restartNode() {
+      if (!authToken) return;
+      if (!confirm('Are you sure you want to restart the Lavalink process? Active connections will temporarily reconnect.')) return;
+
+      try {
+        const res = await fetch('/api/admin/action', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': \`Bearer \${authToken}\`
+          },
+          body: JSON.stringify({ action: 'restart' })
+        });
+        const data = await res.json();
+        if (data.success) {
+          alert('Node restart initiated. Supervisor is reloading Lavalink.jar.');
+          pollStatus();
+        }
+      } catch (err) {
+        alert('Failed to request restart');
+      }
+    }
+
     async function pollStatus() {
       try {
-        const res = await fetch('/api/status');
+        const headers = {};
+        if (authToken) {
+          headers['Authorization'] = \`Bearer \${authToken}\`;
+        }
+
+        const res = await fetch('/api/status', { headers });
         if (!res.ok) return;
         const data = await res.json();
+
+        // Check if owner status changed
+        if (data.isOwner !== isOwnerLoggedIn) {
+          isOwnerLoggedIn = !!data.isOwner;
+          updateOwnerUi();
+        }
 
         // Status badge
         const dot = document.getElementById('status-dot');
@@ -503,8 +921,28 @@ export function renderDashboardHtml(): string {
         document.getElementById('val-cpu-lava').innerText = lavaCpu + '%';
         document.getElementById('bar-cpu').style.width = Math.min(sysCpu, 100) + '%';
 
-        // Logs
-        if (Array.isArray(data.logs) && data.logs.length > 0) {
+        // Keep-Alive Widget
+        const ka = data.keepAlive || {};
+        const kaStatusEl = document.getElementById('val-keepalive-status');
+        const kaSubEl = document.getElementById('val-keepalive-sub');
+        if (ka.enabled) {
+          kaStatusEl.innerText = 'Active (24/7)';
+          kaStatusEl.style.color = '#34d399';
+          if (ka.lastPingTimestamp) {
+            const agoSec = Math.round((Date.now() - ka.lastPingTimestamp) / 1000);
+            const statusTxt = ka.lastPingStatus ? \`HTTP \${ka.lastPingStatus}\` : 'Active';
+            kaSubEl.innerText = \`Last ping \${agoSec}s ago (\${statusTxt}, \${ka.lastPingLatencyMs || 0}ms)\`;
+          } else {
+            kaSubEl.innerText = 'Starting first ping loop...';
+          }
+        } else {
+          kaStatusEl.innerText = 'Disabled';
+          kaStatusEl.style.color = 'var(--text-muted)';
+          kaSubEl.innerText = 'Set KEEP_ALIVE_ENABLED=true';
+        }
+
+        // Logs (Owner Only)
+        if (isOwnerLoggedIn && Array.isArray(data.logs) && data.logs.length > 0) {
           const logBox = document.getElementById('log-viewport');
           logBox.innerHTML = data.logs.map(line => \`<div class="log-line">\${escapeHtml(line)}</div>\`).join('');
         }
@@ -517,7 +955,9 @@ export function renderDashboardHtml(): string {
       return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     }
 
-    setInterval(pollStatus, 3000);
+    // Initialize UI and start polling
+    updateOwnerUi();
+    setInterval(pollStatus, 3500);
     pollStatus();
   </script>
 </body>
