@@ -3,6 +3,7 @@ import http from 'node:http';
 import { config } from './config.js';
 import { setCachedStatus, setCachedStats, setCachedInfo, appendRecentLog } from './redis.js';
 import { logSystemEvent, saveMetricSnapshot } from './db.js';
+import { loadSavedOAuthToken, saveYouTubeRefreshToken } from './youtubeOAuth.js';
 
 export class LavalinkSupervisor {
   private process: ChildProcess | null = null;
@@ -15,6 +16,9 @@ export class LavalinkSupervisor {
 
   public async start(): Promise<void> {
     if (this.process) return;
+
+    // Load any saved refresh token from Redis live memory / SQLite into process.env before spawning
+    await loadSavedOAuthToken();
 
     this.isShuttingDown = false;
     await setCachedStatus('starting');
@@ -56,6 +60,15 @@ export class LavalinkSupervisor {
           setCachedStatus('online').catch(() => {});
           logSystemEvent('info', 'Lavalink is ready to accept connections');
           this.restartCount = 0;
+        }
+
+        // Intercept native YouTube plugin OAuth events from Java stdout
+        if (line.includes('OAUTH INTEGRATION:')) {
+          const tokenMatch = line.match(/Token retrieved successfully.*?\((\S+)\)/i);
+          if (tokenMatch && tokenMatch[1]) {
+            console.log('[Supervisor] Intercepted YouTube refresh token from stdout. Saving to SQLite & Redis...');
+            saveYouTubeRefreshToken(tokenMatch[1]).catch(() => {});
+          }
         }
       }
     });

@@ -82,9 +82,41 @@ export function initDatabase(): DatabaseSync {
     );
 
     CREATE INDEX IF NOT EXISTS idx_events_timestamp ON system_events(timestamp);
+
+    CREATE TABLE IF NOT EXISTS system_settings (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL,
+      updated_at INTEGER NOT NULL
+    );
   `);
 
   return db;
+}
+
+export function saveSystemSetting(key: string, value: string): void {
+  try {
+    const database = initDatabase();
+    database.prepare(`
+      INSERT INTO system_settings (key, value, updated_at)
+      VALUES (?, ?, ?)
+      ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at
+    `).run(key, value, Date.now());
+  } catch (err) {
+    console.error(`[DB] Failed to save setting "${key}":`, err);
+  }
+}
+
+export function getSystemSetting(key: string): string | null {
+  try {
+    const database = initDatabase();
+    const row = database.prepare(`
+      SELECT value FROM system_settings WHERE key = ?
+    `).get(key) as { value: string } | undefined;
+    return row?.value ?? null;
+  } catch (err) {
+    console.error(`[DB] Failed to get setting "${key}":`, err);
+    return null;
+  }
 }
 
 export function saveMetricSnapshot(snapshot: Omit<MetricSnapshot, 'id'>): void {

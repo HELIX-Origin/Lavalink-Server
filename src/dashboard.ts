@@ -425,6 +425,107 @@ export function renderDashboardHtml(): string {
       word-break: break-all;
     }
 
+    /* YouTube OAuth Panel */
+    .oauth-panel {
+      background: rgba(0, 0, 0, 0.25);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 1.25rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .oauth-header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .oauth-title {
+      font-size: 0.9375rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .badge-oauth {
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 0.2rem 0.6rem;
+      border-radius: 9999px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .badge-oauth.authorized {
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid var(--success);
+      color: #6ee7b7;
+    }
+
+    .badge-oauth.pending {
+      background: rgba(6, 182, 212, 0.15);
+      border: 1px solid var(--primary);
+      color: #38bdf8;
+      animation: pulse 1.5s infinite;
+    }
+
+    .badge-oauth.idle {
+      background: rgba(245, 158, 11, 0.15);
+      border: 1px solid var(--warning);
+      color: #fcd34d;
+    }
+
+    .oauth-pending-box {
+      background: var(--code-bg);
+      border: 1px solid rgba(6, 182, 212, 0.35);
+      border-radius: 10px;
+      padding: 1.25rem;
+      margin-top: 0.75rem;
+      text-align: center;
+    }
+
+    .oauth-code-large {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.85rem;
+      font-weight: 800;
+      color: #38bdf8;
+      letter-spacing: 0.12em;
+      margin: 0.5rem 0 0.85rem;
+      text-shadow: 0 0 16px rgba(6, 182, 212, 0.35);
+    }
+
+    .oauth-btn-group {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.75rem;
+      margin-top: 0.5rem;
+    }
+
+    .btn-oauth-primary {
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      color: #000;
+      font-weight: 700;
+      padding: 0.55rem 1.15rem;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      text-decoration: none;
+      font-size: 0.8125rem;
+      transition: opacity 0.2s ease;
+    }
+
+    .btn-oauth-primary:hover {
+      opacity: 0.9;
+    }
+
     /* Modal */
     .modal-overlay {
       display: none;
@@ -562,6 +663,10 @@ export function renderDashboardHtml(): string {
         </div>
       </div>
       <div class="header-actions">
+        <button class="btn-auth" id="btn-header-oauth" onclick="handleHeaderOAuthClick()">
+          <span>📺</span>
+          <span id="header-oauth-text">YouTube OAuth</span>
+        </button>
         <button class="btn-auth" id="btn-auth-toggle" onclick="handleAuthClick()">
           <span id="auth-icon">🔑</span>
           <span id="auth-text">Host Login</span>
@@ -572,6 +677,34 @@ export function renderDashboardHtml(): string {
         </div>
       </div>
     </header>
+
+    <!-- Public Notice: Active YouTube Device Authorization Flow -->
+    <div id="public-oauth-banner" class="oauth-panel" style="display: none; border-color: rgba(6, 182, 212, 0.4); margin-bottom: 1.5rem; background: rgba(6, 182, 212, 0.08);">
+      <div class="oauth-header">
+        <div class="oauth-title">
+          <span>📺 YouTube Device Authorization In Progress</span>
+          <span class="badge-oauth pending" id="public-oauth-badge">PENDING GOOGLE AUTH</span>
+        </div>
+        <div>
+          <button class="action-btn" onclick="handleHeaderOAuthClick()">🔑 Host Console</button>
+        </div>
+      </div>
+      <div id="public-oauth-pending-content" style="margin-top: 0.5rem; text-align: center;">
+        <p style="font-size: 0.875rem; color: var(--text-muted);">
+          To authorize YouTube audio streaming for this Lavalink node, visit Google and enter this code:
+        </p>
+        <div class="oauth-code-large" id="public-oauth-user-code">---- ----</div>
+        <div class="oauth-btn-group">
+          <button class="action-btn" id="btn-public-copy-code" onclick="copyPublicOAuthCode()">📋 Copy Code</button>
+          <a href="#" id="public-oauth-direct-link" target="_blank" rel="noopener noreferrer" class="btn-oauth-primary">
+            🌐 Open Google Device Auth ↗
+          </a>
+        </div>
+        <div style="margin-top: 0.75rem; font-size: 0.8125rem; color: #38bdf8;">
+          ⏳ Polling for authorization... (Once authorized in Google, node activates instantly!)
+        </div>
+      </div>
+    </div>
 
     <!-- Top Stats Row -->
     <div class="grid-stats">
@@ -677,10 +810,54 @@ export function renderDashboardHtml(): string {
           <div class="section-title" style="margin-bottom: 0;">
             <span>👑 Host Owner Diagnostics &amp; Live Logs</span>
           </div>
-          <div style="display: flex; gap: 0.5rem;">
+          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            <button class="action-btn" onclick="startYouTubeOAuth()">🔑 YouTube OAuth</button>
             <button class="action-btn" onclick="triggerPingNow()">⚡ Ping Keep-Alive</button>
             <button class="action-btn danger" onclick="restartNode()">🔄 Restart Node</button>
             <button class="action-btn" onclick="logoutOwner()">🔒 Lock</button>
+          </div>
+        </div>
+
+        <!-- YouTube OAuth & Anti-Throttling Module -->
+        <div class="oauth-panel">
+          <div class="oauth-header">
+            <div class="oauth-title">
+              <span>📺 YouTube OAuth 2.0 (Bot IP Bypass)</span>
+              <span class="badge-oauth idle" id="oauth-badge">CHECKING...</span>
+            </div>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+              <button class="action-btn" id="btn-oauth-start" onclick="startYouTubeOAuth()">
+                <span>🔑</span> <span id="btn-oauth-start-text">Authorize YouTube</span>
+              </button>
+              <button class="action-btn" onclick="openManualTokenModal()">
+                <span>✏️</span> Manual Token
+              </button>
+            </div>
+          </div>
+
+          <p style="font-size: 0.8125rem; color: var(--text-muted);" id="oauth-desc">
+            Bypasses YouTube 429 ratelimits &amp; bot IP checks by authorizing a Google streaming account. Token auto-persists to SQLite database &amp; Redis live memory.
+          </p>
+
+          <div id="oauth-status-box" style="font-size: 0.8125rem; color: #d1d5db; margin-top: 0.5rem;">
+            <span id="oauth-status-detail">Loading OAuth state...</span>
+          </div>
+
+          <!-- Pending Device Flow Box -->
+          <div id="oauth-pending-card" class="oauth-pending-box" style="display: none;">
+            <p style="font-size: 0.875rem; color: var(--text-muted);">
+              Google Device Authorization initiated! Head to Google in your browser:
+            </p>
+            <div class="oauth-code-large" id="oauth-user-code">---- ----</div>
+            <div class="oauth-btn-group">
+              <button class="action-btn" id="btn-copy-code" onclick="copyOAuthCode()">📋 Copy Code</button>
+              <a href="#" id="oauth-direct-link" target="_blank" rel="noopener noreferrer" class="btn-oauth-primary">
+                🌐 Open Google Device Auth ↗
+              </a>
+            </div>
+            <div style="margin-top: 0.85rem; font-size: 0.8125rem; color: #38bdf8;" id="oauth-poll-status">
+              ⏳ Waiting for user authorization in Google... (Once complete, token auto-saves to database &amp; live memory)
+            </div>
           </div>
         </div>
 
@@ -713,6 +890,25 @@ export function renderDashboardHtml(): string {
         <div class="modal-actions">
           <button type="button" class="btn-cancel" onclick="closeLoginModal()">Cancel</button>
           <button type="submit" class="btn-submit" id="btn-login-submit">Unlock Console</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Manual Token Modal -->
+  <div class="modal-overlay" id="manual-token-modal">
+    <div class="modal-card">
+      <h2>✏️ Manual YouTube Refresh Token</h2>
+      <p>Paste an existing YouTube OAuth 2.0 refresh token. It will be saved to the database (SQLite) and live memory (Redis) and applied to Lavalink immediately.</p>
+      <form onsubmit="handleManualTokenSubmit(event)">
+        <div class="form-group">
+          <label class="form-label" for="manual-token-input">Refresh Token (starts with 1//)</label>
+          <input type="password" id="manual-token-input" class="form-input" placeholder="1//04..." required autocomplete="off">
+          <div class="auth-error" id="manual-token-error">Invalid refresh token.</div>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-cancel" onclick="closeManualTokenModal()">Cancel</button>
+          <button type="submit" class="btn-submit" id="btn-manual-token-submit">Save &amp; Apply</button>
         </div>
       </form>
     </div>
@@ -874,6 +1070,174 @@ export function renderDashboardHtml(): string {
       }
     }
 
+    let currentOAuthState = null;
+
+    function handleHeaderOAuthClick() {
+      if (isOwnerLoggedIn) {
+        startYouTubeOAuth();
+      } else {
+        openLoginModal();
+      }
+    }
+
+    function copyPublicOAuthCode() {
+      const codeEl = document.getElementById('public-oauth-user-code');
+      const btn = document.getElementById('btn-public-copy-code');
+      navigator.clipboard.writeText(codeEl.innerText.trim()).then(() => {
+        btn.innerText = 'Copied!';
+        setTimeout(() => btn.innerText = '📋 Copy Code', 2000);
+      });
+    }
+
+    async function startYouTubeOAuth() {
+      if (!authToken) {
+        openLoginModal();
+        return;
+      }
+      const startBtn = document.getElementById('btn-oauth-start-text');
+      startBtn.innerText = 'Requesting Code...';
+
+      try {
+        const res = await fetch('/api/admin/oauth/youtube/start', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': \`Bearer \${authToken}\`
+          }
+        });
+        const data = await res.json();
+        if (data.success && data.oauth) {
+          updateOAuthUi(data.oauth);
+          pollStatus();
+        } else {
+          alert('Failed to initiate OAuth flow: ' + (data.error || 'Unknown error'));
+        }
+      } catch (err) {
+        alert('Network error initiating YouTube OAuth device flow');
+      } finally {
+        startBtn.innerText = 'Authorize YouTube';
+      }
+    }
+
+    function copyOAuthCode() {
+      const codeEl = document.getElementById('oauth-user-code');
+      const btn = document.getElementById('btn-copy-code');
+      navigator.clipboard.writeText(codeEl.innerText.trim()).then(() => {
+        btn.innerText = 'Copied!';
+        setTimeout(() => btn.innerText = '📋 Copy Code', 2000);
+      });
+    }
+
+    function openManualTokenModal() {
+      document.getElementById('manual-token-error').style.display = 'none';
+      document.getElementById('manual-token-input').value = '';
+      document.getElementById('manual-token-modal').classList.add('open');
+      setTimeout(() => document.getElementById('manual-token-input').focus(), 100);
+    }
+
+    function closeManualTokenModal() {
+      document.getElementById('manual-token-modal').classList.remove('open');
+    }
+
+    async function handleManualTokenSubmit(e) {
+      e.preventDefault();
+      const token = document.getElementById('manual-token-input').value.trim();
+      const errEl = document.getElementById('manual-token-error');
+      const submitBtn = document.getElementById('btn-manual-token-submit');
+
+      submitBtn.innerText = 'Saving...';
+      errEl.style.display = 'none';
+
+      try {
+        const res = await fetch('/api/admin/oauth/youtube/manual', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': \`Bearer \${authToken}\`
+          },
+          body: JSON.stringify({ token })
+        });
+        const data = await res.json();
+        if (data.success && data.oauth) {
+          closeManualTokenModal();
+          updateOAuthUi(data.oauth);
+          pollStatus();
+        } else {
+          errEl.innerText = data.error || 'Failed to save refresh token.';
+          errEl.style.display = 'block';
+        }
+      } catch {
+        errEl.innerText = 'Network error saving token.';
+        errEl.style.display = 'block';
+      } finally {
+        submitBtn.innerText = 'Save & Apply';
+      }
+    }
+
+    function updateOAuthUi(oauth) {
+      if (!oauth) return;
+      currentOAuthState = oauth;
+
+      const badge = document.getElementById('oauth-badge');
+      const statusDetail = document.getElementById('oauth-status-detail');
+      const pendingCard = document.getElementById('oauth-pending-card');
+      const startBtnText = document.getElementById('btn-oauth-start-text');
+
+      const pubBanner = document.getElementById('public-oauth-banner');
+      const pubCode = document.getElementById('public-oauth-user-code');
+      const pubLink = document.getElementById('public-oauth-direct-link');
+      const headerText = document.getElementById('header-oauth-text');
+
+      if (oauth.status === 'authorized') {
+        if (badge) {
+          badge.className = 'badge-oauth authorized';
+          badge.innerText = 'AUTHORIZED';
+        }
+        if (statusDetail) {
+          statusDetail.innerHTML = '✅ Active Refresh Token: <code style="color: #6ee7b7;">' + (oauth.tokenPreview || 'Saved') + '</code> &bull; Saved to Database &amp; Live Memory';
+        }
+        if (pendingCard) pendingCard.style.display = 'none';
+        if (startBtnText) startBtnText.innerText = 'Re-authorize Account';
+        if (pubBanner) pubBanner.style.display = 'none';
+        if (headerText) headerText.innerText = 'YouTube: Linked ✅';
+      } else if (oauth.status === 'pending') {
+        if (badge) {
+          badge.className = 'badge-oauth pending';
+          badge.innerText = 'WAITING FOR GOOGLE AUTH';
+        }
+        if (statusDetail) {
+          statusDetail.innerText = 'Follow the prompts below to link your Google account:';
+        }
+        if (pendingCard) pendingCard.style.display = 'block';
+
+        const codeVal = oauth.userCode || '---- ----';
+        const urlVal = oauth.directUrl || oauth.verificationUrl || 'https://www.google.com/device';
+
+        const ownerUserCode = document.getElementById('oauth-user-code');
+        if (ownerUserCode) ownerUserCode.innerText = codeVal;
+        const directLink = document.getElementById('oauth-direct-link');
+        if (directLink) directLink.href = urlVal;
+        if (startBtnText) startBtnText.innerText = 'Restart Flow';
+
+        if (pubBanner) pubBanner.style.display = 'block';
+        if (pubCode) pubCode.innerText = codeVal;
+        if (pubLink) pubLink.href = urlVal;
+        if (headerText) headerText.innerText = 'YouTube: Code Active ⚠️';
+      } else {
+        if (badge) {
+          badge.className = 'badge-oauth idle';
+          badge.innerText = 'NOT CONFIGURED';
+        }
+        if (statusDetail) {
+          statusDetail.innerText = 'No refresh token active. Click "Authorize YouTube" to link a streaming account.';
+        }
+        if (pendingCard) pendingCard.style.display = 'none';
+        if (startBtnText) startBtnText.innerText = 'Authorize YouTube';
+        if (pubBanner) pubBanner.style.display = 'none';
+        if (headerText) headerText.innerText = 'YouTube OAuth';
+      }
+    }
+
     async function pollStatus() {
       try {
         const headers = {};
@@ -939,6 +1303,11 @@ export function renderDashboardHtml(): string {
           kaStatusEl.innerText = 'Disabled';
           kaStatusEl.style.color = 'var(--text-muted)';
           kaSubEl.innerText = 'Set KEEP_ALIVE_ENABLED=true';
+        }
+
+        // YouTube OAuth Status
+        if (data.youtubeOAuth) {
+          updateOAuthUi(data.youtubeOAuth);
         }
 
         // Logs (Owner Only)

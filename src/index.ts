@@ -3,6 +3,7 @@ import { initDatabase, logSystemEvent } from './db.js';
 import { LavalinkSupervisor } from './supervisor.js';
 import { createProxyServer } from './proxy.js';
 import { startKeepAlive, stopKeepAlive } from './keepAlive.js';
+import { loadSavedOAuthToken, initiateDeviceFlow } from './youtubeOAuth.js';
 
 async function main(): Promise<void> {
   console.log('==================================================');
@@ -14,8 +15,16 @@ async function main(): Promise<void> {
   console.log(`⚡ Mode:                 ${config.isProduction ? 'production' : 'development'}`);
   console.log('==================================================');
 
-  // 1. Initialize SQLite Database
+  // 1. Initialize SQLite Database & Load In-Live Memory State
   initDatabase();
+  const token = await loadSavedOAuthToken();
+  if (!token) {
+    console.log('[YouTube OAuth] No refresh token configured. Initiating OAuth device grant...');
+    initiateDeviceFlow().catch((err) => {
+      console.warn('[YouTube OAuth] Device flow notice:', err.message);
+    });
+  }
+
   logSystemEvent('info', 'Lavalink TypeScript gateway initialized', {
     domain: config.domain,
     port: config.port

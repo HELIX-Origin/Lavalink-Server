@@ -8,8 +8,32 @@ export const REDIS_KEYS = {
   INFO: 'lavalink:info',
   STATS: 'lavalink:stats',
   CLIENTS: 'lavalink:clients',
-  LOGS: 'lavalink:logs'
+  LOGS: 'lavalink:logs',
+  YOUTUBE_REFRESH_TOKEN: 'lavalink:youtube:refresh_token',
+  YOUTUBE_OAUTH_STATE: 'lavalink:youtube:oauth_state'
 } as const;
+
+export async function setCachedYouTubeToken(token: string): Promise<void> {
+  await redis.set(REDIS_KEYS.YOUTUBE_REFRESH_TOKEN, token);
+}
+
+export async function getCachedYouTubeToken(): Promise<string | null> {
+  return await redis.get(REDIS_KEYS.YOUTUBE_REFRESH_TOKEN);
+}
+
+export async function setCachedYouTubeOAuthState(state: Record<string, unknown>): Promise<void> {
+  await redis.set(REDIS_KEYS.YOUTUBE_OAUTH_STATE, JSON.stringify(state));
+}
+
+export async function getCachedYouTubeOAuthState(): Promise<Record<string, unknown> | null> {
+  const data = await redis.get(REDIS_KEYS.YOUTUBE_OAUTH_STATE);
+  if (!data) return null;
+  try {
+    return JSON.parse(data);
+  } catch {
+    return null;
+  }
+}
 
 export async function setCachedStatus(status: 'starting' | 'online' | 'restarting' | 'offline'): Promise<void> {
   await redis.set(REDIS_KEYS.STATUS, status);

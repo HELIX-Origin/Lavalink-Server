@@ -6,6 +6,7 @@ import { getCachedStatus, getCachedStats, getCachedInfo, getRecentLogs } from '.
 import { recordClientSessionStart, recordClientSessionEnd, getRecentMetrics, getRecentSystemEvents, logSystemEvent } from './db.js';
 import { renderDashboardHtml } from './dashboard.js';
 import { getKeepAliveState, triggerKeepAlivePing } from './keepAlive.js';
+import { getOAuthState, initiateDeviceFlow, applyManualToken } from './youtubeOAuth.js';
 
 export interface ProxyOptions {
   onRestart?: () => Promise<void>;
@@ -108,6 +109,7 @@ export function createProxyServer(options: ProxyOptions = {}): { server: http.Se
           secure: isSsl,
           websocketUrl: `${isSsl ? 'wss' : 'ws'}://${config.domain}${isSsl ? '' : `:${config.port}`}/v4/websocket`
         },
+        youtubeOAuth: getOAuthState(),
         isOwner
       };
 
@@ -226,8 +228,59 @@ export function createProxyServer(options: ProxyOptions = {}): { server: http.Se
       return;
     }
 
-    // 10. Proxy REST API to internal Lavalink (e.g. /v4/*, /version)
-    if (pathname.startsWith('/v4/') || pathname === '/version') {
+    // 10. YouTube OAuth Management Routes (Host Owner Only)
+    if (pathname.startsWith('/api/admin/oauth/youtube')) {
+      if (!isOwnerAuthenticated(req)) {
+        res.writeHead(401, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Unauthorized: Host account owner login required' }));
+        return;
+      }
+
+      if (pathname === '/api/admin/oauth/youtube/status' && req.method === 'GET') {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true, oauth: getOAuthState() }));
+        return;
+      }
+
+      if (pathname === '/api/admin/oauth/youtube/start' && req.method === 'POST') {
+        try {
+          const oauth = await initiateDeviceFlow();
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: true, oauth }));
+        } catch (err: any) {
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: false, error: err?.message || 'Failed to start device flow' }));
+        }
+        return;
+      }
+
+      if (pathname === '/api/admin/oauth/youtube/manual' && req.method === 'POST') {
+        try {
+          const { token } = await parseJsonBody<{ token?: string }>(req);
+          if (!token || typeof token !== 'string') {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: false, error: 'A valid refresh token string is required' }));
+            return;
+          }
+
+          const ok = await applyManualToken(token);
+          if (ok) {
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: true, oauth: getOAuthState() }));
+          } else {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: false, error: 'Invalid refresh token format' }));
+          }
+        } catch (err: any) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: false, error: err?.message || 'Malformed request body' }));
+        }
+        return;
+      }
+    }
+
+    // 11. Proxy REST API to internal Lavalink (e.g. /v4/*, /version, /youtube/*)
+    if (pathname.startsWith('/v4/') || pathname === '/version' || pathname.startsWith('/youtube')) {
       proxyHttpRequest(req, res);
       return;
     }
