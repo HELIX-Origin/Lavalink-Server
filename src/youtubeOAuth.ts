@@ -63,7 +63,7 @@ function maskToken(token: string): string {
  * giving priority to process.env.YOUTUBE_REFRESH_TOKEN, and sets it before Lavalink spawns.
  */
 export async function loadSavedOAuthToken(): Promise<string | null> {
-  // 1. Check environment variable FIRST (e.g. user supplied YOUTUBE_REFRESH_TOKEN in .env or cloud config)
+  // 1. Check environment variable FIRST (e.g. user supplied YOUTUBE_REFRESH_TOKEN in .env)
   if (process.env.YOUTUBE_REFRESH_TOKEN && process.env.YOUTUBE_REFRESH_TOKEN.trim().length > 5) {
     const envToken = process.env.YOUTUBE_REFRESH_TOKEN.trim();
     saveSystemSetting('youtube_refresh_token', envToken);
@@ -144,7 +144,7 @@ export async function saveYouTubeRefreshToken(token: string): Promise<boolean> {
     console.log('✅ [YouTube OAuth] AUTHORIZATION SUCCESSFUL!');
     console.log('💾 Persisted to SQLite Database (system_settings) & Redis Live Memory');
     console.log('----------------------------------------------------------------------');
-    console.log('📋 Copy this token to your environment variables (e.g. .env or cloud config):');
+    console.log('📋 Copy this token to your environment variables (e.g. .env):');
     console.log(`YOUTUBE_REFRESH_TOKEN=${trimmed}`);
     console.log('======================================================================\n');
 

@@ -71,7 +71,7 @@ export class LavalinkSupervisor {
             console.log('\n======================================================================');
             console.log('✅ [YouTube OAuth] REFRESH TOKEN RETRIEVED FROM LAVALINK!');
             console.log('----------------------------------------------------------------------');
-            console.log('📋 Copy this token to your environment variables (e.g. .env or cloud config):');
+            console.log('📋 Copy this token to your environment variables (e.g. .env):');
             console.log(`YOUTUBE_REFRESH_TOKEN=${token}`);
             console.log('======================================================================\n');
             saveYouTubeRefreshToken(token).catch(() => {});

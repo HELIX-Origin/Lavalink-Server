@@ -12,7 +12,7 @@ export function renderDashboardHtml(): string {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lavalink v4 Cloud Audio Node — Public Gateway & Dashboard</title>
+  <title>Lavalink v4 Audio Node — Public Gateway & Dashboard</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -659,7 +659,7 @@ export function renderDashboardHtml(): string {
         <div class="brand-icon">🔊</div>
         <div>
           <h1>Lavalink v4 Public Node</h1>
-          <p>Managed Cloud Gateway &bull; High-Performance Audio Streaming</p>
+          <p>Public Audio Gateway &bull; High-Performance Audio Streaming</p>
         </div>
       </div>
       <div class="header-actions">
@@ -872,7 +872,7 @@ export function renderDashboardHtml(): string {
     </div>
 
     <footer>
-      Lavalink v4 Public Cloud Audio Server &bull; Maintained by <a href="https://github.com/HELIX-Origin" target="_blank">HELIX Origin</a> &bull; Powered by ESM TypeScript &amp; Anti-Throttling Keep-Alive
+      Lavalink v4 Public Audio Server &bull; Maintained by <a href="https://github.com/HELIX-Origin" target="_blank">HELIX Origin</a> &bull; Powered by ESM TypeScript &amp; Anti-Throttling Keep-Alive
     </footer>
   </div>
 

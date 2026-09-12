@@ -34,54 +34,27 @@ let initialTimeout: NodeJS.Timeout | null = null;
 let jvmWarmupTimer: NodeJS.Timeout | null = null;
 
 function resolveTargetUrl(): string {
-  // 1. Direct external URL provided by cloud platforms (e.g. Render)
-  if (process.env.RENDER_EXTERNAL_URL) {
-    return process.env.RENDER_EXTERNAL_URL.trim().replace(/\/+$/, '');
+  // 1. Explicit public URL override
+  if (process.env.PUBLIC_URL) {
+    return process.env.PUBLIC_URL.trim().replace(/\/+$/, '');
   }
-  // 2. Render injected external hostname
-  if (process.env.RENDER_EXTERNAL_HOSTNAME) {
-    return `https://${process.env.RENDER_EXTERNAL_HOSTNAME.trim().replace(/\/+$/, '')}`;
-  }
-  // 3. Railway public domain or static URL
-  if (process.env.RAILWAY_PUBLIC_DOMAIN) {
-    return `https://${process.env.RAILWAY_PUBLIC_DOMAIN.trim().replace(/\/+$/, '')}`;
-  }
-  if (process.env.RAILWAY_STATIC_URL) {
-    const raw = process.env.RAILWAY_STATIC_URL.trim().replace(/\/+$/, '');
-    return raw.startsWith('http') ? raw : `https://${raw}`;
-  }
-  // 4. Heroku default domain or app name
-  if (process.env.HEROKU_APP_DEFAULT_DOMAIN_NAME) {
-    return `https://${process.env.HEROKU_APP_DEFAULT_DOMAIN_NAME.trim().replace(/\/+$/, '')}`;
-  }
-  if (process.env.HEROKU_APP_NAME) {
-    return `https://${process.env.HEROKU_APP_NAME.trim()}.herokuapp.com`;
-  }
-  // 5. Fly.io app domain
-  if (process.env.FLY_APP_NAME) {
-    return `https://${process.env.FLY_APP_NAME.trim()}.fly.dev`;
-  }
-  // 6. Koyeb public domain
-  if (process.env.KOYEB_PUBLIC_DOMAIN) {
-    return `https://${process.env.KOYEB_PUBLIC_DOMAIN.trim().replace(/\/+$/, '')}`;
-  }
-  // 7. General DOMAIN environment variable
+  // 2. General DOMAIN environment variable
   if (process.env.DOMAIN && process.env.DOMAIN !== 'localhost') {
     const raw = process.env.DOMAIN.trim().replace(/\/+$/, '');
     return raw.startsWith('http') ? raw : `https://${raw}`;
   }
-  // 8. Resolved system domain from config
+  // 3. Resolved system domain from config
   if (config.domain && config.domain !== 'localhost') {
     return `https://${config.domain}`;
   }
-  // 9. Local loopback fallback
+  // 4. Local loopback fallback
   return `http://127.0.0.1:${config.port}`;
 }
 
 
 /**
  * Triggers an external HTTP ping against the public /health endpoint.
- * Resets the inactivity timer on cloud hosts (e.g. Render free tier).
+ * Keeps an idle node warm and verifies public reachability.
  */
 export async function triggerKeepAlivePing(): Promise<{
   success: boolean;
@@ -181,7 +154,7 @@ async function warmUpJvmNode(): Promise<void> {
 
 /**
  * Starts the dual-action keep-alive service:
- * 1. Public endpoint ping to prevent cloud provider sleep (Render spins down after 15m).
+ * 1. Public endpoint ping to keep an idle node warm and verify reachability.
  * 2. Internal loop to warm up JRE threads and avoid CPU cgroup throttles.
  */
 export function startKeepAlive(): void {

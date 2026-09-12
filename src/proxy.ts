@@ -69,7 +69,7 @@ export function createProxyServer(options: ProxyOptions = {}): { server: http.Se
       return;
     }
 
-    // 2. Health check endpoint for cloud platform liveness probes & keep-alive
+    // 2. Health check endpoint for liveness probes & keep-alive
     if (pathname === '/health') {
       const status = await getCachedStatus();
       const isHealthy = status === 'online' || status === 'starting';
@@ -355,7 +355,7 @@ function handleWebSocketProxy(clientWs: WebSocket, req: IncomingMessage): void {
     headers
   });
 
-  // Active Keep-Alive Ping frames every 30s to keep cloud reverse proxies from terminating idle connections
+  // Active Keep-Alive Ping frames every 30s to keep reverse proxies from terminating idle connections
   const keepAlivePingTimer = setInterval(() => {
     if (clientWs.readyState === WebSocket.OPEN) {
       try { clientWs.ping(); } catch {}
