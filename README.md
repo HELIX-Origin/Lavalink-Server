@@ -5,7 +5,7 @@
 [![Docker](https://img.shields.io/badge/Docker-Alpine-blue.svg)](https://hub.docker.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-A production-ready, standalone **Lavalink v4** audio server container with **ESM TypeScript Management Dashboard** and supervisor. Maintained by [**HELIX Origin**](https://github.com/HELIX-Origin) for hosting dedicated audio nodes for Discord music bots (including [Master-Bot](https://github.com/galnir/Master-Bot)).
+A production-ready, standalone **Lavalink v4** audio server container with **ESM TypeScript Management Dashboard** and supervisor. Maintained by [**HELIX Origin**](https://github.com/HELIX-Origin) for hosting dedicated audio nodes for Discord music bots.
 
 📖 **Comprehensive Documentation:** Check out our [**Wiki**](wiki/Home.md) for architecture, VPS setup walk-throughs, configuration references, plugin setup, and troubleshooting.
 
