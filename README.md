@@ -7,7 +7,7 @@
 
 A production-ready, standalone **Lavalink v4** audio server container with **ESM TypeScript Management Dashboard** and supervisor. Maintained by [**HELIX Origin**](https://github.com/HELIX-Origin) for hosting dedicated audio nodes for Discord music bots.
 
-📖 **Comprehensive Documentation:** Check out our [**Wiki**](wiki/Home.md) for architecture, VPS setup walk-throughs, configuration references, plugin setup, and troubleshooting.
+📖 **Comprehensive Documentation:** Check out our [**Wiki**](../../wiki/Home) for architecture, VPS setup walk-throughs, configuration references, plugin setup, and troubleshooting.
 
 ---
 
@@ -99,7 +99,7 @@ LAVA_SECURE=false
 > - If connecting directly to your VPS or Docker host, use port **`2333`** with `LAVA_SECURE=false`.
 > - If fronted by an Nginx/SSL reverse proxy, connect via port **`443`** with `LAVA_SECURE=true`.
 
-See the [Client Integration Wiki](wiki/Client-Integration.md) for code snippets with Lavalink-Client, Shoukaku, Kazagumo, and Poru.
+See the [Client Integration Wiki](../../wiki/Client-Integration.md) for code snippets with Lavalink-Client, Shoukaku, Kazagumo, and Poru.
 
 ---
 
@@ -123,12 +123,12 @@ docker run -p 2333:2333 -e LAVA_PASS=youshallnotpass lavalink-server
 ## 📚 Documentation & Wiki
 
 Explore our detailed documentation pages:
-- [**Home & Architecture**](wiki/Home.md): High-level overview and supervisor architecture.
-- [**Deployment Guide**](wiki/Deployment.md): Detailed guides for VPS and Docker Compose.
-- [**Configuration Reference**](wiki/Configuration.md): In-depth breakdown of `application.yml` and environment parameters.
-- [**Plugins Guide**](wiki/Plugins.md): Configuring YouTube Remote Cipher, OAuth, and Spotify metadata.
-- [**Client Integration**](wiki/Client-Integration.md): Connecting Master-Bot and popular Discord.js Lavalink wrappers.
-- [**Troubleshooting**](wiki/Troubleshooting.md): Diagnosing 401s, YouTube rate-limiting, and WebSocket disconnects.
+- [**Home & Architecture**](../../wiki/Home.md): High-level overview and supervisor architecture.
+- [**Deployment Guide**](../../wiki/Deployment.md): Detailed guides for VPS and Docker Compose.
+- [**Configuration Reference**](../../wiki/Configuration.md): In-depth breakdown of `application.yml` and environment parameters.
+- [**Plugins Guide**](../../wiki/Plugins.md): Configuring YouTube Remote Cipher, OAuth, and Spotify metadata.
+- [**Client Integration**](../../wiki/Client-Integration.md): Connecting Master-Bot and popular Discord.js Lavalink wrappers.
+- [**Troubleshooting**](../../wiki/Troubleshooting.md): Diagnosing 401s, YouTube rate-limiting, and WebSocket disconnects.
 
 ---
 
