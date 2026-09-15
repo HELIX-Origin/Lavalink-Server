@@ -1,9 +1,14 @@
 # 🔊 Lavalink v4 Standalone Server
 
-[![Lavalink](https://img.shields.io/badge/Lavalink-v4.x-purple.svg)](https://github.com/lavalink-devs/Lavalink)
-[![Java](https://img.shields.io/badge/Java-21%20LTS-orange.svg)](https://adoptium.net/)
-[![Docker](https://img.shields.io/badge/Docker-Alpine-blue.svg)](https://hub.docker.com/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Server Status](https://img.shields.io/website?url=https%3A%2F%2Flavalink.helix-origin.club%2Fhealth&label=Server&up_message=online&down_message=offline&up_color=brightgreen&down_color=red&style=plastic)](https://lavalink.helix-origin.club/health)
+[![Lavalink](https://img.shields.io/badge/Lavalink-v4-purple?style=plastic)](https://github.com/lavalink-devs/Lavalink)
+[![Java](https://img.shields.io/badge/Java-21%20LTS-orange?style=plastic)](https://adoptium.net/)
+[![Node.js](https://img.shields.io/badge/Node.js-20%2B-green?logo=nodedotjs&logoColor=white&style=plastic)](https://nodejs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-blue?logo=typescript&logoColor=white&style=plastic)](https://www.typescriptlang.org/)
+[![Docker](https://img.shields.io/badge/Docker-Alpine-blue?logo=docker&logoColor=white&style=plastic)](https://hub.docker.com/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow?style=plastic)](LICENSE)
+[![GitHub Stars](https://img.shields.io/github/stars/HELIX-Origin/Lavalink-Server?style=plastic)](https://github.com/HELIX-Origin/Lavalink-Server)
+[![GitHub Issues](https://img.shields.io/github/issues/HELIX-Origin/Lavalink-Server?style=plastic)](https://github.com/HELIX-Origin/Lavalink-Server/issues)
 
 A production-ready, standalone **Lavalink v4** audio server with **ESM TypeScript Management Dashboard** and supervisor. Maintained by [**HELIX Origin**](https://github.com/HELIX-Origin) for hosting dedicated audio nodes for Discord music bots.
 
