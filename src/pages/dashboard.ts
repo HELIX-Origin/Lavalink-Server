@@ -59,7 +59,7 @@ export function renderDashboardHtml(): string {
 Port: <b>${botPort}</b>
 Secure: <b>${config.secure}</b>
 Password: <b><span id="oa-pass">••••••••</span></b> <button id="toggle-pass" class="btn btn-sm btn-ghost">Show</button>
-WebSocket: ${wsUrl}</pre>
+</pre>
     </div>
 
     <div class="card">
