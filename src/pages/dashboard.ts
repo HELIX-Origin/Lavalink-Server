@@ -63,24 +63,9 @@ WebSocket: ${wsUrl}</pre>
     </div>
 
     <div class="card">
-      <h2 class="section-title">YouTube OAuth</h2>
-      <p class="section-desc">Authorization status for the YouTube plugin.</p>
-      <div id="oauth-panel">
-        <p>Loading OAuth status…</p>
-      </div>
-    </div>
-
-    <div class="card">
       <h2 class="section-title">Recent Metrics</h2>
       <p class="section-desc">Player load over the last 30 snapshots.</p>
       <canvas id="metrics-chart" width="800" height="260"></canvas>
-    </div>
-
-    <div class="card">
-      <h2 class="section-title">System Events</h2>
-      <div id="events-list">
-        <p>Loading events…</p>
-      </div>
     </div>
 
     <style>
@@ -141,18 +126,6 @@ WebSocket: ${wsUrl}</pre>
       .code-block b { color: var(--primary); }
 
       canvas { max-width: 100%; }
-      #events-list { max-height: 320px; overflow-y: auto; }
-      .event-row {
-        padding: 0.5rem 0;
-        border-bottom: 1px solid var(--border);
-        font-size: 0.875rem;
-      }
-      .event-row:last-child { border-bottom: none; }
-      .event-time { color: var(--text-muted); font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; }
-      .event-level { font-weight: 600; }
-      .event-level.info { color: var(--emerald); }
-      .event-level.warn { color: var(--amber); }
-      .event-level.error { color: var(--red); }
     </style>
 
     <script>
@@ -208,56 +181,9 @@ WebSocket: ${wsUrl}</pre>
           document.getElementById('stat-frames').textContent = st.frames?.sent ?? '—';
           document.getElementById('last-updated').textContent = new Date().toLocaleTimeString();
 
-          renderOAuth(data.youtubeOAuth);
         } catch (err) {
           setBadge('red');
           document.getElementById('last-updated').textContent = 'error';
-        }
-      }
-
-      function renderOAuth(oauth) {
-        const panel = document.getElementById('oauth-panel');
-        if (!panel) return;
-        if (!oauth) {
-          panel.innerHTML = '<p class="section-desc">OAuth unavailable.</p>';
-          return;
-        }
-
-        let status = oauth.status || 'unknown';
-        let color = 'var(--text-muted)';
-        if (status === 'authorized') color = 'var(--emerald)';
-        if (status === 'pending') color = 'var(--amber)';
-        if (status === 'failed') color = 'var(--red)';
-
-        let html = '<p style="color: var(--text);"><b>Status:</b> <span style="color:' + color + '">' + status + '</span>';
-        if (oauth.hasToken) {
-          html += ' &bull; Token: <code>' + (oauth.tokenPreview || '• • •') + '</code>';
-        }
-        html += '</p>';
-
-        if (status === 'pending' && oauth.userCode) {
-          html += '<p style="color: var(--text);"><b>Verification URL:</b> <a href="' + oauth.verificationUrl + '" target="_blank">' + oauth.verificationUrl + '</a></p>';
-          html += '<p style="color: var(--text);"><b>User Code:</b> <code>' + oauth.userCode + '</code></p>';
-          html += '<p style="color: var(--text);"><b>Expires:</b> ' + (oauth.expiresAt ? new Date(oauth.expiresAt).toLocaleTimeString() : '—') + '</p>';
-        }
-
-        if (status === 'idle' || status === 'failed') {
-          html += '<br><button id="btn-oauth" class="btn btn-primary btn-sm">Start Device Flow</button>';
-        }
-
-        html += status === 'pending' ? '<p><small style="color: var(--text-muted)">The device code will renew automatically once authorized.</small></p>' : '';
-        panel.innerHTML = html;
-
-        const startBtn = document.getElementById('btn-oauth');
-        if (startBtn) {
-          startBtn.addEventListener('click', async () => {
-            try {
-              await fetchJSON('/api/oauth/youtube/start');
-              await refreshStatus();
-            } catch (e) {
-              panel.innerHTML = '<p style="color:var(--red)">Failed to start OAuth flow.</p>';
-            }
-          });
         }
       }
 
