@@ -1,4 +1,6 @@
 import path from 'node:path';
+import fs from 'node:fs';
+import * as yaml from 'js-yaml';
 
 export interface ServerConfig {
   port: number;
@@ -16,7 +18,30 @@ export interface ServerConfig {
   keepAliveIntervalMs: number;
 }
 
+interface LavalinkYamlConfig {
+  server?: {
+    port?: number;
+    address?: string;
+  };
+}
+
+function loadLavalinkConfig(): LavalinkYamlConfig {
+  const configPath = path.resolve(process.cwd(), 'application.yml');
+  if (fs.existsSync(configPath)) {
+    const content = fs.readFileSync(configPath, 'utf-8');
+    return yaml.load(content) as LavalinkYamlConfig;
+  }
+  return {};
+}
+
 function resolveHostDomain(): string {
+  if (process.env.PUBLIC_URL) {
+    try {
+      return new URL(process.env.PUBLIC_URL).hostname;
+    } catch {
+      return process.env.PUBLIC_URL;
+    }
+  }
   if (process.env.DOMAIN) {
     return process.env.DOMAIN;
   }
@@ -26,25 +51,43 @@ function resolveHostDomain(): string {
   return 'localhost';
 }
 
-function resolveHostPort(): number {
-  const portStr = process.env.PORT || process.env.SERVER_PORT;
-  if (portStr) {
+function resolveHostPort(lavaConfig: LavalinkYamlConfig): number {
+  if (process.env.DASHBOARD_PORT || process.env.PORT || process.env.SERVER_PORT) {
+    const portStr = process.env.DASHBOARD_PORT || process.env.PORT || process.env.SERVER_PORT!;
     const parsed = parseInt(portStr, 10);
     if (!isNaN(parsed) && parsed > 0 && parsed <= 65535) {
       return parsed;
     }
   }
+  if (lavaConfig.server?.port) {
+    return lavaConfig.server.port + 1;
+  }
   return 2333;
 }
 
+function resolveLavalinkHost(lavaConfig: LavalinkYamlConfig): string {
+  if (lavaConfig.server?.address) {
+    return lavaConfig.server.address.split('||')[0].trim();
+  }
+  return '127.0.0.1';
+}
+
+function resolveLavalinkPort(lavaConfig: LavalinkYamlConfig): number {
+  if (lavaConfig.server?.port) {
+    return lavaConfig.server.port;
+  }
+  return 2333;
+}
+
+const lavaConfig = loadLavalinkConfig();
 const lavaPass = process.env.LAVA_PASS || 'youshallnotpass';
 
 export const config: ServerConfig = {
-  port: resolveHostPort(),
+  port: resolveHostPort(lavaConfig),
   host: '0.0.0.0',
   domain: resolveHostDomain(),
-  lavalinkHost: '127.0.0.1',
-  lavalinkPort: 23333,
+  lavalinkHost: resolveLavalinkHost(lavaConfig),
+  lavalinkPort: resolveLavalinkPort(lavaConfig),
   lavalinkPass: lavaPass,
   adminKey: process.env.ADMIN_KEY || process.env.ADMIN_PASSWORD || lavaPass,
   youtubeApiKey: (process.env.YOUTUBE_CLIENT_ID || '').trim(),
@@ -57,4 +100,3 @@ export const config: ServerConfig = {
     10
   )
 };
-

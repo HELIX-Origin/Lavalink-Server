@@ -18,11 +18,11 @@ async function main(): Promise<void> {
 
   if (!config.youtubeApiKey) {
     console.error('======================================================================');
-    console.error('❌ [Fatal] YOUTUBE_API_KEY is required (YouTube OAuth Client ID).');
+    console.error('❌ [Fatal] YOUTUBE_CLIENT_ID is required (YouTube OAuth Client ID).');
     console.error('It must be an OAuth Client ID of app type "TVs and Limited Input devices";');
     console.error('the YouTube authorization URL cannot be issued without it,');
     console.error('so the YouTube plugin cannot authenticate and Lavalink playback fails.');
-    console.error('Set YOUTUBE_API_KEY in your environment (e.g. .env) and restart.');
+    console.error('Set YOUTUBE_CLIENT_ID in your environment (e.g. .env) and restart.');
     console.error('======================================================================');
     process.exit(1);
   }
