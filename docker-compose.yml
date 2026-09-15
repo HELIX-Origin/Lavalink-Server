@@ -6,6 +6,7 @@ services:
     restart: unless-stopped
     ports:
       - "${LAVA_PORT:-2333}:2333"
+      - "2334:2334"  # Dashboard (LAVA_PORT + 1)
     environment:
       # Lavalink Auth & Security
       - LAVA_DOMAIN=${LAVA_DOMAIN:-}

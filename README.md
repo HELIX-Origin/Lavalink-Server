@@ -72,7 +72,7 @@ The Lavalink server resolves configuration from internal/public URLs and environ
 | :--- | :--- | :--- |
 | `LAVA_DOMAIN` | *(empty)* | Public domain/host for both Lavalink and dashboard (e.g. `https://lavalink.yourdomain.com`) |
 | `LAVA_HOST` | `127.0.0.1` | Bind address for both Lavalink and dashboard |
-| `LAVA_PORT` | `2333` | Port for both Lavalink and dashboard (dashboard served at `/dashboard`) |
+| `LAVA_PORT` | `2333` | Lavalink server port; dashboard auto-increments to `LAVA_PORT + 1` (served at `/dashboard`) |
 | `LAVA_PASS` | `youshallnotpass` | Authentication password for WebSocket/REST API |
 | `LAVA_SECURE` | `false` | Use HTTPS for Lavalink (true/false) |
 | `LAVA_CIPHER_URL` | `https://cipher.kikkia.dev/` | Remote cipher endpoint for YouTube signature deciphering |

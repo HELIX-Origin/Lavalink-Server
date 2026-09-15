@@ -21,7 +21,7 @@ Manages Docker deployment: `Dockerfile`, `docker-compose.yml`
 
 ## Responsibilities
 - Lavalink JAR download at build time (not in repo)
-- Port exposure (only 2333)
+- Port exposure (2333 Lavalink + 2334 dashboard = LAVA_PORT + 1)
 - Environment variable mapping in compose
 - Volume for SQLite persistence
 
@@ -45,7 +45,7 @@ COPY tsconfig.json ./
 COPY src/ ./src/
 RUN npm run build && npm prune --production
 COPY application.yml ./application.yml
-EXPOSE 2333
+EXPOSE 2333 2334
 CMD ["node", "dist/index.js"]
 ```
 
@@ -57,6 +57,7 @@ services:
     restart: unless-stopped
     ports:
       - "${LAVA_PORT:-2333}:2333"
+      - "2334:2334"  # Dashboard (LAVA_PORT + 1)
     environment:
       - LAVA_DOMAIN=${LAVA_DOMAIN:-}
       - LAVA_HOST=${LAVA_HOST:-127.0.0.1}
@@ -82,7 +83,7 @@ services:
 
 ## Validation Checklist
 - [ ] Lavalink JAR downloads from official releases
-- [ ] Only port 2333 exposed
+- [ ] Only ports 2333 + 2334 exposed
 - [ ] All valid `.env` keys in compose environment
 - [ ] Volume for SQLite persistence
 - [ ] `docker compose build && docker compose up -d` works

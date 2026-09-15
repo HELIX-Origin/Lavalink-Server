@@ -182,7 +182,8 @@ flowchart LR
 **Simplified ServerConfig interface:**
 ```typescript
 interface ServerConfig {
-  port: number;              // LAVA_PORT (dashboard on /dashboard)
+  port: number;              // LAVA_PORT (Lavalink server)
+  dashboardPort: number;     // LAVA_PORT + 1 (dashboard at /dashboard)
   host: string;              // LAVA_HOST (bind address)
   domain: string;            // LAVA_DOMAIN (public domain)
   pass: string;              // LAVA_PASS
@@ -200,6 +201,7 @@ interface ServerConfig {
   dashboardColorScheme: string; // DASHBOARD_COLOR_SCHEME (default 'default')
   internalUrl: string;       // http(s)://host:port
   publicUrl: string;         // https://domain (or http(s)://host:port if localhost)
+  dashboardUrl: string;      // https://domain/dashboard (or http://host:dashboardPort/dashboard if localhost)
 }
 ```
 
@@ -264,11 +266,11 @@ WS   /v4/websocket        → WebSocket proxy to Lavalink
 - No live log viewport
 - No manual token modal (OAuth is public via /api/oauth/youtube)
 - Public YouTube OAuth flow accessible to anyone
-- Dashboard runs on same port as Lavalink via `/dashboard` endpoint
+- Dashboard runs on `LAVA_PORT + 1` (auto-incremented) via `/dashboard` endpoint
 - Static pages: `/dashboard/docs`, `/dashboard/tos`, `/dashboard/privacy`
 - Lavalink internal: port visible (e.g., `http://localhost:2333`)
 - Lavalink public: port visible (e.g., `https://domain.com:2333`)
-- Dashboard internal: port visible (e.g., `http://localhost:2333/dashboard`)
+- Dashboard internal: `LAVA_PORT + 1` (e.g., `http://localhost:2334/dashboard`)
 - Dashboard public: port masked (e.g., `https://domain.com/dashboard`)
 - Uses `config.publicUrl` for Lavalink public, `config.internalUrl` for Lavalink internal
 - Theme support: `DASHBOARD_THEME` (glassmorphism/dark/light/cyberpunk/dracula/nord/emerald) + `DASHBOARD_COLOR_SCHEME` (accent colors)
@@ -337,6 +339,26 @@ graph TD
 - Wiki links: `../../wiki/PageName` (NO `.md` extension)
 - Keep README, Configuration.md, Deployment.md, Plugins.md, Client-Integration.md, Troubleshooting.md in sync
 - Footer in wiki/_Footer.md
+
+### 11. COMMIT STANDARDS
+Commit messages must be **detailed and human-readable**, using an **emoji** at the start for improved readability.
+
+Format:
+```
+<emoji> <Short summary>
+```
+
+Guidelines:
+- Start with a relevant emoji (e.g., 🔧 refactor/config, ✨ feature, 🐛 fix, 📝 docs, 🎨 style/theme, 📦 dependencies/deployment, 🚀 performance)
+- Write a short, descriptive summary (imperative mood, ≤ ~70 chars)
+- Keep the summary human-readable — no raw hashes, no "fix stuff" vagueness
+- Optionally add a body with context/changed files when the change is non-obvious
+
+Examples:
+- `🔧 Modular restructure: pages, themes, config cleanup, systemd installer`
+- `📝 Clarify YouTube env key naming rationale`
+- `🐛 Fix SponsorBlock plugin version to 3.0.1`
+- `✨ Add theme support to dashboard (DASHBOARD_THEME / DASHBOARD_COLOR_SCHEME)`
 
 ---
 

@@ -2,6 +2,7 @@ import path from 'node:path';
 
 export interface ServerConfig {
   port: number;
+  dashboardPort: number;
   host: string;
   domain: string;
   pass: string;
@@ -19,6 +20,7 @@ export interface ServerConfig {
   dashboardColorScheme: string;
   internalUrl: string;
   publicUrl: string;
+  dashboardUrl: string;
 }
 
 function env(key: string, fallback: string): string {
@@ -40,12 +42,14 @@ function envBool(key: string, fallback: boolean): boolean {
 
 const host = env('LAVA_HOST', '127.0.0.1');
 const port = envInt('LAVA_PORT', 2333);
+const dashboardPort = port + 1;
 const secure = envBool('LAVA_SECURE', false);
 const domain = env('LAVA_DOMAIN', 'localhost');
 const protocol = secure ? 'https' : 'http';
 
 export const config: ServerConfig = {
   port,
+  dashboardPort,
   host,
   domain,
   pass: env('LAVA_PASS', 'youshallnotpass'),
@@ -63,4 +67,5 @@ export const config: ServerConfig = {
   dashboardColorScheme: env('DASHBOARD_COLOR_SCHEME', 'default').toLowerCase(),
   internalUrl: `${protocol}://${host}:${port}`,
   publicUrl: domain === 'localhost' ? `${protocol}://${host}:${port}` : `${protocol}://${domain}`,
+  dashboardUrl: domain === 'localhost' ? `${protocol}://${host}:${dashboardPort}/dashboard` : `${protocol}://${domain}/dashboard`,
 };

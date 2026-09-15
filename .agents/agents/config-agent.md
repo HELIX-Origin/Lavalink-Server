@@ -19,7 +19,7 @@ flowchart TD
 Manages `src/config.ts` and `.env.example`.
 
 ## Responsibilities
-- Maintain `ServerConfig` interface (port/host/domain/pass/secure/cipherUrl/cipherPassword/youtubeClientId/youtubeClientSecret/spotifyClientId/spotifyClientSecret/geniusToken/dbPath/isProduction/dashboardTheme/dashboardColorScheme/internalUrl/publicUrl)
+- Maintain `ServerConfig` interface (port/dashboardPort/host/domain/pass/secure/cipherUrl/cipherPassword/youtubeClientId/youtubeClientSecret/spotifyClientId/spotifyClientSecret/geniusToken/dbPath/isProduction/dashboardTheme/dashboardColorScheme/internalUrl/publicUrl/dashboardUrl)
 - Use `env()`, `envInt()`, `envBool()` helpers for all env parsing
 - Sync `.env.example` with actual `.env` keys
 - Do NOT parse `application.yml` — supervisor spawns Java directly with `-Dserver.port`/`-Dserver.address`
@@ -44,8 +44,10 @@ Manages `src/config.ts` and `.env.example`.
 | `env(key, default)` | Read env var with fallback |
 | `envInt(key, default)` | Read env var as integer |
 | `envBool(key, default)` | Read env var as boolean |
-| `config.internalUrl` | Derived `http(s)://host:port` |
+| `config.internalUrl` | Derived `http(s)://host:port` (Lavalink) |
 | `config.publicUrl` | Derived `https://domain` (or `http://host:port` if localhost) |
+| `config.dashboardUrl` | Derived `https://domain/dashboard` (or `http://host:dashboardPort/dashboard` if localhost) |
+| `config.dashboardPort` | Auto-derived `LAVA_PORT + 1` |
 
 ## Validation
 - Only uses keys from actual `.env` file

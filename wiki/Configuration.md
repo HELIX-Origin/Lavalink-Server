@@ -25,7 +25,7 @@ The Lavalink server resolves all configuration from environment variables. Deriv
 | :--- | :--- | :--- |
 | `LAVA_DOMAIN` | *(empty)* | Public domain/host (e.g. `https://lavalink.yourdomain.com`) used by both dashboard and server |
 | `LAVA_HOST` | `127.0.0.1` | Internal bind address (host:port) |
-| `LAVA_PORT` | `2333` | Internal port for both Lavalink and the dashboard (`/dashboard` endpoint) |
+| `LAVA_PORT` | `2333` | Lavalink server port; dashboard auto-increments to `LAVA_PORT + 1` (`/dashboard` endpoint) |
 | `LAVA_PASS` | `youshallnotpass` | Authentication password for WebSocket/REST API |
 | `LAVA_SECURE` | `false` | Use HTTPS for Lavalink (true/false) |
 | `LAVA_CIPHER_URL` | `https://cipher.kikkia.dev/` | Remote cipher endpoint for YouTube signature deciphering |
@@ -187,14 +187,14 @@ The TypeScript config (`src/config.ts`) reads environment variables directly via
 
 ## 🌐 URL Structure
 
-The server uses a single port for both Lavalink and the dashboard. Derived URLs are built in `src/config.ts`:
+Lavalink binds `LAVA_PORT` and the dashboard binds `LAVA_PORT + 1` (auto-incremented). Derived URLs are built in `src/config.ts`:
 
 | Type | Source | Example |
 | :--- | :--- | :--- |
 | Lavalink Internal | `internalUrl` (`protocol://host:port`) | `http://localhost:2333` |
 | Lavalink Public | `publicUrl` (`https://domain`) | `https://lavalink.yourdomain.com` |
-| Dashboard Public | `${publicUrl}/dashboard` | `https://lavalink.yourdomain.com/dashboard` |
+| Dashboard Public | `dashboardUrl` (`https://domain/dashboard`) | `https://lavalink.yourdomain.com/dashboard` |
 
 - **Lavalink** keeps its port visible publicly (e.g., `https://domain.com:2333`).
-- **Dashboard** is served at `/dashboard` on the same port and its public port is masked by reverse proxies/Cloudflare tunnels.
-- When `LAVA_DOMAIN` is localhost, `publicUrl` falls back to `http://host:port`.
+- **Dashboard** runs on `LAVA_PORT + 1` (e.g., `http://localhost:2334/dashboard`), served at `/dashboard`, and its public port is masked by reverse proxies/Cloudflare tunnels.
+- When `LAVA_DOMAIN` is localhost, `publicUrl` falls back to `http://host:port` and `dashboardUrl` to `http://host:dashboardPort/dashboard`.

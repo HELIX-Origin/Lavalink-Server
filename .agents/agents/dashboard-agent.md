@@ -43,6 +43,8 @@ config.domain        // LAVA_DOMAIN
 config.pass          // LAVA_PASS
 config.publicUrl     // public URL (for display)
 config.internalUrl   // internal URL (for display)
+config.dashboardPort // LAVA_PORT + 1 (the port this gateway binds)
+config.dashboardUrl  // https://domain/dashboard (or http://host:dashboardPort/dashboard if localhost)
 
 // Theme
 config.dashboardTheme       // DASHBOARD_THEME
@@ -65,7 +67,7 @@ config.dashboardColorScheme // DASHBOARD_COLOR_SCHEME
 4. Test in browser (desktop + mobile)
 
 ## Validation Checklist
-- [ ] Uses `config.publicUrl`, `config.internalUrl` (NOT `lavaPublicUrl`/`lavaInternalUrl`)
+- [ ] Uses `config.publicUrl`, `config.internalUrl`, `config.dashboardUrl`, `config.dashboardPort` (NOT `lavaPublicUrl`/`lavaInternalUrl`)
 - [ ] No references to removed features (keep-alive, admin console, owner login)
 - [ ] OAuth UI works with public `/api/oauth/youtube/*` endpoints
 - [ ] `pnpm build` passes

@@ -50,9 +50,9 @@ docker compose logs -f
 
 You can view the real-time web dashboard at:
 ```
-http://<your-server-ip>:2333/dashboard
+http://<your-server-ip>:2334/dashboard
 ```
-*(Note: The dashboard runs on the same port as Lavalink, served at `/dashboard`.)*
+*(Note: The dashboard runs on `LAVA_PORT + 1` (default 2334), served at `/dashboard`.)*
 
 ---
 
@@ -85,11 +85,13 @@ newgrp docker
 ```
 
 ### Step 2: Configure Firewall (`ufw`)
-Ensure port `2333` (Lavalink + dashboard) and SSH are allowed:
+Ensure ports `2333` (Lavalink) + `2334` (dashboard) and SSH are allowed:
 ```bash
 sudo ufw allow OpenSSH
-# Lavalink Java server port + dashboard (/dashboard endpoint)
+# Lavalink Java server port
 sudo ufw allow 2333/tcp
+# Dashboard port (LAVA_PORT + 1, /dashboard endpoint)
+sudo ufw allow 2334/tcp
 # If using Nginx reverse proxy with SSL:
 sudo ufw allow 80/tcp
 sudo ufw allow 443/tcp
@@ -234,7 +236,8 @@ server {
     ssl_ciphers "ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384";
 
     location / {
-        proxy_pass http://127.0.0.1:2333;
+        # Gateway on dashboard port (LAVA_PORT + 1); it proxies /v4/* to Lavalink
+        proxy_pass http://127.0.0.1:2334;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";

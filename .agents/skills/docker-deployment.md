@@ -151,9 +151,9 @@ flowchart LR
 - Download URL: `https://github.com/lavalink-devs/Lavalink/releases/${LAVALINK_VERSION}/download/Lavalink.jar`
 
 ### Ports
-- Only Lavalink port (2333) exposed
-- Dashboard runs on same port via `/dashboard` endpoint
-- No separate dashboard port needed
+- Lavalink port (2333) exposed
+- Dashboard runs on `LAVA_PORT + 1` (2334) via `/dashboard` endpoint
+- Users with a custom `LAVA_PORT` manually add the dashboard port mapping (e.g. `2335:2335` for LAVA_PORT=2334)
 
 ### Environment Variables in Compose
 All valid `.env` keys mapped. See rules.md for current list.

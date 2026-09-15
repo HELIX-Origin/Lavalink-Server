@@ -9,7 +9,8 @@ async function main(): Promise<void> {
   console.log('==================================================');
   console.log('🔊 Lavalink v4 Audio Server & Dashboard');
   console.log(`🌐 Resolved Host Domain: ${config.domain}`);
-  console.log(`🔌 Gateway Port:         ${config.port}`);
+  console.log(`🔌 Lavalink Port:        ${config.port}`);
+  console.log(`📊 Dashboard Port:       ${config.dashboardPort}`);
   console.log(`📍 Internal Node:        ${config.host}:${config.port}`);
   console.log(`💾 SQLite Persistence:   ${config.dbPath}`);
   console.log(`⚡ Mode:                 ${config.isProduction ? 'production' : 'development'}`);
@@ -58,9 +59,9 @@ async function main(): Promise<void> {
     }
   });
 
-  server.listen(config.port, config.host, () => {
-    console.log(`[Gateway] Server listening on http://${config.host}:${config.port}`);
-    console.log(`[Gateway] Dashboard available at ${config.publicUrl}/dashboard`);
+  server.listen(config.dashboardPort, config.host, () => {
+    console.log(`[Gateway] Server listening on http://${config.host}:${config.dashboardPort}`);
+    console.log(`[Gateway] Dashboard available at ${config.dashboardUrl}`);
     console.log(`[Gateway] Lavalink internal: ${config.internalUrl}`);
     console.log(`[Gateway] Lavalink public: ${config.publicUrl}`);
   });
