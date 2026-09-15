@@ -3,7 +3,6 @@ import { config } from './config.js';
 import { initDatabase, logSystemEvent } from './db.js';
 import { LavalinkSupervisor } from './supervisor.js';
 import { createProxyServer } from './proxy.js';
-import { startKeepAlive, stopKeepAlive } from './keepAlive.js';
 import { loadSavedOAuthToken, initiateDeviceFlow, waitForDeviceFlow } from './youtubeOAuth.js';
 
 async function main(): Promise<void> {
@@ -62,9 +61,6 @@ async function main(): Promise<void> {
   server.listen(config.port, config.host, () => {
     console.log(`[Gateway] Server listening on http://${config.host}:${config.port}`);
     console.log(`[Gateway] Dashboard available at http://${config.domain}:${config.port}/`);
-
-    // Start background keep-alive pinger
-    startKeepAlive();
   });
 
   // 4. Graceful Shutdown Handlers
@@ -74,8 +70,6 @@ async function main(): Promise<void> {
     isShuttingDown = true;
     console.log(`\n[Gateway] Received ${signal}. Shutting down gracefully...`);
     logSystemEvent('info', `Server shutting down via ${signal}`);
-
-    stopKeepAlive();
 
     server.close(() => {
       console.log('[Gateway] HTTP server closed.');

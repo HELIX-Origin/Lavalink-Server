@@ -16,11 +16,12 @@ This project provides a pre-tuned, containerized **Lavalink v4** audio node with
 Discord music bots require significant CPU and networking resources to stream and transcode high-bitrate audio packets over WebRTC voice connections. Running an internal audio node inside the same process as your bot quickly leads to **Out-Of-Memory (OOM)** errors, Gateway lag, and audio skipping.
 
 This standalone repository solves that problem by packaging Lavalink v4 in an isolated, lightweight container with an integrated TypeScript supervisor:
-- **Pinned Lavalink JAR:** The official Lavalink v4 release JAR (currently **4.2.2**) is committed in the repository and copied into the image for reproducible builds.
+- **Official Lavalink JAR:** Download the latest Lavalink v4 JAR from the [official releases](https://github.com/lavalink-devs/Lavalink/releases) (not committed to repo).
 - **Interactive Web Dashboard:** Modern glassmorphic status dashboard with real-time player telemetry, node statistics, system logs, and YouTube OAuth controls.
-- **Pre-Configured Plugins:** Out-of-the-box support for the official **YouTube Plugin** (with remote deciphering and OAuth) and **LavaSrc** (Spotify metadata resolution).
+- **Pre-Configured Plugins:** Out-of-the-box support for the official **YouTube Plugin** (with remote deciphering and OAuth), **LavaSrc** (Spotify metadata resolution), **SponsorBlock** (auto-skip sponsorships), **LavaSearch** (enhanced search), **LavaLyrics** (Genius lyrics), and **Skybot** (OCRemix/Mixcloud).
 - **Environment Variable Mapping:** All `application.yml` properties dynamically read from environment variables, eliminating the need to rebuild images to change settings.
 - **In-Memory & Persistent Caching:** In-memory caching with Redis and persistence in SQLite for authentication tokens and system configurations across restarts.
+- **YouTube OAuth Device Flow:** Server waits for OAuth authorization before starting Lavalink, ensuring YouTube playback works on first run.
 
 ---
 

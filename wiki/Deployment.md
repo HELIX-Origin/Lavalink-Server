@@ -30,8 +30,11 @@ nano .env
 ```
 Key settings to customize:
 - `LAVA_PASS`: Choose a strong, secret authentication password (e.g. `MySuperSecretLavaPass123!`).
-- `DOMAIN`: Your public domain/host for the server (e.g. `lavalink.yourdomain.com`).
-- `YOUTUBE_REFRESH_TOKEN`: *(Optional)* If you already generated a YouTube OAuth refresh token.
+- `PUBLIC_URL`: Your public domain/host for the server (e.g. `lavalink.yourdomain.com`).
+- `YOUTUBE_CLIENT_ID`: **Required** — YouTube OAuth Client ID (app type: "TVs and Limited Input devices").
+- `YOUTUBE_CLIENT_SECRET`: YouTube OAuth Client Secret for the Client ID above.
+- `YOUTUBE_REFRESH_TOKEN`: *(Optional)* Pre-authorized refresh token (auto-saved after device flow).
+- `DASHBOARD_PORT`: *(Optional)* Custom dashboard port (default: Lavalink port + 1).
 - `SPOTIFY_CLIENT_ID` & `SPOTIFY_CLIENT_SECRET`: *(Optional)* For Spotify link resolution.
 
 ### Step 3: Start the Server
@@ -48,8 +51,9 @@ docker compose logs -f
 
 You can view the real-time web dashboard at:
 ```
-http://<your-server-ip>:2333
+http://<your-server-ip>:2334
 ```
+*(Note: Dashboard port defaults to Lavalink port + 1, e.g., 2333 → 2334. Check `DASHBOARD_PORT` if customized.)*
 
 ---
 
@@ -82,11 +86,13 @@ newgrp docker
 ```
 
 ### Step 2: Configure Firewall (`ufw`)
-Ensure port `2333` (or `443` if using Nginx) and SSH are allowed:
+Ensure port `2333` (Lavalink) and `2334` (Dashboard) and SSH are allowed:
 ```bash
 sudo ufw allow OpenSSH
-# If connecting directly to Lavalink:
+# Lavalink Java server port
 sudo ufw allow 2333/tcp
+# Dashboard/gateway port (default: Lavalink port + 1)
+sudo ufw allow 2334/tcp
 # If using Nginx reverse proxy with SSL:
 sudo ufw allow 80/tcp
 sudo ufw allow 443/tcp
@@ -96,6 +102,57 @@ sudo ufw enable
 
 ### Step 3: Run with Docker Compose
 Follow the steps in [Quick Start: Docker Compose](#1--quick-start-docker-compose-recommended-for-vps) above.
+
+---
+
+### Step 4: Install as Systemd Service (Alternative to Docker)
+
+For native VPS deployment without Docker:
+
+1. **Install dependencies:**
+   ```bash
+   sudo apt update && sudo apt install -y nodejs npm openjdk-21-jre-headless git
+   ```
+
+2. **Clone and build:**
+   ```bash
+   git clone https://github.com/HELIX-Origin/Lavalink-Server.git
+   cd Lavalink-Server
+   pnpm install
+   pnpm build
+   ```
+
+3. **Download Lavalink JAR (required):**
+   ```bash
+   # Download the latest Lavalink v4 JAR from the official repo
+   curl -L -o Lavalink.jar https://github.com/lavalink-devs/Lavalink/releases/latest/download/Lavalink.jar
+   ```
+   
+   > **Note:** The Lavalink JAR is no longer committed to the repository. You must download it from the [official Lavalink v4 releases](https://github.com/lavalink-devs/Lavalink/releases) before running the server.
+
+4. **Configure environment:**
+   ```bash
+   cp .env.example .env
+   nano .env  # Set your credentials
+   ```
+
+5. **Install systemd service:**
+   ```bash
+   sudo ./scripts/install-service.sh install
+   ```
+   
+   Or specify a custom path:
+   ```bash
+   sudo ./scripts/install-service.sh install /opt/lavalink-server
+   ```
+
+6. **Check status and logs:**
+   ```bash
+   sudo ./scripts/install-service.sh status
+   sudo ./scripts/install-service.sh logs
+   ```
+
+The service runs as the invoking user, loads `.env`, restarts on failure, and includes security hardening.
 
 ---
 
@@ -136,7 +193,7 @@ server {
     ssl_ciphers "ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384";
 
     location / {
-        proxy_pass http://127.0.0.1:2333;
+        proxy_pass http://127.0.0.1:2334;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
@@ -164,7 +221,7 @@ sudo systemctl reload nginx
 
 Once your server is running, update your Discord bot's configuration (e.g. Master-Bot `.env`):
 
-### Option A: Direct VPS Connection (Raw IP / Port 2333)
+### Option A: Direct VPS Connection (Raw IP / Port 2333 for Lavalink, 2334 for Dashboard)
 ```env
 LAVA_ENABLED=true
 LAVA_EXTERNAL=true
@@ -185,3 +242,24 @@ LAVA_SECURE=true
 ```
 
 For more details on connecting with popular client libraries, see the [Client Integration Guide](Client-Integration.md).
+
+---
+
+## 5. 🔐 First Run: YouTube OAuth Authorization
+
+On first startup (without a pre-configured `YOUTUBE_REFRESH_TOKEN`), the server will:
+
+1. **Print a device authorization code** to the console:
+   ```
+   👉 1. Open in browser:  https://www.google.com/device
+   👉 2. Enter code:       ABC-DEF-GHI
+   👉 3. Or direct link:   https://www.google.com/device?user_code=ABC-DEF-GHI
+   ```
+
+2. **Wait for you to authorize** at `https://www.google.com/device`
+
+3. **Auto-save the refresh token** to SQLite and apply it to Lavalink
+
+4. **Continue starting** Lavalink Java process only after authorization succeeds
+
+> **Important:** Your OAuth app must have your Google account added as a test user in Google Cloud Console (OAuth consent screen → Test users), or be published/verified.

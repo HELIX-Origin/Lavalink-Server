@@ -5,7 +5,7 @@ import { config } from './config.js';
 import { getCachedStatus, getCachedStats, getCachedInfo, getRecentLogs } from './redis.js';
 import { recordClientSessionStart, recordClientSessionEnd, getRecentMetrics, getRecentSystemEvents, logSystemEvent } from './db.js';
 import { renderDashboardHtml } from './dashboard.js';
-import { getKeepAliveState, triggerKeepAlivePing } from './keepAlive.js';
+
 import { getOAuthState, initiateDeviceFlow, applyManualToken } from './youtubeOAuth.js';
 
 export interface ProxyOptions {
@@ -101,7 +101,6 @@ export function createProxyServer(options: ProxyOptions = {}): { server: http.Se
         port: config.port,
         stats,
         info,
-        keepAlive: getKeepAliveState(),
         connection: {
           host: config.domain,
           port: botPort,
@@ -203,9 +202,8 @@ export function createProxyServer(options: ProxyOptions = {}): { server: http.Se
         const { action } = await parseJsonBody<{ action?: string }>(req);
 
         if (action === 'ping') {
-          const result = await triggerKeepAlivePing();
           res.writeHead(200, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ success: true, result, keepAlive: getKeepAliveState() }));
+          res.end(JSON.stringify({ success: true, message: 'Keep-alive removed' }));
           return;
         }
 

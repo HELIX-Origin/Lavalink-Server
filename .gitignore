@@ -3,6 +3,7 @@ plugins/
 logs/
 .youtube-oauth.json
 application.yml
+Lavalink.jar
 
 # Node & TypeScript
 node_modules/

@@ -17,9 +17,6 @@ export class LavalinkSupervisor {
   public async start(): Promise<void> {
     if (this.process) return;
 
-    // Load any saved refresh token from Redis live memory / SQLite into process.env before spawning
-    await loadSavedOAuthToken();
-
     this.isShuttingDown = false;
     await setCachedStatus('starting');
     logSystemEvent('info', 'Lavalink supervisor starting Java process', {

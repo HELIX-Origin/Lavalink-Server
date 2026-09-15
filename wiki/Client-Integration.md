@@ -85,13 +85,13 @@ shoukaku.on("ready", (name) => console.log(`Node ${name} connected!`));
 ```
 
 ---
-
+ 
 ## 4. Poru / Kazagumo
-
+ 
 ```typescript
 import { Kazagumo } from "kazagumo";
 import { Connectors } from "shoukaku";
-
+ 
 const kazagumo = new Kazagumo(
   {
     defaultSearchEngine: "youtube",
@@ -111,3 +111,23 @@ const kazagumo = new Kazagumo(
   ]
 );
 ```
+ 
+---
+ 
+## 5. NodeLink (Java / Spring)
+ 
+[NodeLink](https://nodelink.js.org/) is a Lavalink-compatible Java-based audio node. **This server is compatible with NodeLink** as a Lavalink v4 server implementation.
+ 
+To use NodeLink with this server, configure your bot client to connect to the same endpoints:
+ 
+```yaml
+# NodeLink configuration example
+nodes:
+  - name: "main-node"
+    host: "your-vps-ip-or-domain.com"
+    port: 2333          # Lavalink Java server port (from application.yml)
+    password: "youshallnotpass"
+    secure: false       # true if using SSL reverse proxy (port 443)
+```
+ 
+> **Note:** NodeLink is a Lavalink-compatible server implementation. This HELIX-Origin server runs the official Lavalink v4 JAR with YouTube and LavaSrc plugins. Both expose the same Lavalink v4 REST/WebSocket API, so any Lavalink v4-compatible client (including NodeLink-based clients) will work.
