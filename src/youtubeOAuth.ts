@@ -395,6 +395,33 @@ export async function applyManualToken(token: string): Promise<boolean> {
 }
 
 /**
+ * Waits for device flow authorization to complete
+ * Returns the refresh token when authorized, or throws if failed/timed out
+ */
+export async function waitForDeviceFlow(timeoutMs = 10 * 60 * 1000): Promise<string> {
+  const startTime = Date.now();
+  
+  while (Date.now() - startTime < timeoutMs) {
+    const currentState = getOAuthState();
+    
+    if (currentState.status === 'authorized' && currentState.tokenPreview) {
+      const token = process.env.YOUTUBE_REFRESH_TOKEN;
+      if (token && token.trim().length > 5) {
+        return token.trim();
+      }
+    }
+    
+    if (currentState.status === 'failed') {
+      throw new Error(currentState.error || 'OAuth authorization failed');
+    }
+    
+    await new Promise(resolve => setTimeout(resolve, 2000));
+  }
+  
+  throw new Error('OAuth authorization timed out');
+}
+
+/**
  * Returns current OAuth status and details
  */
 export function getOAuthState(): OAuthState {

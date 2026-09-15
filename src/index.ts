@@ -4,7 +4,7 @@ import { initDatabase, logSystemEvent } from './db.js';
 import { LavalinkSupervisor } from './supervisor.js';
 import { createProxyServer } from './proxy.js';
 import { startKeepAlive, stopKeepAlive } from './keepAlive.js';
-import { loadSavedOAuthToken, initiateDeviceFlow } from './youtubeOAuth.js';
+import { loadSavedOAuthToken, initiateDeviceFlow, waitForDeviceFlow } from './youtubeOAuth.js';
 
 async function main(): Promise<void> {
   console.log('==================================================');
@@ -32,9 +32,15 @@ async function main(): Promise<void> {
   const token = await loadSavedOAuthToken();
   if (!token) {
     console.log('[YouTube OAuth] No refresh token configured. Initiating OAuth device grant...');
-    initiateDeviceFlow().catch((err) => {
-      console.warn('[YouTube OAuth] Device flow notice:', err.message);
-    });
+    await initiateDeviceFlow();
+    console.log('[YouTube OAuth] Waiting for authorization...');
+    try {
+      await waitForDeviceFlow();
+      console.log('[YouTube OAuth] Authorization successful!');
+    } catch (err: any) {
+      console.error('[YouTube OAuth] Authorization failed:', err.message);
+      process.exit(1);
+    }
   }
 
   logSystemEvent('info', 'Lavalink TypeScript gateway initialized', {
