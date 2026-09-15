@@ -2,7 +2,6 @@ import path from 'node:path';
 
 export interface ServerConfig {
   port: number;
-  dashboardPort: number;
   host: string;
   domain: string;
   pass: string;
@@ -20,6 +19,9 @@ export interface ServerConfig {
   dashboardColorScheme: string;
   internalUrl: string;
   publicUrl: string;
+  dashboardPort: number;
+  dashboardHost: string;
+  dashboardInternalUrl: string;
   dashboardUrl: string;
 }
 
@@ -40,16 +42,41 @@ function envBool(key: string, fallback: boolean): boolean {
   return raw === 'true' || raw === '1';
 }
 
+function stripProtocol(url: string): string {
+  return url.replace(/^https?:\/\//, '');
+}
+
+function parseBaseUrl(raw: string): { hostname: string; port: number } | null {
+  try {
+    const url = new URL(raw);
+    if (!url.hostname) return null;
+    const port = url.port ? parseInt(url.port, 10) : NaN;
+    return {
+      hostname: url.hostname,
+      port: isNaN(port) || port < 1 || port > 65535 ? 0 : port
+    };
+  } catch {
+    return null;
+  }
+}
+
 const host = env('LAVA_HOST', '127.0.0.1');
 const port = envInt('LAVA_PORT', 2333);
-const dashboardPort = port + 1;
 const secure = envBool('LAVA_SECURE', false);
-const domain = env('LAVA_DOMAIN', 'localhost');
+const domain = stripProtocol(env('LAVA_DOMAIN', 'localhost'));
 const protocol = secure ? 'https' : 'http';
+
+const dashboardInternalRaw = env('DASHBOARD_INTERNAL_URL', '');
+const dashboardInternal = parseBaseUrl(dashboardInternalRaw);
+const dashboardHost = dashboardInternal?.hostname || host;
+const dashboardPort = dashboardInternal && dashboardInternal.port > 0 ? dashboardInternal.port : port + 1;
+const dashboardInternalUrl = dashboardInternalRaw || `${protocol}://${dashboardHost}:${dashboardPort}`;
+const dashboardUrl =
+  env('DASHBOARD_PUBLIC_URL', '').replace(/\/+$/, '') ||
+  `${protocol}://${dashboardHost}:${dashboardPort}`;
 
 export const config: ServerConfig = {
   port,
-  dashboardPort,
   host,
   domain,
   pass: env('LAVA_PASS', 'youshallnotpass'),
@@ -67,5 +94,8 @@ export const config: ServerConfig = {
   dashboardColorScheme: env('DASHBOARD_COLOR_SCHEME', 'default').toLowerCase(),
   internalUrl: `${protocol}://${host}:${port}`,
   publicUrl: domain === 'localhost' ? `${protocol}://${host}:${port}` : `${protocol}://${domain}`,
-  dashboardUrl: domain === 'localhost' ? `${protocol}://${host}:${dashboardPort}/dashboard` : `${protocol}://${domain}/dashboard`,
+  dashboardPort,
+  dashboardHost,
+  dashboardInternalUrl,
+  dashboardUrl,
 };

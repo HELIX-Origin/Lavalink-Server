@@ -46,14 +46,14 @@ graph LR
         A11[DB_PATH]
         A12[DASHBOARD_THEME]
         A12[DASHBOARD_COLOR_SCHEME]
+        A13[DASHBOARD_PUBLIC_URL]
+        A13[DASHBOARD_INTERNAL_URL]
     end
 
     subgraph Removed["❌ REMOVED - NEVER USE"]
         R1[PUBLIC_URL]
         R2[DASHBOARD_PORT]
-        R3[DASHBOARD_PUBLIC_URL]
-        R4[DASHBOARD_INTERNAL_URL]
-        R5[INTERNAL_URL]
+        R3[INTERNAL_URL]
         R6[LAVA_INTERNAL_URL]
         R6[LAVA_PUBLIC_URL]
         R7[ADMIN_KEY]
@@ -93,11 +93,12 @@ graph LR
 - `DB_PATH` - SQLite database file path
 - `DASHBOARD_THEME` - Dashboard theme: glassmorphism | dark | light | cyberpunk | dracula | nord | emerald (default: dark)
 - `DASHBOARD_COLOR_SCHEME` - Accent color: default | cyan | purple | blue | emerald | rose | amber | indigo | crimson | teal | sunset
+- `DASHBOARD_PUBLIC_URL` - Public URL for the dashboard (e.g., `https://dashboard.example.com`). Empty defaults to `http://<dashboardHost>:<dashboardPort>`
+- `DASHBOARD_INTERNAL_URL` - Internal bind URL for the dashboard (e.g., `http://127.0.0.1:2334`). Empty defaults to `LAVA_HOST:LAVA_PORT+1`
 
 **NEVER USE THESE REMOVED KEYS:**
 - ❌ `PUBLIC_URL`
 - ❌ `DASHBOARD_PORT`
-- ❌ `DASHBOARD_PUBLIC_URL` / `DASHBOARD_INTERNAL_URL`
 - ❌ `INTERNAL_URL` / `LAVA_INTERNAL_URL` / `LAVA_PUBLIC_URL`
 - ❌ `ADMIN_KEY` / `ADMIN_PASSWORD`
 - ❌ `KEEP_ALIVE_ENABLED` / `KEEP_ALIVE_INTERVAL_MS`
@@ -151,6 +152,8 @@ flowchart LR
         ENV10[DB_PATH]
         ENV11[DASHBOARD_THEME]
         ENV11[DASHBOARD_COLOR_SCHEME]
+        ENV12[DASHBOARD_PUBLIC_URL]
+        ENV12[DASHBOARD_INTERNAL_URL]
     end
 
     subgraph Config["src/config.ts"]
@@ -173,6 +176,10 @@ flowchart LR
         SC11[dashboardColorScheme: string]
         SC12[internalUrl: string]
         SC13[publicUrl: string]
+        SC14[dashboardPort: number]
+        SC15[dashboardHost: string]
+        SC16[dashboardInternalUrl: string]
+        SC17[dashboardUrl: string]
     end
 
     Env --> Config
@@ -183,9 +190,9 @@ flowchart LR
 ```typescript
 interface ServerConfig {
   port: number;              // LAVA_PORT (Lavalink server)
-  dashboardPort: number;     // LAVA_PORT + 1 (dashboard at /dashboard)
+  dashboardPort: number;     // Dashboard port (from DASHBOARD_INTERNAL_URL or LAVA_PORT + 1)
   host: string;              // LAVA_HOST (bind address)
-  domain: string;            // LAVA_DOMAIN (public domain)
+  domain: string;            // LAVA_DOMAIN (public Lavalink domain, scheme stripped)
   pass: string;              // LAVA_PASS
   secure: boolean;           // LAVA_SECURE (true/false)
   cipherUrl: string;         // LAVA_CIPHER_URL
@@ -201,22 +208,25 @@ interface ServerConfig {
   dashboardColorScheme: string; // DASHBOARD_COLOR_SCHEME (default 'default')
   internalUrl: string;       // http(s)://host:port
   publicUrl: string;         // https://domain (or http(s)://host:port if localhost)
-  dashboardUrl: string;      // https://domain/dashboard (or http://host:dashboardPort/dashboard if localhost)
+  dashboardHost: string;     // Gateway bind host (from DASHBOARD_INTERNAL_URL or LAVA_HOST)
+  dashboardInternalUrl: string; // http://<dashboardHost>:<dashboardPort> (gateway bind)
+  dashboardUrl: string;      // DASHBOARD_PUBLIC_URL or http://<dashboardHost>:<dashboardPort>
 }
 ```
 
 **URL Parsing:**
-- `LAVA_PORT` → port (dashboard on /dashboard)
+- `LAVA_PORT` → port (Lavalink server)
 - `LAVA_HOST` → host (bind address)
-- `LAVA_DOMAIN` → domain, publicUrl
+- `LAVA_DOMAIN` → domain (scheme stripped), publicUrl
 - `LAVA_HOST` + `LAVA_PORT` + `LAVA_SECURE` → internalUrl
+- `DASHBOARD_INTERNAL_URL` → dashboardHost + dashboardPort (default `LAVA_HOST:LAVA_PORT+1`)
+- `DASHBOARD_PUBLIC_URL` → dashboardUrl (default `http://<dashboardHost>:<dashboardPort>`)
 
 ### 4. PROXY ENDPOINTS (Current)
 
 ```mermaid
 graph LR
     Client[Client] -->|GET /| Proxy[Proxy Server]
-    Client -->|GET /dashboard| Proxy
     Client -->|GET /docs| Proxy
     Client -->|GET /privacy| Proxy
     Client -->|GET /tos| Proxy
@@ -242,11 +252,10 @@ graph LR
 ```
 
 ```
-GET  /                    → Dashboard (serves /dashboard)
-GET  /dashboard           → Dashboard
-GET  /dashboard/docs      → Documentation page
-GET  /dashboard/privacy   → Privacy policy page
-GET  /dashboard/tos       → Terms of Service page
+GET  /                    → Dashboard (gateway root)
+GET  /docs                → Documentation page
+GET  /privacy             → Privacy policy page
+GET  /tos                 → Terms of Service page
 GET  /health              → Health check
 GET  /api/status          → Public connection details + YouTube OAuth status
 GET  /api/metrics         → Performance metrics
@@ -266,13 +275,13 @@ WS   /v4/websocket        → WebSocket proxy to Lavalink
 - No live log viewport
 - No manual token modal (OAuth is public via /api/oauth/youtube)
 - Public YouTube OAuth flow accessible to anyone
-- Dashboard runs on `LAVA_PORT + 1` (auto-incremented) via `/dashboard` endpoint
-- Static pages: `/dashboard/docs`, `/dashboard/tos`, `/dashboard/privacy`
+- Dashboard runs on its own port (from `DASHBOARD_INTERNAL_URL`, default `LAVA_PORT + 1`) served at gateway root
+- Static pages: `/docs`, `/tos`, `/privacy`
 - Lavalink internal: port visible (e.g., `http://localhost:2333`)
 - Lavalink public: port visible (e.g., `https://domain.com:2333`)
-- Dashboard internal: `LAVA_PORT + 1` (e.g., `http://localhost:2334/dashboard`)
-- Dashboard public: port masked (e.g., `https://domain.com/dashboard`)
-- Uses `config.publicUrl` for Lavalink public, `config.internalUrl` for Lavalink internal
+- Dashboard internal: `DASHBOARD_INTERNAL_URL` (e.g., `http://localhost:2334`)
+- Dashboard public: `DASHBOARD_PUBLIC_URL` (e.g., `https://dashboard.domain.com`), typically a separate subdomain mapped via reverse proxy/tunnel
+- Uses `config.publicUrl` for Lavalink public, `config.internalUrl` for Lavalink internal, `config.dashboardUrl` for dashboard public, `config.dashboardInternalUrl` for dashboard bind
 - Theme support: `DASHBOARD_THEME` (glassmorphism/dark/light/cyberpunk/dracula/nord/emerald) + `DASHBOARD_COLOR_SCHEME` (accent colors)
 - Theme registry: `src/pages/theme.ts`, themes in `src/pages/themes/*.ts`, layout shell in `src/pages/layout.ts`
 

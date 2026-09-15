@@ -3,9 +3,9 @@
 ```mermaid
 flowchart TD
     A[Receive Task] --> B{Change Type?}
-    B -->|Flow Logic| C[Edit youtubeOAuth.ts]
-    B -->|API Endpoints| D[Edit proxy.ts]
-    B -->|UI| E[Edit dashboard.ts]
+    B -->|Flow Logic| C[Edit youtube-oauth.ts]
+    B -->|API Endpoints| D[Edit server.ts]
+    B -->|UI| E[Edit pages/dashboard.ts]
     C --> F[pnpm build]
     D --> F
     E --> F
@@ -17,7 +17,7 @@ flowchart TD
 ```
 
 ## Purpose
-Manages YouTube OAuth device flow in `src/youtubeOAuth.ts` and related API endpoints.
+Manages YouTube OAuth device flow in `src/youtube-oauth.ts` and related API endpoints.
 
 ## Responsibilities
 - Device flow initiation (`initiateDeviceFlow`)
@@ -27,9 +27,9 @@ Manages YouTube OAuth device flow in `src/youtubeOAuth.ts` and related API endpo
 - Public API endpoints (`/api/oauth/youtube/*`)
 
 ## Files Managed
-- `src/youtubeOAuth.ts` - OAuth flow logic
-- `src/proxy.ts` - Public OAuth API endpoints
-- `src/dashboard.ts` - OAuth UI
+- `src/youtube-oauth.ts` - OAuth flow logic
+- `src/server.ts` - Public OAuth API endpoints
+- `src/pages/dashboard.ts` - OAuth UI
 
 ## Skills Required
 - `.agents/skills/youtube-oauth.md`
@@ -58,7 +58,7 @@ sequenceDiagram
     Lavalink-->>Server: OK
 ```
 
-## Key Functions (src/youtubeOAuth.ts)
+## Key Functions (src/youtube-oauth.ts)
 
 | Function | Purpose |
 |----------|---------|
@@ -95,9 +95,9 @@ sequenceDiagram
 - Manual token entry available
 
 ## Workflow
-1. Edit `src/youtubeOAuth.ts` for flow logic
-2. Update `src/proxy.ts` for API endpoints
-3. Update `src/dashboard.ts` for UI
+1. Edit `src/youtube-oauth.ts` for flow logic
+2. Update `src/server.ts` for API endpoints
+3. Update `src/pages/dashboard.ts` for UI
 4. Test: Start without token → verify device flow
 5. Test: Start with token → verify auto-load
 6. Run `pnpm build` to verify

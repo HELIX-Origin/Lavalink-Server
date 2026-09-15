@@ -137,10 +137,10 @@ export function renderPage(title: string, content: string): string {
         </div>
       </div>
       <nav>
-        <a href="/dashboard">Dashboard</a>
-        <a href="/dashboard/docs">Docs</a>
-        <a href="/dashboard/privacy">Privacy</a>
-        <a href="/dashboard/tos">Terms</a>
+        <a href="/">Dashboard</a>
+        <a href="/docs">Docs</a>
+        <a href="/privacy">Privacy</a>
+        <a href="/tos">Terms</a>
       </nav>
     </header>
 

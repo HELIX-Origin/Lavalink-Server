@@ -50,9 +50,9 @@ docker compose logs -f
 
 You can view the real-time web dashboard at:
 ```
-http://<your-server-ip>:2334/dashboard
+http://<your-server-ip>:2334
 ```
-*(Note: The dashboard runs on `LAVA_PORT + 1` (default 2334), served at `/dashboard`.)*
+*(Note: The dashboard runs on its own port — from `DASHBOARD_INTERNAL_URL` (default `LAVA_PORT + 1` = 2334) — served at the gateway root `/`. Configure `DASHBOARD_PUBLIC_URL` for public access via a reverse proxy/Cloudflare tunnel.)*
 
 ---
 
@@ -90,7 +90,7 @@ Ensure ports `2333` (Lavalink) + `2334` (dashboard) and SSH are allowed:
 sudo ufw allow OpenSSH
 # Lavalink Java server port
 sudo ufw allow 2333/tcp
-# Dashboard port (LAVA_PORT + 1, /dashboard endpoint)
+# Dashboard port (LAVA_PORT + 1, gateway root)
 sudo ufw allow 2334/tcp
 # If using Nginx reverse proxy with SSL:
 sudo ufw allow 80/tcp

@@ -28,9 +28,11 @@ services:
       # Database
       - DB_PATH=${DB_PATH:-./database.db}
       - DB_URI=${DB_URI:-sqlite://./database.db}
-      # Dashboard Theme
+      # Dashboard
       - DASHBOARD_THEME=${DASHBOARD_THEME:-dark}
       - DASHBOARD_COLOR_SCHEME=${DASHBOARD_COLOR_SCHEME:-default}
+      - DASHBOARD_PUBLIC_URL=${DASHBOARD_PUBLIC_URL:-}
+      - DASHBOARD_INTERNAL_URL=${DASHBOARD_INTERNAL_URL:-}
       # Environment
       - NODE_ENV=${NODE_ENV:-production}
     volumes:

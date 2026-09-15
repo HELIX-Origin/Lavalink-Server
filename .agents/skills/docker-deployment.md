@@ -97,7 +97,9 @@ flowchart LR
         E11[DB_URI]
         E12[DASHBOARD_THEME]
         E12[DASHBOARD_COLOR_SCHEME]
-        E13[NODE_ENV]
+        E13[DASHBOARD_PUBLIC_URL]
+        E13[DASHBOARD_INTERNAL_URL]
+        E14[NODE_ENV]
     end
 ```
 
@@ -111,8 +113,8 @@ services:
     restart: unless-stopped
     ports:
       - "${LAVA_PORT:-2333}:2333"
+      - "2334:2334"
     environment:
-      - PUBLIC_URL=${PUBLIC_URL:-}
       - LAVA_HOST=${LAVA_HOST:-127.0.0.1}
       - LAVA_PORT=${LAVA_PORT:-2333}
       - LAVA_PASS=${LAVA_PASS:-youshallnotpass}
@@ -128,6 +130,10 @@ services:
       - DB_PATH=${DB_PATH:-./database.db}
       - DB_URI=${DB_URI:-sqlite://./database.db}
       - NODE_ENV=${NODE_ENV:-production}
+      - DASHBOARD_THEME=${DASHBOARD_THEME:-dark}
+      - DASHBOARD_COLOR_SCHEME=${DASHBOARD_COLOR_SCHEME:-default}
+      - DASHBOARD_PUBLIC_URL=${DASHBOARD_PUBLIC_URL:-}
+      - DASHBOARD_INTERNAL_URL=${DASHBOARD_INTERNAL_URL:-}
     volumes:
       - ./data:/opt/Lavalink/data
 ```
@@ -152,7 +158,7 @@ flowchart LR
 
 ### Ports
 - Lavalink port (2333) exposed
-- Dashboard runs on `LAVA_PORT + 1` (2334) via `/dashboard` endpoint
+- Dashboard runs on its own port (from `DASHBOARD_INTERNAL_URL`, default `LAVA_PORT + 1` = 2334), served at gateway root
 - Users with a custom `LAVA_PORT` manually add the dashboard port mapping (e.g. `2335:2335` for LAVA_PORT=2334)
 
 ### Environment Variables in Compose
@@ -177,7 +183,7 @@ All valid `.env` keys mapped. See rules.md for current list.
 
 ## Validation Checklist
 - [ ] Lavalink JAR downloads from official releases
-- [ ] Only port 2333 exposed
+- [ ] Ports 2333 (Lavalink) + dashboard port (default 2334) exposed
 - [ ] All valid `.env` keys in compose environment
 - [ ] Volume for SQLite persistence
 - [ ] `docker compose build && docker compose up -d` works

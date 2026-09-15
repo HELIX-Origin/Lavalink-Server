@@ -38,6 +38,8 @@ flowchart LR
         E10[DB_PATH]
         E11[DASHBOARD_THEME]
         E11[DASHBOARD_COLOR_SCHEME]
+        E12[DASHBOARD_PUBLIC_URL]
+        E12[DASHBOARD_INTERNAL_URL]
     end
 
     subgraph Config["src/config.ts"]
@@ -64,6 +66,10 @@ flowchart LR
         SC16[dashboardColorScheme: string]
         SC17[internalUrl: string]
         SC18[publicUrl: string]
+        SC19[dashboardPort: number]
+        SC20[dashboardHost: string]
+        SC21[dashboardInternalUrl: string]
+        SC22[dashboardUrl: string]
     end
 
     Env --> Config
@@ -73,9 +79,10 @@ flowchart LR
 ### ServerConfig Interface (src/config.ts)
 ```typescript
 interface ServerConfig {
-  port: number;              // LAVA_PORT (dashboard on /dashboard)
+  port: number;              // LAVA_PORT (Lavalink server)
+  dashboardPort: number;     // Dashboard port (from DASHBOARD_INTERNAL_URL or LAVA_PORT + 1)
   host: string;              // LAVA_HOST (bind address)
-  domain: string;            // LAVA_DOMAIN (public domain)
+  domain: string;            // LAVA_DOMAIN (public Lavalink domain, scheme stripped)
   pass: string;              // LAVA_PASS
   secure: boolean;           // LAVA_SECURE (true/false)
   cipherUrl: string;         // LAVA_CIPHER_URL (default https://cipher.kikkia.dev/)
@@ -91,6 +98,9 @@ interface ServerConfig {
   dashboardColorScheme: string; // DASHBOARD_COLOR_SCHEME (default 'default')
   internalUrl: string;       // http(s)://host:port
   publicUrl: string;         // https://domain (or http(s)://host:port if localhost)
+  dashboardHost: string;     // Gateway bind host (from DASHBOARD_INTERNAL_URL or LAVA_HOST)
+  dashboardInternalUrl: string; // http://<dashboardHost>:<dashboardPort>
+  dashboardUrl: string;      // DASHBOARD_PUBLIC_URL or http://<dashboardHost>:<dashboardPort>
 }
 ```
 
@@ -100,11 +110,15 @@ interface ServerConfig {
 flowchart TD
     LAVA_PORT[LAVA_PORT] --> Port[port]
     LAVA_HOST[LAVA_HOST] --> Host[host]
-    LAVA_DOMAIN[LAVA_DOMAIN] --> Domain[domain]
+    LAVA_DOMAIN[LAVA_DOMAIN] --> Domain[domain scheme stripped]
     LAVA_DOMAIN --> PublicURL[publicUrl]
     LAVA_HOST & LAVA_PORT --> Internal[internalUrl]
     LAVA_SECURE[LAVA_SECURE] --> Proto[protocol http/https]
     Proto --> Internal
+    DASHBOARD_INTERNAL_URL[DASHBOARD_INTERNAL_URL] --> DashHost[dashboardHost + dashboardPort]
+    LAVA_HOST & LAVA_PORT --> DashHost
+    DASHBOARD_PUBLIC_URL[DASHBOARD_PUBLIC_URL] --> DashPublic[dashboardUrl]
+    DashHost --> DashPublic
 ```
 
 ### Environment Variables (src/config.ts)
@@ -113,12 +127,16 @@ Key helpers (no YAML parsing):
 - `env(name, fallback)` - Reads `process.env[name]` with fallback
 - `envInt(name, fallback)` - Parses integer env var
 - `envBool(name, fallback)` - Parses boolean env var
-- Derived: `internalUrl = ${protocol}://${host}:${port}`, `publicUrl` from LAVA_DOMAIN (falls back to `http://host:port` when domain is localhost)
+- `stripProtocol(url)` - Strips `http://`/`https://` prefix from LAVA_DOMAIN
+- `parseBaseUrl(raw)` - Parses a URL string into `{hostname, port}` (used for DASHBOARD_INTERNAL_URL)
+- Derived: `internalUrl = ${protocol}://${host}:${port}`, `publicUrl` from LAVA_DOMAIN (falls back to `http://host:port` when domain is localhost), `dashboardPort` from DASHBOARD_INTERNAL_URL or `port + 1`, `dashboardUrl` from DASHBOARD_PUBLIC_URL (falls back to `http://<dashboardHost>:<dashboardPort>`)
 
 ## .env.example Format
-All current valid keys must be documented. See rules.md for complete list. Theme section at the bottom:
+All current valid keys must be documented. See rules.md for complete list. Theme + dashboard section at the bottom:
 - `DASHBOARD_THEME="dark"` — glassmorphism | dark | light | cyberpunk | dracula | nord | emerald
 - `DASHBOARD_COLOR_SCHEME="default"` — default | cyan | purple | blue | emerald | rose | amber | indigo | crimson | teal | sunset
+- `DASHBOARD_PUBLIC_URL=""` — public dashboard URL (e.g. `https://dashboard.example.com`)
+- `DASHBOARD_INTERNAL_URL=""` — gateway bind URL (e.g. `http://127.0.0.1:2334`), defaults to `LAVA_HOST:LAVA_PORT+1`
 
 ## application.yml Integration
 

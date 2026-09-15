@@ -17,7 +17,7 @@ flowchart TD
 ```
 
 ## Purpose
-Manage YouTube OAuth device flow in `src/youtubeOAuth.ts`.
+Manage YouTube OAuth device flow in `src/youtube-oauth.ts`.
 
 ## Current Flow
 
@@ -82,9 +82,9 @@ sequenceDiagram
 
 ## Workflow for Changes
 
-1. Edit `src/youtubeOAuth.ts` for flow logic changes
-2. Update `src/proxy.ts` API endpoints if needed
-3. Update `src/dashboard.ts` for UI changes
+1. Edit `src/youtube-oauth.ts` for flow logic changes
+2. Update `src/server.ts` API endpoints if needed
+3. Update `src/pages/dashboard.ts` for UI changes
 4. Test: Start server without token → verify device flow
 5. Test: Start server with token → verify auto-load
 

@@ -31,7 +31,7 @@ This project uses an agent-based development workflow. All agents, rules, and sk
 - Skill: `.agents/skills/plugin-management.md`
 
 ### Dashboard Agent
-- Manages `src/dashboard.ts`, `src/proxy.ts` static pages
+- Manages `src/pages/*` (dashboard, docs, privacy, tos, layout, theme), `src/server.ts` routes
 - Skill: `.agents/skills/dashboard-development.md`
 
 ### YouTube OAuth Agent
@@ -42,9 +42,9 @@ This project uses an agent-based development workflow. All agents, rules, and sk
 
 ```
 # Lavalink Auth & Security
-LAVA_DOMAIN=""                                               # Public URL used by both the dashboard and Lavalink server. Leave empty for internal use only.
-LAVA_HOST="127.0.0.1"                                        # Internal host used by both the dashboard and Lavalink server.
-LAVA_PORT="2333"                                             # Internal port used by both the dashboard and Lavalink server.
+LAVA_DOMAIN=""                                               # Public URL/domain for the Lavalink server (e.g. "https://lavalink.example.com"). Scheme is stripped automatically.
+LAVA_HOST="127.0.0.1"                                        # Internal host the Lavalink server binds to.
+LAVA_PORT="2333"                                             # Internal port the Lavalink server binds to.
 LAVA_PASS="youshallnotpass"                                  # Lavalink authentication password.
 LAVA_SECURE=false                                            # Use HTTPS for Lavalink (true/false).
 LAVA_CIPHER_URL="https://cipher.kikkia.dev/"                 # Remote cipher endpoint for YouTube signature deciphering.
@@ -68,13 +68,19 @@ DB_URI="sqlite://./database.db"                              # SQLite database U
 
 # Environment
 NODE_ENV="production"                                        # Set to "production" for production mode. Available options: "production", "development".
+
+# Dashboard Theme
+DASHBOARD_THEME="dark"                                       # Dashboard theme: glassmorphism | dark | light | cyberpunk | dracula | nord | emerald (default: dark).
+DASHBOARD_COLOR_SCHEME="default"                             # Accent color scheme: default | cyan | purple | blue | emerald | rose | amber | indigo | crimson | teal | sunset.
+DASHBOARD_PUBLIC_URL=""                                      # Public URL for the dashboard (e.g. "https://dashboard.example.com"). Leave empty to default to http://<dashboardHost>:<dashboardPort>.
+DASHBOARD_INTERNAL_URL=""                                    # Internal bind URL for the dashboard (e.g. "http://127.0.0.1:2334"). Controls the gateway bind host/port. Leave empty to default to LAVA_HOST:LAVA_PORT+1.
 ```
 
 ## Removed (NEVER USE)
 
 - `YOUTUBE_API_KEY`, `YOUTUBE_API_SECRET` (YouTube's API key/secret are a *different* credential mechanism; this server uses OAuth — use `YOUTUBE_CLIENT_ID`/`YOUTUBE_CLIENT_SECRET`)
-- `DASHBOARD_PORT`, `LAVA_INTERNAL_URL`, `DASHBOARD_INTERNAL_URL`
-- `LAVA_PUBLIC_URL`, `DASHBOARD_PUBLIC_URL`, `KEEP_ALIVE_ENABLED`
+- `DASHBOARD_PORT`, `LAVA_INTERNAL_URL`
+- `LAVA_PUBLIC_URL`, `KEEP_ALIVE_ENABLED`
 - `YOUTUBE_SKIP_INIT`, `YOUTUBE_CIPHER_URL`, `YOUTUBE_CIPHER_PASSWORD`
 - `DOMAIN`, `HOST`, `PORT`, `SERVER_PORT`, `ADMIN_KEY`, `ADMIN_PASSWORD`
 
@@ -85,7 +91,7 @@ NODE_ENV="production"                                        # Set to "productio
 - Old (broken) install-service script - replaced by `scripts/install-service.sh`
 - CLIENT_SECRET.ts
 - Lavalink.jar in repo
-- Separate dashboard port
+- Old `DASHBOARD_PORT` env var - replaced by `DASHBOARD_INTERNAL_URL` (bind host/port) and `DASHBOARD_PUBLIC_URL` (public dashboard URL)
 
 ## Documentation
 

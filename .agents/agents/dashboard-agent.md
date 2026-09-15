@@ -43,8 +43,9 @@ config.domain        // LAVA_DOMAIN
 config.pass          // LAVA_PASS
 config.publicUrl     // public URL (for display)
 config.internalUrl   // internal URL (for display)
-config.dashboardPort // LAVA_PORT + 1 (the port this gateway binds)
-config.dashboardUrl  // https://domain/dashboard (or http://host:dashboardPort/dashboard if localhost)
+config.dashboardPort // dashboard port (from DASHBOARD_INTERNAL_URL or LAVA_PORT + 1)
+config.dashboardInternalUrl // http://<dashboardHost>:<dashboardPort> (gateway bind)
+config.dashboardUrl  // DASHBOARD_PUBLIC_URL or http://<dashboardHost>:<dashboardPort>
 
 // Theme
 config.dashboardTheme       // DASHBOARD_THEME
@@ -60,6 +61,12 @@ config.dashboardColorScheme // DASHBOARD_COLOR_SCHEME
 | `POST /api/oauth/youtube/start` | Initiate device flow |
 | `POST /api/oauth/youtube/manual` | Apply manual token |
 
+## Routes (src/server.ts)
+- `/` - Dashboard (gateway root)
+- `/docs` - Documentation
+- `/privacy` - Privacy Policy
+- `/tos` - Terms of Service
+
 ## Workflow
 1. Edit relevant `src/pages/*.ts` file
 2. If theme changes needed, edit `src/pages/themes/*.ts` or `src/pages/theme.ts`
@@ -67,7 +74,8 @@ config.dashboardColorScheme // DASHBOARD_COLOR_SCHEME
 4. Test in browser (desktop + mobile)
 
 ## Validation Checklist
-- [ ] Uses `config.publicUrl`, `config.internalUrl`, `config.dashboardUrl`, `config.dashboardPort` (NOT `lavaPublicUrl`/`lavaInternalUrl`)
+- [ ] Uses `config.publicUrl`, `config.internalUrl`, `config.dashboardUrl`, `config.dashboardInternalUrl`, `config.secure`, `config.domain`, `config.port` (NOT `lavaPublicUrl`/`lavaInternalUrl`)
+- [ ] No `/dashboard` route prefix (dashboard at root `/`, static pages at `/docs`, `/privacy`, `/tos`)
 - [ ] No references to removed features (keep-alive, admin console, owner login)
 - [ ] OAuth UI works with public `/api/oauth/youtube/*` endpoints
 - [ ] `pnpm build` passes

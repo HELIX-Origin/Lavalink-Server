@@ -76,6 +76,8 @@ services:
       - DB_URI=${DB_URI:-sqlite://./database.db}
       - DASHBOARD_THEME=${DASHBOARD_THEME:-dark}
       - DASHBOARD_COLOR_SCHEME=${DASHBOARD_COLOR_SCHEME:-default}
+      - DASHBOARD_PUBLIC_URL=${DASHBOARD_PUBLIC_URL:-}
+      - DASHBOARD_INTERNAL_URL=${DASHBOARD_INTERNAL_URL:-}
       - NODE_ENV=${NODE_ENV:-production}
     volumes:
       - ./data:/opt/Lavalink/data

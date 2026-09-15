@@ -59,11 +59,12 @@ async function main(): Promise<void> {
     }
   });
 
-  server.listen(config.dashboardPort, config.host, () => {
-    console.log(`[Gateway] Server listening on http://${config.host}:${config.dashboardPort}`);
-    console.log(`[Gateway] Dashboard available at ${config.dashboardUrl}`);
-    console.log(`[Gateway] Lavalink internal: ${config.internalUrl}`);
-    console.log(`[Gateway] Lavalink public: ${config.publicUrl}`);
+  server.listen(config.dashboardPort, config.dashboardHost, () => {
+    console.log(`[Gateway] Server listening on http://${config.dashboardHost}:${config.dashboardPort}`);
+    console.log(`[Gateway] Dashboard internal: ${config.dashboardInternalUrl}`);
+    console.log(`[Gateway] Dashboard public:   ${config.dashboardUrl}`);
+    console.log(`[Gateway] Lavalink internal:  ${config.internalUrl}`);
+    console.log(`[Gateway] Lavalink public:    ${config.publicUrl}`);
   });
 
   // 4. Graceful Shutdown Handlers

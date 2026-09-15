@@ -23,9 +23,9 @@ The Lavalink server resolves all configuration from environment variables. Deriv
 
 | Variable | Default Value | Description |
 | :--- | :--- | :--- |
-| `LAVA_DOMAIN` | *(empty)* | Public domain/host (e.g. `https://lavalink.yourdomain.com`) used by both dashboard and server |
-| `LAVA_HOST` | `127.0.0.1` | Internal bind address (host:port) |
-| `LAVA_PORT` | `2333` | Lavalink server port; dashboard auto-increments to `LAVA_PORT + 1` (`/dashboard` endpoint) |
+| `LAVA_DOMAIN` | *(empty)* | Public domain/host for the Lavalink server (e.g. `https://lavalink.yourdomain.com`). Scheme stripped automatically |
+| `LAVA_HOST` | `127.0.0.1` | Internal bind address (host) |
+| `LAVA_PORT` | `2333` | Lavalink server port |
 | `LAVA_PASS` | `youshallnotpass` | Authentication password for WebSocket/REST API |
 | `LAVA_SECURE` | `false` | Use HTTPS for Lavalink (true/false) |
 | `LAVA_CIPHER_URL` | `https://cipher.kikkia.dev/` | Remote cipher endpoint for YouTube signature deciphering |
@@ -65,6 +65,13 @@ The Lavalink server resolves all configuration from environment variables. Deriv
 | :--- | :--- | :--- |
 | `DASHBOARD_THEME` | `dark` | Theme: `glassmorphism` \| `dark` \| `light` \| `cyberpunk` \| `dracula` \| `nord` \| `emerald` |
 | `DASHBOARD_COLOR_SCHEME` | `default` | Accent color: `default` \| `cyan` \| `purple` \| `blue` \| `emerald` \| `rose` \| `amber` \| `indigo` \| `crimson` \| `teal` \| `sunset` |
+
+### Dashboard
+
+| Variable | Default Value | Description |
+| :--- | :--- | :--- |
+| `DASHBOARD_PUBLIC_URL` | *(empty)* | Public URL for the dashboard (e.g. `https://dashboard.yourdomain.com`). Leave empty to default to `http://<dashboardHost>:<dashboardPort>` |
+| `DASHBOARD_INTERNAL_URL` | *(empty)* | Gateway bind URL (e.g. `http://127.0.0.1:2334`). Leave empty to default to `LAVA_HOST:LAVA_PORT+1` |
 
 ### Environment
 
@@ -187,14 +194,16 @@ The TypeScript config (`src/config.ts`) reads environment variables directly via
 
 ## 🌐 URL Structure
 
-Lavalink binds `LAVA_PORT` and the dashboard binds `LAVA_PORT + 1` (auto-incremented). Derived URLs are built in `src/config.ts`:
+The Lavalink server binds `LAVA_PORT` and the dashboard/gateway binds its own port — from `DASHBOARD_INTERNAL_URL` (default `LAVA_PORT + 1`). Derived URLs are built in `src/config.ts`:
 
 | Type | Source | Example |
 | :--- | :--- | :--- |
 | Lavalink Internal | `internalUrl` (`protocol://host:port`) | `http://localhost:2333` |
-| Lavalink Public | `publicUrl` (`https://domain`) | `https://lavalink.yourdomain.com` |
-| Dashboard Public | `dashboardUrl` (`https://domain/dashboard`) | `https://lavalink.yourdomain.com/dashboard` |
+| Lavalink Public | `publicUrl` (`https://domain`) | `https://lavalink.yourdomain.com:2333` |
+| Dashboard Internal | `dashboardInternalUrl` (gateway bind, from `DASHBOARD_INTERNAL_URL`) | `http://localhost:2334` |
+| Dashboard Public | `dashboardUrl` (from `DASHBOARD_PUBLIC_URL`) | `https://dashboard.yourdomain.com` |
 
 - **Lavalink** keeps its port visible publicly (e.g., `https://domain.com:2333`).
-- **Dashboard** runs on `LAVA_PORT + 1` (e.g., `http://localhost:2334/dashboard`), served at `/dashboard`, and its public port is masked by reverse proxies/Cloudflare tunnels.
-- When `LAVA_DOMAIN` is localhost, `publicUrl` falls back to `http://host:port` and `dashboardUrl` to `http://host:dashboardPort/dashboard`.
+- **Dashboard** runs on its own port (default `LAVA_PORT + 1`, e.g., `http://localhost:2334`) and is served at the gateway root `/`. Map it to its own public URL (e.g. `https://dashboard.yourdomain.com`) via reverse proxy/Cloudflare tunnel.
+- When neither dashboard URL is set, `dashboardUrl` falls back to `http://<dashboardHost>:<dashboardPort>`.
+- `LAVA_DOMAIN` may include a scheme (`https://...`) — it is stripped automatically.

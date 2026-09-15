@@ -64,7 +64,7 @@ flowchart TD
 ### Shared Layout (`src/pages/layout.ts` → `renderPage(title, content)`)
 - Full HTML shell with `<html class="${theme.id} scheme-${scheme.id}">`
 - Injects `getThemeCss()` + `getBaseStyles()` + layout CSS (all driven by theme vars)
-- Header brand icon + nav to `/dashboard`, `/dashboard/docs`, `/dashboard/privacy`, `/dashboard/tos`
+- Header brand icon + nav to `/`, `/docs`, `/privacy`, `/tos`
 - Footer with websocket URL (from `config.secure` / `config.domain` / `config.port`)
 
 ### Theme System (`src/pages/theme.ts` + `src/pages/themes/*.ts`)
@@ -75,28 +75,31 @@ flowchart TD
 - Selected via `config.dashboardTheme` / `config.dashboardColorScheme` (from `.env`)
 
 ### Static Pages
-- `src/pages/docs.ts` → `/dashboard/docs`
-- `src/pages/privacy.ts` → `/dashboard/privacy`
-- `src/pages/tos.ts` → `/dashboard/tos`
+- `src/pages/docs.ts` → `/docs`
+- `src/pages/privacy.ts` → `/privacy`
+- `src/pages/tos.ts` → `/tos`
 - All use `renderPage()` with `.card` / `.section-title` / `.section-desc` classes and `var(--border)` list styling
 
 ## Configuration Usage (from src/config.ts)
 ```typescript
 config.secure       // boolean, LAVA_SECURE
-config.domain       // string, LAVA_DOMAIN
+config.domain       // string, LAVA_DOMAIN (scheme stripped)
 config.port         // number, LAVA_PORT
 config.pass         // string, LAVA_PASS
-config.publicUrl    // https://domain.com (Lavalink public)
+config.publicUrl    // http(s)://domain (Lavalink public)
 config.internalUrl  // http://host:port (Lavalink internal)
+config.dashboardPort        // number, from DASHBOARD_INTERNAL_URL or LAVA_PORT + 1
+config.dashboardInternalUrl // http://<dashboardHost>:<dashboardPort> (gateway bind)
+config.dashboardUrl         // DASHBOARD_PUBLIC_URL or http://<dashboardHost>:<dashboardPort>
 config.dashboardTheme        // 'dark' | 'light' | 'cyberpunk' | ...
 config.dashboardColorScheme  // 'default' | 'purple' | ...
 ```
 
-### Static Pages Routes
-- `/dashboard` - Main dashboard
-- `/dashboard/docs` - Documentation
-- `/dashboard/tos` - Terms of Service
-- `/dashboard/privacy` - Privacy Policy
+### Routes
+- `/` - Main dashboard (gateway root)
+- `/docs` - Documentation
+- `/tos` - Terms of Service
+- `/privacy` - Privacy Policy
 
 ## Public API Endpoints Used
 | Endpoint | Purpose |
@@ -140,7 +143,8 @@ config.dashboardColorScheme  // 'default' | 'purple' | ...
 4. Update navigation in `src/pages/layout.ts` if needed
 
 ## Validation Checklist
-- [ ] Uses `config.publicUrl`, `config.internalUrl`, `config.secure`, `config.domain`, `config.port` only (no `lavaPublicUrl`/`lavaInternalUrl`)
+- [ ] Uses `config.publicUrl`, `config.internalUrl`, `config.dashboardUrl`, `config.dashboardInternalUrl`, `config.secure`, `config.domain`, `config.port` only (no `lavaPublicUrl`/`lavaInternalUrl`)
+- [ ] No `/dashboard` route prefix (dashboard at gateway root `/`, static pages at `/docs`, `/privacy`, `/tos`)
 - [ ] Colors come from theme CSS variables, not hardcoded values
 - [ ] No references to removed features (keep-alive, admin console, owner login, manual token modal)
 - [ ] OAuth UI works with public `/api/oauth/youtube/*` endpoints

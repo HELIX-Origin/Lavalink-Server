@@ -75,9 +75,9 @@ The Lavalink server resolves configuration from internal/public URLs and environ
 
 | Variable | Default | Description |
 | :--- | :--- | :--- |
-| `LAVA_DOMAIN` | *(empty)* | Public domain/host for both Lavalink and dashboard (e.g. `https://lavalink.yourdomain.com`) |
-| `LAVA_HOST` | `127.0.0.1` | Bind address for both Lavalink and dashboard |
-| `LAVA_PORT` | `2333` | Lavalink server port; dashboard auto-increments to `LAVA_PORT + 1` (served at `/dashboard`) |
+| `LAVA_DOMAIN` | *(empty)* | Public domain for the Lavalink server (e.g. `https://lavalink.yourdomain.com`). Scheme stripped automatically |
+| `LAVA_HOST` | `127.0.0.1` | Bind address for Lavalink |
+| `LAVA_PORT` | `2333` | Lavalink server port |
 | `LAVA_PASS` | `youshallnotpass` | Authentication password for WebSocket/REST API |
 | `LAVA_SECURE` | `false` | Use HTTPS for Lavalink (true/false) |
 | `LAVA_CIPHER_URL` | `https://cipher.kikkia.dev/` | Remote cipher endpoint for YouTube signature deciphering |
@@ -123,6 +123,13 @@ The Lavalink server resolves configuration from internal/public URLs and environ
 | :--- | :--- | :--- |
 | `DASHBOARD_THEME` | `dark` | Dashboard theme: `glassmorphism` \| `dark` \| `light` \| `cyberpunk` \| `dracula` \| `nord` \| `emerald` |
 | `DASHBOARD_COLOR_SCHEME` | `default` | Dashboard accent color: `default` \| `cyan` \| `purple` \| `blue` \| `emerald` \| `rose` \| `amber` \| `indigo` \| `crimson` \| `teal` \| `sunset` |
+
+### Dashboard
+
+| Variable | Default | Description |
+| :--- | :--- | :--- |
+| `DASHBOARD_PUBLIC_URL` | *(empty)* | Public URL for the dashboard (e.g. `https://dashboard.yourdomain.com`). Leave empty to default to `http://<dashboardHost>:<dashboardPort>` |
+| `DASHBOARD_INTERNAL_URL` | *(empty)* | Gateway bind URL (e.g. `http://127.0.0.1:2334`). Leave empty to default to `LAVA_HOST:LAVA_PORT+1` |
 
 > ℹ️ **Notice:** Variables like `LAVA_EXTERNAL` or `LAVA_ENABLED` are **client-side bot settings** used by Discord bots (e.g. Master-Bot) to determine connection modes. They are not server variables and are never set on this Lavalink instance.
 

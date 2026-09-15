@@ -39,7 +39,7 @@ export function createProxyServer(options: ProxyOptions = {}): { server: http.Se
     const pathname = url.pathname;
 
     // 1. Dashboard UI
-    if (pathname === '/' || pathname === '/dashboard') {
+    if (pathname === '/') {
       res.writeHead(200, {
         'Content-Type': 'text/html; charset=utf-8',
         'Cache-Control': 'no-cache'
@@ -48,8 +48,8 @@ export function createProxyServer(options: ProxyOptions = {}): { server: http.Se
       return;
     }
 
-    // 2. Static Pages (Docs, Privacy, TOS) - under /dashboard/
-    if (pathname === '/dashboard/docs') {
+    // 2. Static Pages (Docs, Privacy, TOS)
+    if (pathname === '/docs') {
       res.writeHead(200, {
         'Content-Type': 'text/html; charset=utf-8',
         'Cache-Control': 'no-cache'
@@ -58,7 +58,7 @@ export function createProxyServer(options: ProxyOptions = {}): { server: http.Se
       return;
     }
 
-    if (pathname === '/dashboard/privacy') {
+    if (pathname === '/privacy') {
       res.writeHead(200, {
         'Content-Type': 'text/html; charset=utf-8',
         'Cache-Control': 'no-cache'
@@ -67,7 +67,7 @@ export function createProxyServer(options: ProxyOptions = {}): { server: http.Se
       return;
     }
 
-    if (pathname === '/dashboard/tos') {
+    if (pathname === '/tos') {
       res.writeHead(200, {
         'Content-Type': 'text/html; charset=utf-8',
         'Cache-Control': 'no-cache'

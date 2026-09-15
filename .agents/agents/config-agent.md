@@ -19,8 +19,8 @@ flowchart TD
 Manages `src/config.ts` and `.env.example`.
 
 ## Responsibilities
-- Maintain `ServerConfig` interface (port/dashboardPort/host/domain/pass/secure/cipherUrl/cipherPassword/youtubeClientId/youtubeClientSecret/spotifyClientId/spotifyClientSecret/geniusToken/dbPath/isProduction/dashboardTheme/dashboardColorScheme/internalUrl/publicUrl/dashboardUrl)
-- Use `env()`, `envInt()`, `envBool()` helpers for all env parsing
+- Maintain `ServerConfig` interface (port/host/domain/pass/secure/cipherUrl/cipherPassword/youtubeClientId/youtubeClientSecret/spotifyClientId/spotifyClientSecret/geniusToken/dbPath/isProduction/dashboardTheme/dashboardColorScheme/internalUrl/publicUrl/dashboardPort/dashboardHost/dashboardInternalUrl/dashboardUrl)
+- Use `env()`, `envInt()`, `envBool()`, `stripProtocol()`, `parseBaseUrl()` helpers for all env parsing
 - Sync `.env.example` with actual `.env` keys
 - Do NOT parse `application.yml` — supervisor spawns Java directly with `-Dserver.port`/`-Dserver.address`
 
@@ -46,8 +46,12 @@ Manages `src/config.ts` and `.env.example`.
 | `envBool(key, default)` | Read env var as boolean |
 | `config.internalUrl` | Derived `http(s)://host:port` (Lavalink) |
 | `config.publicUrl` | Derived `https://domain` (or `http://host:port` if localhost) |
-| `config.dashboardUrl` | Derived `https://domain/dashboard` (or `http://host:dashboardPort/dashboard` if localhost) |
-| `config.dashboardPort` | Auto-derived `LAVA_PORT + 1` |
+| `config.dashboardInternalUrl` | Derived `http://<dashboardHost>:<dashboardPort>` (gateway bind) |
+| `config.dashboardUrl` | Derived `DASHBOARD_PUBLIC_URL` or `http://<dashboardHost>:<dashboardPort>` |
+| `config.dashboardPort` | Derived from `DASHBOARD_INTERNAL_URL` or `LAVA_PORT + 1` |
+| `config.dashboardHost` | Derived from `DASHBOARD_INTERNAL_URL` or `LAVA_HOST` |
+| `stripProtocol(url)` | Strips `http://`/`https://` from `LAVA_DOMAIN` |
+| `parseBaseUrl(raw)` | Parses `DASHBOARD_INTERNAL_URL` into `{hostname, port}` |
 
 ## Validation
 - Only uses keys from actual `.env` file
