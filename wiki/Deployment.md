@@ -277,7 +277,7 @@ LAVA_PASS=your-chosen-password
 LAVA_SECURE=true
 ```
 
-For more details on connecting with popular client libraries, see the [Client Integration Guide](Client-Integration.md).
+For more details on connecting with popular client libraries, see the [Client Integration Guide](Client-Integration).
 
 ---
 

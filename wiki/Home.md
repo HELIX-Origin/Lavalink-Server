@@ -61,8 +61,8 @@ flowchart LR
 
 ## 📖 Wiki Table of Contents
 
-- [**Deployment Guide**](Deployment.md): Complete instructions for Dedicated VPS setups, Docker Compose, and Nginx SSL reverse proxying.
-- [**Configuration Reference**](Configuration.md): Comprehensive breakdown of `application.yml`, JVM tuning, and environment variable keys.
-- [**Plugins Guide**](Plugins.md): Setup instructions for YouTube Remote Cipher, YouTube OAuth2 authorization, and Spotify credentials.
-- [**Client Integration**](Client-Integration.md): Code examples connecting Master-Bot, Lavalink-Client, Shoukaku, and Kazagumo.
-- [**Troubleshooting & FAQ**](Troubleshooting.md): Solutions for 401 Unauthorized errors, YouTube stream 429 blocks, memory limits, and WebSocket disconnects.
+- [**Deployment Guide**](Deployment): Complete instructions for Dedicated VPS setups, Docker Compose, and Nginx SSL reverse proxying.
+- [**Configuration Reference**](Configuration): Comprehensive breakdown of `application.yml`, JVM tuning, and environment variable keys.
+- [**Plugins Guide**](Plugins): Setup instructions for YouTube Remote Cipher, YouTube OAuth2 authorization, and Spotify credentials.
+- [**Client Integration**](Client-Integration): Code examples connecting Master-Bot, Lavalink-Client, Shoukaku, and Kazagumo.
+- [**Troubleshooting & FAQ**](Troubleshooting): Solutions for 401 Unauthorized errors, YouTube stream 429 blocks, memory limits, and WebSocket disconnects.

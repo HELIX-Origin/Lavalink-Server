@@ -1,14 +1,14 @@
 ### 🔊 Lavalink v4 Audio Server
-- [Home](Home.md)
+- [Home](Home)
 
 ### 🚀 Getting Started
-- [Deployment Guide](Deployment.md)
-- [Configuration Reference](Configuration.md)
+- [Deployment Guide](Deployment)
+- [Configuration Reference](Configuration)
 
 ### 🔌 Features & Extensibility
-- [Plugins Guide](Plugins.md)
-- [Client Integration](Client-Integration.md)
+- [Plugins Guide](Plugins)
+- [Client Integration](Client-Integration)
 
 ### 🛠️ Maintenance & Support
-- [Troubleshooting & FAQ](Troubleshooting.md)
+- [Troubleshooting & FAQ](Troubleshooting)
 - [GitHub Repository](https://github.com/HELIX-Origin/Lavalink-Server)
