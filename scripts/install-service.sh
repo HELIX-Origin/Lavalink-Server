@@ -103,7 +103,7 @@ EnvironmentFile=-${INSTALL_DIR}/.env
 NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict
-ProtectHome=true
+ProtectHome=false
 ReadWritePaths=${INSTALL_DIR}/data ${INSTALL_DIR}/logs
 
 # Resource limits
