@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { config } from './config.js';
 import { initDatabase, logSystemEvent } from './db.js';
 import { LavalinkSupervisor } from './supervisor.js';
