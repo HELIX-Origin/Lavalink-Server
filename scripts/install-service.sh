@@ -2,22 +2,30 @@
 set -euo pipefail
 
 # Lavalink Server - Systemd Service Installer
-# Usage: sudo scripts/install-service.sh [install|uninstall|status]
+# Usage: sudo scripts/install-service.sh [install|uninstall|status|logs] [/path/to/project]
 
 SERVICE_NAME="lavalink-server"
 SERVICE_USER="${SUDO_USER:-$USER}"
-PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# Allow overriding project dir via argument or env var
+PROJECT_DIR="${2:-${LAVALINK_PROJECT_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}}"
 NODE_BIN="$(which node)"
 SERVICE_FILE="/etc/systemd/system/${SERVICE_NAME}.service"
 
 show_usage() {
-    echo "Usage: sudo $0 [install|uninstall|status|logs]"
+    echo "Usage: sudo $0 [install|uninstall|status|logs] [/path/to/project]"
     echo ""
     echo "Commands:"
     echo "  install   - Install and enable the systemd service"
     echo "  uninstall - Stop, disable, and remove the systemd service"
     echo "  status    - Show service status"
     echo "  logs      - Follow service logs (journalctl)"
+    echo ""
+    echo "Arguments:"
+    echo "  /path/to/project  - Optional project directory (default: script's parent dir)"
+    echo "                      Can also be set via LAVALINK_PROJECT_DIR env var"
+    echo ""
+    echo "Example:"
+    echo "  sudo $0 install /opt/lavalink-server"
 }
 
 create_service_file() {
@@ -60,10 +68,17 @@ EOF
 
 cmd_install() {
     echo "Installing ${SERVICE_NAME} service..."
+    echo "Project directory: ${PROJECT_DIR}"
+    
+    if [[ ! -d "${PROJECT_DIR}" ]]; then
+        echo "Error: Project directory does not exist: ${PROJECT_DIR}"
+        echo "Specify the correct path: sudo $0 install /path/to/lavalink-server"
+        exit 1
+    fi
     
     if [[ ! -f "${PROJECT_DIR}/dist/index.js" ]]; then
         echo "Error: Built project not found at ${PROJECT_DIR}/dist/index.js"
-        echo "Run 'pnpm build' first."
+        echo "Run 'pnpm build' first in the project directory."
         exit 1
     fi
     
