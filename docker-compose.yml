@@ -5,15 +5,35 @@ services:
     build: .
     restart: unless-stopped
     ports:
-      - "${PORT:-2333}:2333"
+      - "${LAVA_PORT:-2333}:2333"
+      - "${DASHBOARD_PORT:-2334}:2334"
     environment:
+      # Lavalink Internal URLs
+      - LAVA_INTERNAL_URL=${LAVA_INTERNAL_URL:-http://localhost:2333}
+      - DASHBOARD_INTERNAL_URL=${DASHBOARD_INTERNAL_URL:-http://localhost:2334}
+      # Public URLs (for Cloudflare tunnels, reverse proxies)
+      - LAVA_PUBLIC_URL=${LAVA_PUBLIC_URL:-}
+      - DASHBOARD_PUBLIC_URL=${DASHBOARD_PUBLIC_URL:-}
+      # Lavalink Auth & Security
       - LAVA_PASS=${LAVA_PASS:-youshallnotpass}
+      - LAVA_SECURE=${LAVA_SECURE:-false}
+      - LAVA_CIPHER_URL=${LAVA_CIPHER_URL:-https://cipher.kikkia.dev/}
+      - LAVA_CIPHER_PASSWORD=${LAVA_CIPHER_PASSWORD:-}
+      # YouTube OAuth
+      - YOUTUBE_CLIENT_ID=${YOUTUBE_CLIENT_ID:-}
+      - YOUTUBE_CLIENT_SECRET=${YOUTUBE_CLIENT_SECRET:-}
       - YOUTUBE_REFRESH_TOKEN=${YOUTUBE_REFRESH_TOKEN:-}
-      - YOUTUBE_API_KEY=${YOUTUBE_API_KEY:-}
-      - YOUTUBE_CIPHER_URL=${YOUTUBE_CIPHER_URL:-https://cipher.kikkia.dev/}
-      - YOUTUBE_CIPHER_PASSWORD=${YOUTUBE_CIPHER_PASSWORD:-}
+      # Spotify
       - SPOTIFY_CLIENT_ID=${SPOTIFY_CLIENT_ID:-}
       - SPOTIFY_CLIENT_SECRET=${SPOTIFY_CLIENT_SECRET:-}
-      - KEEP_ALIVE_ENABLED=${KEEP_ALIVE_ENABLED:-true}
+      # Genius (LavaLyrics)
+      - GENIUS_ACCESS_TOKEN=${GENIUS_ACCESS_TOKEN:-}
+      # Database
+      - DB_PATH=${DB_PATH:-./database.db}
+      - DB_URI=${DB_URI:-sqlite://./database.db}
+      # Admin
+      - ADMIN_KEY=${ADMIN_KEY:-}
+      # Environment
+      - NODE_ENV=${NODE_ENV:-production}
     volumes:
       - ./data:/opt/Lavalink/data

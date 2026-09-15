@@ -10,40 +10,74 @@ It is critical to distinguish between **Lavalink Server Variables** and **Discor
 
 | Variable Type | Examples | Where It Is Configured | Purpose |
 | :--- | :--- | :--- | :--- |
-| **Server Variable** | `PORT`, `LAVA_PASS`, `YOUTUBE_CLIENT_ID`, `SPOTIFY_CLIENT_ID`, `DASHBOARD_PORT` | Lavalink Server (`application.yml`, `.env`, `docker-compose.yml`) | Tells Lavalink what port to bind to, what password to demand, and which external APIs to query. |
+| **Server Variable** | `LAVA_PASS`, `YOUTUBE_CLIENT_ID`, `SPOTIFY_CLIENT_ID`, `LAVA_INTERNAL_URL`, `DASHBOARD_INTERNAL_URL` | Lavalink Server (`application.yml`, `.env`, `docker-compose.yml`) | Tells Lavalink what port to bind to, what password to demand, and which external APIs to query. |
 | **Bot Client Variable** | `LAVA_ENABLED`, `LAVA_EXTERNAL`, `LAVA_HOST`, `LAVA_SECURE` | Discord Bot (`Master-Bot` `.env`) | Tells your Discord bot how to reach this external Lavalink server. **Never configured on the Lavalink server.** |
 
 ---
 
 ## 📋 Comprehensive Server Variables
 
-The Lavalink server resolves **Port** (`$PORT`, defaulting to `2333`) and **Domain** (`$PUBLIC_URL`, `$HOST`, or `localhost`) directly from the system environment.
+The Lavalink server resolves all configuration from internal/public URLs and environment variables.
 
-The following server configuration variables are exposed and supported:
+### Core Lavalink Variables
 
 | Variable | Default Value | Description |
 | :--- | :--- | :--- |
-| `LAVA_PASS` | `youshallnotpass` | Authentication password for incoming WebSocket and REST API requests. |
-| `YOUTUBE_REFRESH_TOKEN` | *(empty)* | YouTube OAuth 2.0 refresh token. Auto-saved after device flow completes. Can also be pre-set in `.env`. |
-| `YOUTUBE_CLIENT_ID` | **(required)** | YouTube OAuth Client ID (app type: "TVs and Limited Input devices"). Used to issue the authorization URL. Server refuses to start without it. |
-| `YOUTUBE_CLIENT_SECRET` | *(empty)* | YouTube OAuth Client Secret matching `YOUTUBE_CLIENT_ID`, used for the token exchange. Falls back to YouTube's built-in client secret when empty. |
-| `PUBLIC_URL` | *(empty)* | Public domain/host for the server (e.g. `lavalink.yourdomain.com`). Used for dashboard URL and keep-alive. |
-| `DASHBOARD_PORT` | `lavaLinkPort + 1` | Custom port for the dashboard/gateway. Defaults to Lavalink port + 1 (e.g., 2333 → 2334). |
-| `SPOTIFY_CLIENT_ID` | *(empty)* | Client ID from the [Spotify Developer Dashboard](https://developer.spotify.com/dashboard). |
-| `SPOTIFY_CLIENT_SECRET` | *(empty)* | Client Secret from the Spotify Developer Dashboard. |
-| `KEEP_ALIVE_ENABLED` | `true` | *(Deprecated)* Keep-alive service has been removed. |
+| `LAVA_INTERNAL_URL` | `http://localhost:2333` | Internal Lavalink URL (host:port) |
+| `DASHBOARD_INTERNAL_URL` | `http://localhost:2334` | Dashboard internal URL (host:port) |
+| `LAVA_PUBLIC_URL` | *(empty)* | Public Lavalink URL (e.g. `https://lavalink.yourdomain.com`) |
+| `DASHBOARD_PUBLIC_URL` | *(empty)* | Public Dashboard URL (e.g. `https://lavalink.yourdomain.com`) |
+| `LAVA_PASS` | `youshallnotpass` | Authentication password for WebSocket/REST API |
+| `LAVA_SECURE` | `false` | Use HTTPS for Lavalink (true/false) |
+| `LAVA_CIPHER_URL` | `https://cipher.kikkia.dev/` | Remote cipher endpoint for YouTube signature deciphering |
+| `LAVA_CIPHER_PASSWORD` | *(empty)* | Optional password for self-hosted cipher |
+
+### YouTube OAuth
+
+| Variable | Default Value | Description |
+| :--- | :--- | :--- |
+| `YOUTUBE_CLIENT_ID` | **(required)** | YouTube OAuth Client ID (app type: "TVs and Limited Input devices") |
+| `YOUTUBE_CLIENT_SECRET` | *(empty)* | YouTube OAuth Client Secret for token exchange |
+| `YOUTUBE_REFRESH_TOKEN` | *(empty)* | Pre-authorized refresh token (auto-saved after device flow) |
+
+### Spotify
+
+| Variable | Default Value | Description |
+| :--- | :--- | :--- |
+| `SPOTIFY_CLIENT_ID` | *(empty)* | Spotify Developer App Client ID |
+| `SPOTIFY_CLIENT_SECRET` | *(empty)* | Spotify Developer App Client Secret |
+
+### Genius (LavaLyrics)
+
+| Variable | Default Value | Description |
+| :--- | :--- | :--- |
+| `GENIUS_ACCESS_TOKEN` | *(empty)* | Genius API Access Token for lyrics |
+
+### Database
+
+| Variable | Default Value | Description |
+| :--- | :--- | :--- |
+| `DB_PATH` | `./database.db` | SQLite database file path |
+| `DB_URI` | `sqlite://./database.db` | SQLite database URI |
+
+### Environment
+
+| Variable | Default Value | Description |
+| :--- | :--- | :--- |
+| `NODE_ENV` | `production` | Set to "production" for production mode |
+| `ADMIN_KEY` | *(empty)* | Optional host owner dashboard password (defaults to LAVA_PASS) |
 
 ---
 
 ## 📄 `application.yml` Core Sections
 
-The `application.yml` file is now the **single source of truth** for Lavalink Java server configuration. The TypeScript supervisor reads this file at startup to determine ports and addresses.
+The `application.yml` file is the **single source of truth** for Lavalink Java server configuration. The TypeScript supervisor reads this file at startup to determine ports and addresses.
 
 ### 1. Server & Networking
 ```yaml
 server:
-  port: 2333
-  address: 0.0.0.0
+  port: ${LAVA_PORT:2333}
+  address: ${LAVA_HOST:0.0.0.0}
   undertow:
     buffer-size: 1024
     direct-buffers: true
@@ -51,11 +85,11 @@ server:
       io: 4
       worker: 32
 ```
-- **`port`**: Lavalink Java server port (used by TypeScript supervisor to derive dashboard port +1).
-- **`address`**: Binds to `0.0.0.0` (all IPv4 interfaces).
-- **`undertow`**: Configures the high-performance non-blocking HTTP/WebSocket Undertow engine.
+- **`port`**: Lavalink Java server port (from `LAVA_PORT` or `LAVA_INTERNAL_URL`)
+- **`address`**: Lavalink bind address (from `LAVA_HOST` or `LAVA_INTERNAL_URL`)
+- **`undertow`**: High-performance non-blocking HTTP/WebSocket Undertow engine
 
-### 2. Lavalink Core & Audio Buffers
+### 2. Lavalink Core & Plugins
 ```yaml
 lavalink:
   plugins:
@@ -64,10 +98,21 @@ lavalink:
     - dependency: "com.github.topi314.lavasrc:lavasrc-plugin:4.8.3"
       repository: "https://maven.topi.wtf/releases"
       snapshot: false
+    - dependency: "com.github.topi314.sponsorblock:sponsorblock-plugin:1.0.0"
+      repository: "https://maven.topi.wtf/releases"
+      snapshot: false
+    - dependency: "com.github.topi314.lavasearch:lavasearch-plugin:1.0.0"
+      repository: "https://maven.topi.wtf/releases"
+      snapshot: false
+    - dependency: "com.github.topi314.lavalyrics:lavalyrics-plugin:1.0.0"
+      repository: "https://maven.topi.wtf/releases"
+      snapshot: false
+    - dependency: "com.github.DuncteBot.skybot:skybot-lavalink-plugin:1.7.1"
+      repository: "https://jitpack.io"
   server:
-    password: "youshallnotpass"
+    password: "${LAVA_PASS:youshallnotpass}"
     sources:
-      youtube: false        # Handled by the modern YouTube Plugin
+      youtube: false
       soundcloud:
         searchEnabled: true
         filterOutPreviewTracks: true
@@ -76,30 +121,15 @@ lavalink:
       nico: true
       http: false
       local: false
-    filters:
-      volume: true
-      equalizer: true
-      karaoke: true
-      timescale: true
-      tremolo: true
-      vibrato: true
-      distortion: true
-      rotation: true
-      channelMix: true
-      lowPass: true
-    bufferDurationMs: 400
-    frameBufferDurationMs: 10000
-    opusEncodingQuality: 10
-    resamplingQuality: HIGH
-    trackStuckThresholdMs: 30000
-    playersTimeout: 0
+    # ... filters, buffer settings, etc.
 
 plugins:
   youtube:
     enabled: true
-    allowSearch: true
-    allowDirectVideoIds: true
-    allowDirectPlaylistIds: true
+    oauth:
+      enabled: true
+      refreshToken: "${YOUTUBE_REFRESH_TOKEN:}"
+      skipInitialization: "true"
     remoteCipher:
       url: "https://cipher.kikkia.dev/"
       password: ""
@@ -110,10 +140,6 @@ plugins:
       - IOS
       - WEB
       - WEBEMBEDDED
-    oauth:
-      enabled: true
-      refreshToken: "${YOUTUBE_REFRESH_TOKEN:}"
-      skipInitialization: "true"
   lavasrc:
     providers:
       - "ytmsearch:\"%ISRC%\""
@@ -131,6 +157,21 @@ plugins:
       playlistLoadLimit: 6
       albumLoadLimit: 6
       resolveArtistsInSearch: true
+  lavalyrics:
+    enabled: true
+    geniusToken: "${GENIUS_ACCESS_TOKEN:}"
+  skybot:
+    sources:
+      getyarn: false
+      tts: false
+      pornhub: false
+      reddit: false
+      ocremix: true
+      tiktok: false
+      mixcloud: true
+      soundgasm: false
+      pixeldrain: false
+      tumblr: false
 ```
 
 ### 3. JVM Flags & Tuning
@@ -149,7 +190,20 @@ java -Xmx512M -Djdk.tls.client.protocols=TLSv1.2,TLSv1.3 -Dspring.profiles.activ
 2. **`.env`** - Overrides for secrets (passwords, tokens, API keys)
 3. **System environment** - Highest priority, overrides `.env`
 
-The TypeScript supervisor parses `application.yml` at startup to determine:
-- Lavalink Java server port & address
-- Dashboard port (defaults to Lavalink port + 1, configurable via `DASHBOARD_PORT`)
-- Lavalink host address (defaults to `127.0.0.1`)
+The TypeScript supervisor parses `application.yml` at startup and resolves `${VAR:default}` placeholders with environment variables.
+
+---
+
+## 🌐 URL Structure
+
+The server uses **internal URLs** (with ports) for local communication and **public URLs** (without ports) for external access via reverse proxies/Cloudflare tunnels:
+
+| Type | Variable | Example |
+| :--- | :--- | :--- |
+| Lavalink Internal | `LAVA_INTERNAL_URL` | `http://localhost:2333` |
+| Dashboard Internal | `DASHBOARD_INTERNAL_URL` | `http://localhost:2334` |
+| Lavalink Public | `LAVA_PUBLIC_URL` | `https://lavalink.yourdomain.com` |
+| Dashboard Public | `DASHBOARD_PUBLIC_URL` | `https://lavalink.yourdomain.com` |
+
+**Internal URLs** include ports for direct service-to-service communication.
+**Public URLs** omit ports since reverse proxies/Cloudflare tunnels handle port mapping.

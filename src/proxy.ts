@@ -92,8 +92,8 @@ export function createProxyServer(options: ProxyOptions = {}): { server: http.Se
         getCachedInfo()
       ]);
 
-      const isSsl = config.domain !== 'localhost';
-      const botPort = isSsl ? 443 : config.port;
+      const isSsl = config.lavalinkPublicUrl.startsWith('https');
+      const botPort = isSsl ? 443 : config.lavalinkPort;
 
       const payload: Record<string, unknown> = {
         status,
@@ -106,7 +106,9 @@ export function createProxyServer(options: ProxyOptions = {}): { server: http.Se
           port: botPort,
           password: config.lavalinkPass,
           secure: isSsl,
-          websocketUrl: `${isSsl ? 'wss' : 'ws'}://${config.domain}${isSsl ? '' : `:${config.port}`}/v4/websocket`
+          websocketUrl: `${isSsl ? 'wss' : 'ws'}://${config.domain}${isSsl ? '' : `:${config.lavalinkPort}`}/v4/websocket`,
+          lavalinkPublicUrl: config.lavalinkPublicUrl,
+          dashboardPublicUrl: config.dashboardPublicUrl
         },
         youtubeOAuth: getOAuthState(),
         isOwner

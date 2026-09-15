@@ -3,8 +3,8 @@
 # Maintained by HELIX Origin
 
 server:
-  port: 2333
-  address: 0.0.0.0 || 127.0.0.1
+  port: ${LAVA_PORT:2333}
+  address: ${LAVA_HOST:0.0.0.0}
   undertow:
     buffer-size: 1024
     direct-buffers: true
@@ -31,7 +31,7 @@ lavalink:
     - dependency: "com.github.DuncteBot.skybot:skybot-lavalink-plugin:1.7.1"
       repository: "https://jitpack.io"
   server:
-    password: "youshallnotpass"
+    password: "${LAVA_PASS:youshallnotpass}"
     sources:
       youtube: false
       soundcloud:

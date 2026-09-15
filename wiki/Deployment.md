@@ -136,27 +136,63 @@ For native VPS deployment without Docker:
    nano .env  # Set your credentials
    ```
 
-5. **Install systemd service:**
+5. **Create systemd service:**
    ```bash
-   sudo ./scripts/install-service.sh install
-   ```
-   
-   Or specify a custom path:
-   ```bash
-   sudo ./scripts/install-service.sh install /opt/lavalink-server
+   sudo tee /etc/systemd/system/lavalink-server.service > /dev/null <<'EOF'
+   [Unit]
+   Description=Lavalink v4 Audio Server
+   After=network.target
+   Wants=network.target
+
+   [Service]
+   Type=simple
+   User=root
+   WorkingDirectory=/root/Lavalink-Server
+   ExecStart=/usr/bin/node /root/Lavalink-Server/dist/index.js
+   Restart=on-failure
+   RestartSec=10
+   StandardOutput=journal
+   StandardError=journal
+   SyslogIdentifier=lavalink-server
+   Environment=NODE_ENV=production
+   EnvironmentFile=-/root/Lavalink-Server/.env
+
+   # Security hardening
+   NoNewPrivileges=true
+   PrivateTmp=true
+   ProtectSystem=strict
+   ProtectHome=true
+   ReadWritePaths=/root/Lavalink-Server/data /root/Lavalink-Server/logs
+
+   # Resource limits
+   LimitNOFILE=65536
+   LimitNPROC=4096
+
+   [Install]
+   WantedBy=multi-user.target
+   EOF
    ```
 
-6. **Check status and logs:**
+   Adjust `WorkingDirectory`, `ExecStart`, and `EnvironmentFile` paths if your installation is in a different location.
+
+6. **Enable and start the service:**
    ```bash
-   sudo ./scripts/install-service.sh status
-   sudo ./scripts/install-service.sh logs
+   sudo systemctl daemon-reload
+   sudo systemctl enable lavalink-server
+   sudo systemctl start lavalink-server
    ```
 
-The service runs as the invoking user, loads `.env`, restarts on failure, and includes security hardening.
+7. **Check status and logs:**
+   ```bash
+   sudo systemctl status lavalink-server
+   sudo journalctl -u lavalink-server -f
+   ```
+
+The service runs as root, loads `.env`, restarts on failure, and includes security hardening.
 
 ---
 
-## 3. 🔒 Production Reverse Proxy with Nginx & Let's Encrypt (SSL/WSS)
+## 5. 🔒 Production Reverse Proxy with Nginx & Let's Encrypt (SSL/WSS)
 
 To securely connect your Discord bot over standard HTTPS/WSS on port `443` with a custom domain (e.g. `lavalink.yourdomain.com`):
 

@@ -60,7 +60,9 @@ async function main(): Promise<void> {
 
   server.listen(config.port, config.host, () => {
     console.log(`[Gateway] Server listening on http://${config.host}:${config.port}`);
-    console.log(`[Gateway] Dashboard available at http://${config.domain}:${config.port}/`);
+    console.log(`[Gateway] Dashboard available at ${config.dashboardPublicUrl}/`);
+    console.log(`[Gateway] Lavalink internal: ${config.lavalinkInternalUrl}`);
+    console.log(`[Gateway] Lavalink public: ${config.lavalinkPublicUrl}`);
   });
 
   // 4. Graceful Shutdown Handlers
