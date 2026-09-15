@@ -63,8 +63,10 @@ function parseBaseUrl(raw: string): { hostname: string; port: number } | null {
 const host = env('LAVA_HOST', '127.0.0.1');
 const port = envInt('LAVA_PORT', 2333);
 const secure = envBool('LAVA_SECURE', false);
-const domain = stripProtocol(env('LAVA_DOMAIN', 'localhost'));
+const lavaDomainRaw = env('LAVA_DOMAIN', 'localhost');
+const domain = stripProtocol(lavaDomainRaw);
 const protocol = secure ? 'https' : 'http';
+const publicProtocol = lavaDomainRaw.startsWith('https://') ? 'https' : protocol;
 
 const dashboardInternalRaw = env('DASHBOARD_INTERNAL_URL', '');
 const dashboardInternal = parseBaseUrl(dashboardInternalRaw);
@@ -73,7 +75,7 @@ const dashboardPort = dashboardInternal && dashboardInternal.port > 0 ? dashboar
 const dashboardInternalUrl = dashboardInternalRaw || `${protocol}://${dashboardHost}:${dashboardPort}`;
 const dashboardUrl =
   env('DASHBOARD_PUBLIC_URL', '').replace(/\/+$/, '') ||
-  `${protocol}://${dashboardHost}:${dashboardPort}`;
+  dashboardInternalUrl;
 
 export const config: ServerConfig = {
   port,
@@ -93,7 +95,7 @@ export const config: ServerConfig = {
   dashboardTheme: env('DASHBOARD_THEME', 'dark').toLowerCase(),
   dashboardColorScheme: env('DASHBOARD_COLOR_SCHEME', 'default').toLowerCase(),
   internalUrl: `${protocol}://${host}:${port}`,
-  publicUrl: domain === 'localhost' ? `${protocol}://${host}:${port}` : `${protocol}://${domain}`,
+  publicUrl: domain === 'localhost' ? `${protocol}://${host}:${port}` : `${publicProtocol}://${domain}`,
   dashboardPort,
   dashboardHost,
   dashboardInternalUrl,

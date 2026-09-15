@@ -129,7 +129,7 @@ Key helpers (no YAML parsing):
 - `envBool(name, fallback)` - Parses boolean env var
 - `stripProtocol(url)` - Strips `http://`/`https://` prefix from LAVA_DOMAIN
 - `parseBaseUrl(raw)` - Parses a URL string into `{hostname, port}` (used for DASHBOARD_INTERNAL_URL)
-- Derived: `internalUrl = ${protocol}://${host}:${port}`, `publicUrl` from LAVA_DOMAIN (falls back to `http://host:port` when domain is localhost), `dashboardPort` from DASHBOARD_INTERNAL_URL or `port + 1`, `dashboardUrl` from DASHBOARD_PUBLIC_URL (falls back to `http://<dashboardHost>:<dashboardPort>`)
+- Derived: `internalUrl = ${protocol}://${host}:${port}`, `publicUrl` from LAVA_DOMAIN's scheme (falls back to `http://host:port` when domain is localhost), `dashboardPort` from DASHBOARD_INTERNAL_URL or `port + 1`, `dashboardUrl` from DASHBOARD_PUBLIC_URL (falls back to `dashboardInternalUrl`)
 
 ## .env.example Format
 All current valid keys must be documented. See rules.md for complete list. Theme + dashboard section at the bottom:

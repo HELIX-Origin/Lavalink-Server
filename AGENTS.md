@@ -72,7 +72,7 @@ NODE_ENV="production"                                        # Set to "productio
 # Dashboard Theme
 DASHBOARD_THEME="dark"                                       # Dashboard theme: glassmorphism | dark | light | cyberpunk | dracula | nord | emerald (default: dark).
 DASHBOARD_COLOR_SCHEME="default"                             # Accent color scheme: default | cyan | purple | blue | emerald | rose | amber | indigo | crimson | teal | sunset.
-DASHBOARD_PUBLIC_URL=""                                      # Public URL for the dashboard (e.g. "https://dashboard.example.com"). Leave empty to default to http://<dashboardHost>:<dashboardPort>.
+DASHBOARD_PUBLIC_URL=""                                      # Public URL for the dashboard (e.g. "https://dashboard.example.com"). Leave empty to fall back to DASHBOARD_INTERNAL_URL.
 DASHBOARD_INTERNAL_URL=""                                    # Internal bind URL for the dashboard (e.g. "http://127.0.0.1:2334"). Controls the gateway bind host/port. Leave empty to default to LAVA_HOST:LAVA_PORT+1.
 ```
 
