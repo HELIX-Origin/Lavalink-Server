@@ -41,7 +41,7 @@ graph TD
     subgraph Plugins["Lavalink Plugins"]
         P1[YouTube Plugin<br/>youtube-plugin:1.18.2]
         P2[LavaSrc<br/>lavasrc-plugin:4.8.3<br/>Spotify]
-        P3[SponsorBlock<br/>sponsorblock-plugin:1.0.0]
+        P3[SponsorBlock<br/>sponsorblock-plugin:3.0.1]
         P4[LavaSearch<br/>lavasearch-plugin:1.0.0]
         P5[LavaLyrics<br/>lavalyrics-plugin:1.0.0<br/>needs GENIUS_ACCESS_TOKEN]
         P6[Skybot<br/>skybot-plugin:1.7.1<br/>OCRemix + Mixcloud]

@@ -94,7 +94,7 @@ SponsorBlock automatically skips sponsorships, intros, outros, and other non-mus
 ```yaml
 lavalink:
   plugins:
-    - dependency: "com.github.topi314.sponsorblock:sponsorblock-plugin:1.0.0"
+    - dependency: "com.github.topi314.sponsorblock:sponsorblock-plugin:3.0.1"
       repository: "https://maven.topi.wtf/releases"
       snapshot: false
 ```
@@ -209,7 +209,7 @@ lavalink:
     - dependency: "com.github.topi314.lavasrc:lavasrc-plugin:4.8.3"
       repository: "https://maven.topi.wtf/releases"
       snapshot: false
-    - dependency: "com.github.topi314.sponsorblock:sponsorblock-plugin:1.0.0"
+    - dependency: "com.github.topi314.sponsorblock:sponsorblock-plugin:3.0.1"
       repository: "https://maven.topi.wtf/releases"
       snapshot: false
     - dependency: "com.github.topi314.lavasearch:lavasearch-plugin:1.0.0"

@@ -24,7 +24,7 @@ graph TD
     subgraph Plugins["Lavalink Plugins (application.yml)"]
         P1[YouTube Plugin<br/>youtube-plugin:1.18.2<br/>maven.lavalink.dev]
         P2[LavaSrc<br/>lavasrc-plugin:4.8.3<br/>maven.topi.wtf<br/>Spotify metadata]
-        P3[SponsorBlock<br/>sponsorblock-plugin:1.0.0<br/>maven.topi.wtf]
+        P3[SponsorBlock<br/>sponsorblock-plugin:3.0.1<br/>maven.topi.wtf]
         P4[LavaSearch<br/>lavasearch-plugin:1.0.0<br/>maven.topi.wtf]
         P5[LavaLyrics<br/>lavalyrics-plugin:1.0.0<br/>maven.topi.wtf<br/>needs GENIUS_ACCESS_TOKEN]
         P6[Skybot<br/>skybot-plugin:1.7.1<br/>jitpack.io<br/>OCRemix + Mixcloud]
@@ -41,7 +41,7 @@ lavalink:
     - dependency: "com.github.topi314.lavasrc:lavasrc-plugin:4.8.3"
       repository: "https://maven.topi.wtf/releases"
       snapshot: false
-    - dependency: "com.github.topi314.sponsorblock:sponsorblock-plugin:1.0.0"
+    - dependency: "com.github.topi314.sponsorblock:sponsorblock-plugin:3.0.1"
       repository: "https://maven.topi.wtf/releases"
       snapshot: false
     - dependency: "com.github.topi314.lavasearch:lavasearch-plugin:1.0.0"
@@ -110,7 +110,7 @@ plugins:
 |--------|------------|------------|----------------|----------|
 | YouTube | `dev.lavalink.youtube:youtube-plugin:1.18.2` | maven.lavalink.dev | `plugins.youtube` | `YOUTUBE_CLIENT_ID`, `YOUTUBE_CLIENT_SECRET`, `YOUTUBE_REFRESH_TOKEN`, `LAVA_CIPHER_URL`, `LAVA_CIPHER_PASSWORD` |
 | LavaSrc | `com.github.topi314.lavasrc:lavasrc-plugin:4.8.3` | maven.topi.wtf | `plugins.lavasrc` | `SPOTIFY_CLIENT_ID`, `SPOTIFY_CLIENT_SECRET` |
-| SponsorBlock | `com.github.topi314.sponsorblock:sponsorblock-plugin:1.0.0` | maven.topi.wtf | (auto) | None |
+| SponsorBlock | `com.github.topi314.sponsorblock:sponsorblock-plugin:3.0.1` | maven.topi.wtf | (auto) | None |
 | LavaSearch | `com.github.topi314.lavasearch:lavasearch-plugin:1.0.0` | maven.topi.wtf | (auto) | None |
 | LavaLyrics | `com.github.topi314.lavalyrics:lavalyrics-plugin:1.0.0` | maven.topi.wtf | `plugins.lavalytics` | `GENIUS_ACCESS_TOKEN` |
 | Skybot | `com.github.DuncteBot.skybot:skybot-lavalink-plugin:1.7.1` | jitpack.io | `plugins.skybot` | None |
