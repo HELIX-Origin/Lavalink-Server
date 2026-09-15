@@ -2,20 +2,20 @@ import 'dotenv/config';
 import { config } from './config.js';
 import { initDatabase, logSystemEvent } from './db.js';
 import { LavalinkSupervisor } from './supervisor.js';
-import { createProxyServer } from './proxy.js';
-import { loadSavedOAuthToken, initiateDeviceFlow, waitForDeviceFlow } from './youtubeOAuth.js';
+import { createProxyServer } from './server.js';
+import { loadSavedOAuthToken, initiateDeviceFlow, waitForDeviceFlow } from './youtube-oauth.js';
 
 async function main(): Promise<void> {
   console.log('==================================================');
   console.log('🔊 Lavalink v4 Audio Server & Dashboard');
   console.log(`🌐 Resolved Host Domain: ${config.domain}`);
   console.log(`🔌 Gateway Port:         ${config.port}`);
-  console.log(`📍 Internal Node Port:   ${config.lavalinkHost}:${config.lavalinkPort}`);
+  console.log(`📍 Internal Node:        ${config.host}:${config.port}`);
   console.log(`💾 SQLite Persistence:   ${config.dbPath}`);
   console.log(`⚡ Mode:                 ${config.isProduction ? 'production' : 'development'}`);
   console.log('==================================================');
 
-  if (!config.youtubeApiKey) {
+  if (!config.youtubeClientId) {
     console.error('======================================================================');
     console.error('❌ [Fatal] YOUTUBE_CLIENT_ID is required (YouTube OAuth Client ID).');
     console.error('It must be an OAuth Client ID of app type "TVs and Limited Input devices";');
@@ -60,9 +60,9 @@ async function main(): Promise<void> {
 
   server.listen(config.port, config.host, () => {
     console.log(`[Gateway] Server listening on http://${config.host}:${config.port}`);
-    console.log(`[Gateway] Dashboard available at ${config.dashboardPublicUrl}/`);
-    console.log(`[Gateway] Lavalink internal: ${config.lavalinkInternalUrl}`);
-    console.log(`[Gateway] Lavalink public: ${config.lavalinkPublicUrl}`);
+    console.log(`[Gateway] Dashboard available at ${config.publicUrl}/dashboard`);
+    console.log(`[Gateway] Lavalink internal: ${config.internalUrl}`);
+    console.log(`[Gateway] Lavalink public: ${config.publicUrl}`);
   });
 
   // 4. Graceful Shutdown Handlers

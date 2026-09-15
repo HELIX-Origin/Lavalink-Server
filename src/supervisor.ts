@@ -3,7 +3,7 @@ import http from 'node:http';
 import { config } from './config.js';
 import { setCachedStatus, setCachedStats, setCachedInfo, appendRecentLog } from './redis.js';
 import { logSystemEvent, saveMetricSnapshot } from './db.js';
-import { loadSavedOAuthToken, saveYouTubeRefreshToken } from './youtubeOAuth.js';
+import { loadSavedOAuthToken, saveYouTubeRefreshToken } from './youtube-oauth.js';
 
 export class LavalinkSupervisor {
   private process: ChildProcess | null = null;
@@ -20,16 +20,16 @@ export class LavalinkSupervisor {
     this.isShuttingDown = false;
     await setCachedStatus('starting');
     logSystemEvent('info', 'Lavalink supervisor starting Java process', {
-      port: config.lavalinkPort,
-      address: config.lavalinkHost
+      port: config.port,
+      address: config.host
     });
 
     const javaArgs = [
       '-Xmx512M',
       '-Djdk.tls.client.protocols=TLSv1.2,TLSv1.3',
       '-Dspring.profiles.active=prod',
-      `-Dserver.port=${config.lavalinkPort}`,
-      `-Dserver.address=${config.lavalinkHost}`,
+      `-Dserver.port=${config.port}`,
+      `-Dserver.address=${config.host}`,
       '-jar',
       'Lavalink.jar'
     ];
@@ -41,8 +41,8 @@ export class LavalinkSupervisor {
       stdio: ['ignore', 'pipe', 'pipe'],
       env: {
         ...process.env,
-        PORT: String(config.lavalinkPort),
-        SERVER_PORT: String(config.lavalinkPort)
+        PORT: String(config.port),
+        SERVER_PORT: String(config.port)
       }
     });
 
@@ -162,12 +162,12 @@ export class LavalinkSupervisor {
     return new Promise((resolve, reject) => {
       const req = http.request(
         {
-          hostname: config.lavalinkHost,
-          port: config.lavalinkPort,
+          hostname: config.host,
+          port: config.port,
           path: pathName,
           method: 'GET',
           headers: {
-            Authorization: config.lavalinkPass,
+            Authorization: config.pass,
             Accept: 'application/json'
           },
           timeout: 3000

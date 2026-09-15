@@ -5,14 +5,14 @@
 [![Docker](https://img.shields.io/badge/Docker-Alpine-blue.svg)](https://hub.docker.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-A production-ready, standalone **Lavalink v4** audio server container with **ESM TypeScript Management Dashboard** and supervisor. Maintained by [**HELIX Origin**](https://github.com/HELIX-Origin) for hosting dedicated audio nodes for Discord music bots.
+A production-ready, standalone **Lavalink v4** audio server with **ESM TypeScript Management Dashboard** and supervisor. Maintained by [**HELIX Origin**](https://github.com/HELIX-Origin) for hosting dedicated audio nodes for Discord music bots.
 
 📖 **Comprehensive Documentation:** Check out our [**Wiki**](../../wiki/Home) for architecture, VPS setup walk-throughs, configuration references, plugin setup, and troubleshooting.
 
 ---
 
 > [!NOTE]
-> **Hosted / Self-Hosted Only.** This project is designed to run on hardware you control — a **Dedicated VPS** (Hetzner, DigitalOcean, Linode, OVH), a local server, or your own network — via Docker Compose. Cloud PaaS deployment has been removed; shared datacenter IP ranges are aggressively blocked by YouTube's anti-scraping systems.
+> **Hosted / Self-Hosted Only.** This project is designed to run on hardware you control — a **Dedicated VPS** (Hetzner, DigitalOcean, Linode, OVH), a local server, or your own network — via Docker Compose or native systemd. Cloud PaaS deployment has been removed; shared datacenter IP ranges are aggressively blocked by YouTube's anti-scraping systems.
 
 ---
 
@@ -25,8 +25,9 @@ Deploy on your own server or VPS in seconds:
 git clone https://github.com/HELIX-Origin/Lavalink-Server.git
 cd Lavalink-Server
 
-# 2. Configure environment (optional custom password)
+# 2. Configure environment
 cp .env.example .env
+# Edit .env with your credentials (YOUTUBE_CLIENT_ID, etc.)
 
 # 3. Start with Docker Compose
 docker compose up -d
@@ -51,31 +52,73 @@ For high-throughput WebRTC audio transcoding and unblocked YouTube streaming (av
 - 📊 **ESM TypeScript Management Dashboard:** Real-time web dashboard at `/` tracking node health, JVM memory, CPU utilization, active players, and uptime.
 - ⚡ **Pure Node.js Supervisor (No Shell Scripts):** Robust ESM TypeScript supervisor managing Java process lifecycle, port/domain binding, and graceful signal handling without shell scripts.
 - 💾 **SQLite Persistence & ioredis-mock:** Embedded SQLite database for historical metrics and client audit sessions, paired with in-memory `ioredis-mock` for instant pub/sub and state caching.
-- 🚀 **Pinned Lavalink JAR:** The official Lavalink v4 release JAR (currently **4.2.2**) is committed directly to the repository and copied into the image, so builds are reproducible and never depend on GitHub availability.
-- 📺 **YouTube Plugin (`youtube-plugin`):** Multi-client support (TV, MUSIC, ANDROID_VR, IOS, WEB) with remote cipher decoding and OAuth2 refresh token compatibility.
+- 📺 **YouTube Plugin (`youtube-plugin`):** Multi-client support (TV, MUSIC, ANDROID_VR, IOS, WEB, WEBEMBEDDED) with remote cipher decoding and OAuth2 refresh token compatibility.
 - 🟢 **Spotify Metadata (`lavasrc-plugin`):** Seamless Spotify track, album, and playlist resolution through YouTube search providers.
-- 🌐 **Host Port & Domain Resolution:** Dynamically resolves custom domains (`$DOMAIN`) and ports (`$PORT`) directly at runtime.
-- 🪶 **Resource Efficient:** Tuned with low memory footprint and JVM garbage collection optimization for smooth playback on 1GB VPS nodes.
+- 🟣 **SponsorBlock (`sponsorblock-plugin`):** Automatically skips sponsorships, intros, outros using the community SponsorBlock API.
+- 🔍 **LavaSearch (`lavasearch-plugin`):** Enhanced search capabilities across multiple sources.
+- 🎵 **LavaLyrics (`lavalyrics-plugin`):** Fetches synchronized lyrics from Genius.com (requires `GENIUS_ACCESS_TOKEN`).
+- ☁️ **Skybot (`skybot-plugin`):** Additional audio sources — **OCRemix** and **Mixcloud** enabled by default.
+- 🌐 **Internal/Public URL Separation:** Internal URLs (with ports) for service-to-service communication; Public URLs (without ports) for Cloudflare tunnels/reverse proxies.
+- 🪶 **Resource Efficient:** Tuned with low memory footprint and JVM GC optimization for smooth playback on 1GB+ VPS nodes.
 
 ---
 
 ## 🔐 Server Environment Variables
 
-The Lavalink server resolves **Port** (`$PORT`, defaulting to `2333`) and **Domain** (`$DOMAIN`, `$HOST`, or `localhost`) directly from the environment.
+The Lavalink server resolves configuration from internal/public URLs and environment variables.
 
-The following server configuration variables are exposed and supported:
+### Core Lavalink Variables
 
 | Variable | Default | Description |
 | :--- | :--- | :--- |
-| `LAVA_PASS` | `youshallnotpass` | Authentication password clients must provide in the `Authorization` header. |
-| `YOUTUBE_REFRESH_TOKEN` | *(empty)* | YouTube OAuth 2.0 refresh token for authenticated streams (auto-captured and persisted after the device flow completes). |
-| `YOUTUBE_API_KEY` | **(required)** | YouTube OAuth Client ID (app type: "TVs and Limited Input devices") used to issue the authorization URL. The server refuses to start without it. |
-| `YOUTUBE_API_SECRET` | *(empty)* | YouTube OAuth Client Secret matching `YOUTUBE_API_KEY`, used for the token exchange. Falls back to YouTube's built-in client secret when empty. |
-| `YOUTUBE_CIPHER_URL` | `https://cipher.kikkia.dev/` | Remote cipher endpoint for YouTube signature deciphering. |
-| `YOUTUBE_CIPHER_PASSWORD` | *(empty)* | Optional password for self-hosted yt-cipher (leave empty for default public endpoint). |
-| `SPOTIFY_CLIENT_ID` | *(empty)* | Spotify Developer Application Client ID. |
-| `SPOTIFY_CLIENT_SECRET` | *(empty)* | Spotify Developer Application Client Secret. |
-| `KEEP_ALIVE_ENABLED` | `true` | Periodic background pinger to `/health` (every 10m) to keep memory active. |
+| `LAVA_DOMAIN` | *(empty)* | Public domain/host for both Lavalink and dashboard (e.g. `https://lavalink.yourdomain.com`) |
+| `LAVA_HOST` | `127.0.0.1` | Bind address for both Lavalink and dashboard |
+| `LAVA_PORT` | `2333` | Port for both Lavalink and dashboard (dashboard served at `/dashboard`) |
+| `LAVA_PASS` | `youshallnotpass` | Authentication password for WebSocket/REST API |
+| `LAVA_SECURE` | `false` | Use HTTPS for Lavalink (true/false) |
+| `LAVA_CIPHER_URL` | `https://cipher.kikkia.dev/` | Remote cipher endpoint for YouTube signature deciphering |
+| `LAVA_CIPHER_PASSWORD` | *(empty)* | Optional password for self-hosted cipher |
+
+### YouTube OAuth
+
+| Variable | Default | Description |
+| :--- | :--- | :--- |
+| `YOUTUBE_CLIENT_ID` | **(required)** | YouTube OAuth Client ID (app type: "TVs and Limited Input devices") |
+| `YOUTUBE_CLIENT_SECRET` | *(empty)* | YouTube OAuth Client Secret for token exchange |
+| `YOUTUBE_REFRESH_TOKEN` | *(empty)* | Pre-authorized refresh token (auto-saved after device flow) |
+
+### Spotify
+
+| Variable | Default | Description |
+| :--- | :--- | :--- |
+| `SPOTIFY_CLIENT_ID` | *(empty)* | Spotify Developer App Client ID |
+| `SPOTIFY_CLIENT_SECRET` | *(empty)* | Spotify Developer App Client Secret |
+
+### Genius (LavaLyrics)
+
+| Variable | Default | Description |
+| :--- | :--- | :--- |
+| `GENIUS_ACCESS_TOKEN` | *(empty)* | Genius API Access Token for lyrics |
+
+### Database
+
+| Variable | Default | Description |
+| :--- | :--- | :--- |
+| `DB_PATH` | `./database.db` | SQLite database file path |
+| `DB_URI` | `sqlite://./database.db` | SQLite database URI |
+
+### Environment
+
+| Variable | Default | Description |
+| :--- | :--- | :--- |
+| `NODE_ENV` | `production` | Set to "production" for production mode |
+
+### Dashboard Theme
+
+| Variable | Default | Description |
+| :--- | :--- | :--- |
+| `DASHBOARD_THEME` | `dark` | Dashboard theme: `glassmorphism` \| `dark` \| `light` \| `cyberpunk` \| `dracula` \| `nord` \| `emerald` |
+| `DASHBOARD_COLOR_SCHEME` | `default` | Dashboard accent color: `default` \| `cyan` \| `purple` \| `blue` \| `emerald` \| `rose` \| `amber` \| `indigo` \| `crimson` \| `teal` \| `sunset` |
 
 > ℹ️ **Notice:** Variables like `LAVA_EXTERNAL` or `LAVA_ENABLED` are **client-side bot settings** used by Discord bots (e.g. Master-Bot) to determine connection modes. They are not server variables and are never set on this Lavalink instance.
 
@@ -95,11 +138,21 @@ LAVA_PASS=youshallnotpass
 LAVA_SECURE=false
 ```
 
+### For VPS with Domain & SSL Reverse Proxy:
+```env
+LAVA_ENABLED=true
+LAVA_EXTERNAL=true
+LAVA_HOST=lavalink.yourdomain.com
+LAVA_PORT=443
+LAVA_PASS=youshallnotpass
+LAVA_SECURE=true
+```
+
 > 💡 **Note on Ports and SSL:**
 > - If connecting directly to your VPS or Docker host, use port **`2333`** with `LAVA_SECURE=false`.
 > - If fronted by an Nginx/SSL reverse proxy, connect via port **`443`** with `LAVA_SECURE=true`.
 
-See the [Client Integration Wiki](../../wiki/Client-Integration.md) for code snippets with Lavalink-Client, Shoukaku, Kazagumo, and Poru.
+See the [Client Integration Wiki](../../wiki/Client-Integration) for code snippets with Lavalink-Client, Shoukaku, Kazagumo, Poru, and NodeLink.
 
 ---
 
@@ -115,7 +168,11 @@ Or build and run manually:
 
 ```bash
 docker build -t lavalink-server .
-docker run -p 2333:2333 -e LAVA_PASS=youshallnotpass lavalink-server
+docker run -p 2333:2333 \
+  -e LAVA_PASS=youshallnotpass \
+  -e YOUTUBE_CLIENT_ID=your_client_id \
+  -e YOUTUBE_CLIENT_SECRET=your_client_secret \
+  lavalink-server
 ```
 
 ---
@@ -123,12 +180,13 @@ docker run -p 2333:2333 -e LAVA_PASS=youshallnotpass lavalink-server
 ## 📚 Documentation & Wiki
 
 Explore our detailed documentation pages:
-- [**Home & Architecture**](../../wiki/Home.md): High-level overview and supervisor architecture.
-- [**Deployment Guide**](../../wiki/Deployment.md): Detailed guides for VPS and Docker Compose.
-- [**Configuration Reference**](../../wiki/Configuration.md): In-depth breakdown of `application.yml` and environment parameters.
-- [**Plugins Guide**](../../wiki/Plugins.md): Configuring YouTube Remote Cipher, OAuth, and Spotify metadata.
-- [**Client Integration**](../../wiki/Client-Integration.md): Connecting Master-Bot and popular Discord.js Lavalink wrappers.
-- [**Troubleshooting**](../../wiki/Troubleshooting.md): Diagnosing 401s, YouTube rate-limiting, and WebSocket disconnects.
+
+- [**Home & Architecture**](../../wiki/Home): High-level overview and supervisor architecture.
+- [**Deployment Guide**](../../wiki/Deployment): Detailed guides for VPS, Docker Compose, and systemd.
+- [**Configuration Reference**](../../wiki/Configuration): In-depth breakdown of `application.yml` and environment parameters.
+- [**Plugins Guide**](../../wiki/Plugins): Configuring YouTube, SponsorBlock, LavaSrc, LavaSearch, LavaLyrics, Skybot.
+- [**Client Integration**](../../wiki/Client-Integration): Connecting Master-Bot and popular Discord.js Lavalink wrappers.
+- [**Troubleshooting**](../../wiki/Troubleshooting): Diagnosing 401s, YouTube rate-limiting, and WebSocket disconnects.
 
 ---
 

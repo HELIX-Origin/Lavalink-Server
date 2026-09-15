@@ -30,11 +30,10 @@ nano .env
 ```
 Key settings to customize:
 - `LAVA_PASS`: Choose a strong, secret authentication password (e.g. `MySuperSecretLavaPass123!`).
-- `PUBLIC_URL`: Your public domain/host for the server (e.g. `lavalink.yourdomain.com`).
+- `LAVA_DOMAIN`: Your public domain/host for the server (e.g. `https://lavalink.yourdomain.com`).
 - `YOUTUBE_CLIENT_ID`: **Required** — YouTube OAuth Client ID (app type: "TVs and Limited Input devices").
 - `YOUTUBE_CLIENT_SECRET`: YouTube OAuth Client Secret for the Client ID above.
 - `YOUTUBE_REFRESH_TOKEN`: *(Optional)* Pre-authorized refresh token (auto-saved after device flow).
-- `DASHBOARD_PORT`: *(Optional)* Custom dashboard port (default: Lavalink port + 1).
 - `SPOTIFY_CLIENT_ID` & `SPOTIFY_CLIENT_SECRET`: *(Optional)* For Spotify link resolution.
 
 ### Step 3: Start the Server
@@ -51,9 +50,9 @@ docker compose logs -f
 
 You can view the real-time web dashboard at:
 ```
-http://<your-server-ip>:2334
+http://<your-server-ip>:2333/dashboard
 ```
-*(Note: Dashboard port defaults to Lavalink port + 1, e.g., 2333 → 2334. Check `DASHBOARD_PORT` if customized.)*
+*(Note: The dashboard runs on the same port as Lavalink, served at `/dashboard`.)*
 
 ---
 
@@ -86,13 +85,11 @@ newgrp docker
 ```
 
 ### Step 2: Configure Firewall (`ufw`)
-Ensure port `2333` (Lavalink) and `2334` (Dashboard) and SSH are allowed:
+Ensure port `2333` (Lavalink + dashboard) and SSH are allowed:
 ```bash
 sudo ufw allow OpenSSH
-# Lavalink Java server port
+# Lavalink Java server port + dashboard (/dashboard endpoint)
 sudo ufw allow 2333/tcp
-# Dashboard/gateway port (default: Lavalink port + 1)
-sudo ufw allow 2334/tcp
 # If using Nginx reverse proxy with SSL:
 sudo ufw allow 80/tcp
 sudo ufw allow 443/tcp
@@ -138,6 +135,15 @@ For native VPS deployment without Docker:
 
 5. **Create systemd service:**
    ```bash
+   sudo ./scripts/install-service.sh
+   ```
+   The script auto-detects the install directory, Node.js binary, and writes a hardened unit file. Options:
+   - `--user <name>` — run as a dedicated system user instead of root
+   - `--name <name>` — custom unit name (default: `lavalink-server`)
+   - `--no-start` — create + enable the unit without starting it
+
+   For reference, the generated unit looks like:
+   ```bash
    sudo tee /etc/systemd/system/lavalink-server.service > /dev/null <<'EOF'
    [Unit]
    Description=Lavalink v4 Audio Server
@@ -146,23 +152,23 @@ For native VPS deployment without Docker:
 
    [Service]
    Type=simple
-   User=root
-   WorkingDirectory=/root/Lavalink-Server
-   ExecStart=/usr/bin/node /root/Lavalink-Server/dist/index.js
+   User=<user>
+   WorkingDirectory=<install-dir>
+   ExecStart=/usr/bin/node <install-dir>/dist/index.js
    Restart=on-failure
    RestartSec=10
    StandardOutput=journal
    StandardError=journal
    SyslogIdentifier=lavalink-server
    Environment=NODE_ENV=production
-   EnvironmentFile=-/root/Lavalink-Server/.env
+   EnvironmentFile=-<install-dir>/.env
 
    # Security hardening
    NoNewPrivileges=true
    PrivateTmp=true
    ProtectSystem=strict
    ProtectHome=true
-   ReadWritePaths=/root/Lavalink-Server/data /root/Lavalink-Server/logs
+   ReadWritePaths=<install-dir>/data <install-dir>/logs
 
    # Resource limits
    LimitNOFILE=65536
@@ -172,8 +178,7 @@ For native VPS deployment without Docker:
    WantedBy=multi-user.target
    EOF
    ```
-
-   Adjust `WorkingDirectory`, `ExecStart`, and `EnvironmentFile` paths if your installation is in a different location.
+   Replace `<user>` and `<install-dir>` with the actual values from your setup.
 
 6. **Enable and start the service:**
    ```bash
@@ -229,7 +234,7 @@ server {
     ssl_ciphers "ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384";
 
     location / {
-        proxy_pass http://127.0.0.1:2334;
+        proxy_pass http://127.0.0.1:2333;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
@@ -257,7 +262,7 @@ sudo systemctl reload nginx
 
 Once your server is running, update your Discord bot's configuration (e.g. Master-Bot `.env`):
 
-### Option A: Direct VPS Connection (Raw IP / Port 2333 for Lavalink, 2334 for Dashboard)
+### Option A: Direct VPS Connection (Raw IP / Port 2333)
 ```env
 LAVA_ENABLED=true
 LAVA_EXTERNAL=true

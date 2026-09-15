@@ -40,7 +40,7 @@ lavalink:
       bandcamp: true
       vimeo: true
       nico: true
-      http: false
+      http: true
       local: false
     filters:
       volume: true

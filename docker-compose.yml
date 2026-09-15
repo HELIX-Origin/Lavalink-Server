@@ -6,15 +6,11 @@ services:
     restart: unless-stopped
     ports:
       - "${LAVA_PORT:-2333}:2333"
-      - "${DASHBOARD_PORT:-2334}:2334"
     environment:
-      # Lavalink Internal URLs
-      - LAVA_INTERNAL_URL=${LAVA_INTERNAL_URL:-http://localhost:2333}
-      - DASHBOARD_INTERNAL_URL=${DASHBOARD_INTERNAL_URL:-http://localhost:2334}
-      # Public URLs (for Cloudflare tunnels, reverse proxies)
-      - LAVA_PUBLIC_URL=${LAVA_PUBLIC_URL:-}
-      - DASHBOARD_PUBLIC_URL=${DASHBOARD_PUBLIC_URL:-}
       # Lavalink Auth & Security
+      - LAVA_DOMAIN=${LAVA_DOMAIN:-}
+      - LAVA_HOST=${LAVA_HOST:-127.0.0.1}
+      - LAVA_PORT=${LAVA_PORT:-2333}
       - LAVA_PASS=${LAVA_PASS:-youshallnotpass}
       - LAVA_SECURE=${LAVA_SECURE:-false}
       - LAVA_CIPHER_URL=${LAVA_CIPHER_URL:-https://cipher.kikkia.dev/}
@@ -31,8 +27,9 @@ services:
       # Database
       - DB_PATH=${DB_PATH:-./database.db}
       - DB_URI=${DB_URI:-sqlite://./database.db}
-      # Admin
-      - ADMIN_KEY=${ADMIN_KEY:-}
+      # Dashboard Theme
+      - DASHBOARD_THEME=${DASHBOARD_THEME:-dark}
+      - DASHBOARD_COLOR_SCHEME=${DASHBOARD_COLOR_SCHEME:-default}
       # Environment
       - NODE_ENV=${NODE_ENV:-production}
     volumes:

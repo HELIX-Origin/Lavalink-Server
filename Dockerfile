@@ -20,8 +20,8 @@ RUN npm run build && npm prune --production
 # Copy configuration
 COPY application.yml ./application.yml
 
-# Expose default gateway port (Lavalink) and dashboard port
-EXPOSE 2333 2334
+# Expose Lavalink port (dashboard served at /dashboard)
+EXPOSE 2333
 
 # Start the ESM TypeScript dashboard and supervisor directly with Node.js
 CMD ["node", "dist/index.js"]

@@ -13,7 +13,7 @@ const DEVICE_CODE_URL = 'https://www.youtube.com/o/oauth2/device/code';
 const TOKEN_URL = 'https://www.youtube.com/o/oauth2/token';
 
 function getOAuthClientId(): string {
-  return config.youtubeApiKey;
+  return config.youtubeClientId;
 }
 
 export interface OAuthState {
@@ -169,13 +169,13 @@ async function notifyLavalinkNode(refreshToken: string): Promise<void> {
 
     const req = http.request(
       {
-        hostname: config.lavalinkHost,
-        port: config.lavalinkPort,
+        hostname: config.host,
+        port: config.port,
         path: '/youtube',
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': config.lavalinkPass,
+          'Authorization': config.pass,
           'Content-Length': Buffer.byteLength(postData)
         },
         timeout: 4000
@@ -331,7 +331,7 @@ function startPolling(pollId: number, deviceCode: string, intervalSeconds: numbe
     try {
       const payload: Record<string, string> = {
         client_id: getOAuthClientId(),
-        client_secret: config.youtubeApiSecret,
+        client_secret: config.youtubeClientSecret,
         code: deviceCode,
         grant_type: 'http://oauth.net/grant_type/device/1.0'
       };

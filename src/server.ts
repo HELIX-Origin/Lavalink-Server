@@ -4,33 +4,12 @@ import { WebSocketServer, WebSocket } from 'ws';
 import { config } from './config.js';
 import { getCachedStatus, getCachedStats, getCachedInfo, getRecentLogs } from './redis.js';
 import { recordClientSessionStart, recordClientSessionEnd, getRecentMetrics, getRecentSystemEvents, logSystemEvent } from './db.js';
-import { renderDashboardHtml } from './dashboard.js';
+import { renderDashboardHtml, renderDocsHtml, renderPrivacyHtml, renderTosHtml } from './pages/index.js';
 
-import { getOAuthState, initiateDeviceFlow, applyManualToken } from './youtubeOAuth.js';
+import { getOAuthState, initiateDeviceFlow, applyManualToken } from './youtube-oauth.js';
 
 export interface ProxyOptions {
   onRestart?: () => Promise<void>;
-}
-
-function getExpectedAdminToken(): string {
-  return crypto.createHash('sha256').update(`lavalink-admin:${config.adminKey}`).digest('hex');
-}
-
-export function isOwnerAuthenticated(req: IncomingMessage): boolean {
-  const authHeader = req.headers.authorization;
-  const token = authHeader?.startsWith('Bearer ') ? authHeader.substring(7).trim() : null;
-  const cookieHeader = req.headers.cookie;
-  const cookieToken = cookieHeader
-    ?.split(';')
-    .map((c) => c.trim())
-    .find((c) => c.startsWith('admin_token='))
-    ?.substring(12);
-
-  const testToken = token || cookieToken;
-  if (!testToken) return false;
-
-  const expected = getExpectedAdminToken();
-  return testToken === expected || testToken === config.adminKey;
 }
 
 function parseJsonBody<T = Record<string, unknown>>(req: IncomingMessage): Promise<T> {
@@ -69,7 +48,35 @@ export function createProxyServer(options: ProxyOptions = {}): { server: http.Se
       return;
     }
 
-    // 2. Health check endpoint for liveness probes & keep-alive
+    // 2. Static Pages (Docs, Privacy, TOS) - under /dashboard/
+    if (pathname === '/dashboard/docs') {
+      res.writeHead(200, {
+        'Content-Type': 'text/html; charset=utf-8',
+        'Cache-Control': 'no-cache'
+      });
+      res.end(renderDocsHtml());
+      return;
+    }
+
+    if (pathname === '/dashboard/privacy') {
+      res.writeHead(200, {
+        'Content-Type': 'text/html; charset=utf-8',
+        'Cache-Control': 'no-cache'
+      });
+      res.end(renderPrivacyHtml());
+      return;
+    }
+
+    if (pathname === '/dashboard/tos') {
+      res.writeHead(200, {
+        'Content-Type': 'text/html; charset=utf-8',
+        'Cache-Control': 'no-cache'
+      });
+      res.end(renderTosHtml());
+      return;
+    }
+
+    // 3. Health check endpoint for liveness probes
     if (pathname === '/health') {
       const status = await getCachedStatus();
       const isHealthy = status === 'online' || status === 'starting';
@@ -83,17 +90,16 @@ export function createProxyServer(options: ProxyOptions = {}): { server: http.Se
       return;
     }
 
-    // 3. API Status (Public connection details vs Owner-only diagnostics)
+    // 4. API Status (Public connection details)
     if (pathname === '/api/status') {
-      const isOwner = isOwnerAuthenticated(req);
       const [status, stats, info] = await Promise.all([
         getCachedStatus(),
         getCachedStats(),
         getCachedInfo()
       ]);
 
-      const isSsl = config.lavalinkPublicUrl.startsWith('https');
-      const botPort = isSsl ? 443 : config.lavalinkPort;
+      const isSsl = config.secure;
+      const botPort = isSsl ? 443 : config.port;
 
       const payload: Record<string, unknown> = {
         status,
@@ -104,20 +110,14 @@ export function createProxyServer(options: ProxyOptions = {}): { server: http.Se
         connection: {
           host: config.domain,
           port: botPort,
-          password: config.lavalinkPass,
+          password: config.pass,
           secure: isSsl,
-          websocketUrl: `${isSsl ? 'wss' : 'ws'}://${config.domain}${isSsl ? '' : `:${config.lavalinkPort}`}/v4/websocket`,
-          lavalinkPublicUrl: config.lavalinkPublicUrl,
-          dashboardPublicUrl: config.dashboardPublicUrl
+          websocketUrl: `${isSsl ? 'wss' : 'ws'}://${config.domain}${isSsl ? '' : `:${config.port}`}/v4/websocket`,
+          lavalinkPublicUrl: config.publicUrl,
+          dashboardPublicUrl: `${config.publicUrl}/dashboard`
         },
-        youtubeOAuth: getOAuthState(),
-        isOwner
+        youtubeOAuth: getOAuthState()
       };
-
-      if (isOwner) {
-        payload.logs = await getRecentLogs(50);
-        payload.adminKey = config.adminKey;
-      }
 
       res.writeHead(200, {
         'Content-Type': 'application/json',
@@ -127,64 +127,7 @@ export function createProxyServer(options: ProxyOptions = {}): { server: http.Se
       return;
     }
 
-    // 4. API Auth Login
-    if (pathname === '/api/auth/login' && req.method === 'POST') {
-      try {
-        const { password } = await parseJsonBody<{ password?: string }>(req);
-        if (password && (password === config.adminKey || password === config.lavalinkPass)) {
-          const token = getExpectedAdminToken();
-          res.writeHead(200, {
-            'Content-Type': 'application/json',
-            'Set-Cookie': `admin_token=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=86400`
-          });
-          res.end(JSON.stringify({ success: true, token }));
-          logSystemEvent('info', 'Host account owner authenticated via dashboard');
-        } else {
-          res.writeHead(401, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ success: false, error: 'Invalid password' }));
-        }
-      } catch {
-        res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ success: false, error: 'Malformed request body' }));
-      }
-      return;
-    }
-
-    // 5. API Auth Verify
-    if (pathname === '/api/auth/verify') {
-      const isOwner = isOwnerAuthenticated(req);
-      res.writeHead(isOwner ? 200 : 401, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ authenticated: isOwner }));
-      return;
-    }
-
-    // 6. API Logs (Host Owner Only)
-    if (pathname === '/api/logs') {
-      if (!isOwnerAuthenticated(req)) {
-        res.writeHead(401, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'Unauthorized: Host account owner login required' }));
-        return;
-      }
-      const logs = await getRecentLogs(60);
-      res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache' });
-      res.end(JSON.stringify({ logs }));
-      return;
-    }
-
-    // 7. API Event Logs from SQLite (Host Owner Only)
-    if (pathname === '/api/events') {
-      if (!isOwnerAuthenticated(req)) {
-        res.writeHead(401, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'Unauthorized: Host account owner login required' }));
-        return;
-      }
-      const events = getRecentSystemEvents(50);
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify(events));
-      return;
-    }
-
-    // 8. API Metrics History from SQLite (Publicly available performance metrics)
+    // 5. API Metrics History from SQLite (Publicly available performance metrics)
     if (pathname === '/api/metrics') {
       const history = getRecentMetrics(30);
       res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -192,57 +135,15 @@ export function createProxyServer(options: ProxyOptions = {}): { server: http.Se
       return;
     }
 
-    // 9. API Admin Actions (Host Owner Only)
-    if (pathname === '/api/admin/action' && req.method === 'POST') {
-      if (!isOwnerAuthenticated(req)) {
-        res.writeHead(401, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'Unauthorized: Host account owner login required' }));
-        return;
-      }
-
-      try {
-        const { action } = await parseJsonBody<{ action?: string }>(req);
-
-        if (action === 'ping') {
-          res.writeHead(200, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ success: true, message: 'Keep-alive removed' }));
-          return;
-        }
-
-        if (action === 'restart') {
-          logSystemEvent('warn', 'Manual node restart requested by host owner');
-          if (options.onRestart) {
-            void options.onRestart();
-          }
-          res.writeHead(200, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ success: true, message: 'Node restart initiated' }));
-          return;
-        }
-
-        res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: `Unknown action: ${action}` }));
-      } catch {
-        res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'Bad request' }));
-      }
-      return;
-    }
-
-    // 10. YouTube OAuth Management Routes (Host Owner Only)
-    if (pathname.startsWith('/api/admin/oauth/youtube')) {
-      if (!isOwnerAuthenticated(req)) {
-        res.writeHead(401, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'Unauthorized: Host account owner login required' }));
-        return;
-      }
-
-      if (pathname === '/api/admin/oauth/youtube/status' && req.method === 'GET') {
+    // 6. YouTube OAuth Management Routes (Public)
+    if (pathname.startsWith('/api/oauth/youtube')) {
+      if (pathname === '/api/oauth/youtube/status' && req.method === 'GET') {
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ success: true, oauth: getOAuthState() }));
         return;
       }
 
-      if (pathname === '/api/admin/oauth/youtube/start' && req.method === 'POST') {
+      if (pathname === '/api/oauth/youtube/start' && req.method === 'POST') {
         try {
           const oauth = await initiateDeviceFlow();
           res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -254,7 +155,7 @@ export function createProxyServer(options: ProxyOptions = {}): { server: http.Se
         return;
       }
 
-      if (pathname === '/api/admin/oauth/youtube/manual' && req.method === 'POST') {
+      if (pathname === '/api/oauth/youtube/manual' && req.method === 'POST') {
         try {
           const { token } = await parseJsonBody<{ token?: string }>(req);
           if (!token || typeof token !== 'string') {
@@ -279,7 +180,7 @@ export function createProxyServer(options: ProxyOptions = {}): { server: http.Se
       }
     }
 
-    // 11. Proxy REST API to internal Lavalink (e.g. /v4/*, /version, /youtube/*)
+    // 7. Proxy REST API to internal Lavalink (e.g. /v4/*, /version, /youtube/*)
     if (pathname.startsWith('/v4/') || pathname === '/version' || pathname.startsWith('/youtube')) {
       proxyHttpRequest(req, res);
       return;
@@ -290,7 +191,7 @@ export function createProxyServer(options: ProxyOptions = {}): { server: http.Se
     res.end(JSON.stringify({ error: 'Not Found', path: pathname }));
   });
 
-  // 11. WebSocket Reverse Proxy for /v4/websocket with Keep-Alive Heartbeat
+  // WebSocket Reverse Proxy for /v4/websocket
   const wss = new WebSocketServer({ noServer: true });
 
   server.on('upgrade', (req: IncomingMessage, socket, head) => {
@@ -309,13 +210,13 @@ export function createProxyServer(options: ProxyOptions = {}): { server: http.Se
 
 function proxyHttpRequest(clientReq: IncomingMessage, clientRes: ServerResponse): void {
   const options: http.RequestOptions = {
-    hostname: config.lavalinkHost,
-    port: config.lavalinkPort,
+    hostname: config.host,
+    port: config.port,
     path: clientReq.url,
     method: clientReq.method,
     headers: {
       ...clientReq.headers,
-      host: `${config.lavalinkHost}:${config.lavalinkPort}`
+      host: `${config.host}:${config.port}`
     }
   };
 
@@ -351,7 +252,7 @@ function handleWebSocketProxy(clientWs: WebSocket, req: IncomingMessage): void {
     }
   }
 
-  const targetWs = new WebSocket(`ws://${config.lavalinkHost}:${config.lavalinkPort}${req.url}`, {
+  const targetWs = new WebSocket(`ws://${config.host}:${config.port}${req.url}`, {
     headers
   });
 

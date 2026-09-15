@@ -10,23 +10,22 @@ It is critical to distinguish between **Lavalink Server Variables** and **Discor
 
 | Variable Type | Examples | Where It Is Configured | Purpose |
 | :--- | :--- | :--- | :--- |
-| **Server Variable** | `LAVA_PASS`, `YOUTUBE_CLIENT_ID`, `SPOTIFY_CLIENT_ID`, `LAVA_INTERNAL_URL`, `DASHBOARD_INTERNAL_URL` | Lavalink Server (`application.yml`, `.env`, `docker-compose.yml`) | Tells Lavalink what port to bind to, what password to demand, and which external APIs to query. |
+| **Server Variable** | `LAVA_PASS`, `YOUTUBE_CLIENT_ID`, `SPOTIFY_CLIENT_ID`, `LAVA_DOMAIN`, `LAVA_PORT` | Lavalink Server (`application.yml`, `.env`, `docker-compose.yml`) | Tells Lavalink what port to bind to, what password to demand, and which external APIs to query. |
 | **Bot Client Variable** | `LAVA_ENABLED`, `LAVA_EXTERNAL`, `LAVA_HOST`, `LAVA_SECURE` | Discord Bot (`Master-Bot` `.env`) | Tells your Discord bot how to reach this external Lavalink server. **Never configured on the Lavalink server.** |
 
 ---
 
 ## 📋 Comprehensive Server Variables
 
-The Lavalink server resolves all configuration from internal/public URLs and environment variables.
+The Lavalink server resolves all configuration from environment variables. Derived URLs (`internalUrl`, `publicUrl`) are computed in `src/config.ts`.
 
 ### Core Lavalink Variables
 
 | Variable | Default Value | Description |
 | :--- | :--- | :--- |
-| `LAVA_INTERNAL_URL` | `http://localhost:2333` | Internal Lavalink URL (host:port) |
-| `DASHBOARD_INTERNAL_URL` | `http://localhost:2334` | Dashboard internal URL (host:port) |
-| `LAVA_PUBLIC_URL` | *(empty)* | Public Lavalink URL (e.g. `https://lavalink.yourdomain.com`) |
-| `DASHBOARD_PUBLIC_URL` | *(empty)* | Public Dashboard URL (e.g. `https://lavalink.yourdomain.com`) |
+| `LAVA_DOMAIN` | *(empty)* | Public domain/host (e.g. `https://lavalink.yourdomain.com`) used by both dashboard and server |
+| `LAVA_HOST` | `127.0.0.1` | Internal bind address (host:port) |
+| `LAVA_PORT` | `2333` | Internal port for both Lavalink and the dashboard (`/dashboard` endpoint) |
 | `LAVA_PASS` | `youshallnotpass` | Authentication password for WebSocket/REST API |
 | `LAVA_SECURE` | `false` | Use HTTPS for Lavalink (true/false) |
 | `LAVA_CIPHER_URL` | `https://cipher.kikkia.dev/` | Remote cipher endpoint for YouTube signature deciphering |
@@ -60,18 +59,24 @@ The Lavalink server resolves all configuration from internal/public URLs and env
 | `DB_PATH` | `./database.db` | SQLite database file path |
 | `DB_URI` | `sqlite://./database.db` | SQLite database URI |
 
+### Dashboard Theme
+
+| Variable | Default Value | Description |
+| :--- | :--- | :--- |
+| `DASHBOARD_THEME` | `dark` | Theme: `glassmorphism` \| `dark` \| `light` \| `cyberpunk` \| `dracula` \| `nord` \| `emerald` |
+| `DASHBOARD_COLOR_SCHEME` | `default` | Accent color: `default` \| `cyan` \| `purple` \| `blue` \| `emerald` \| `rose` \| `amber` \| `indigo` \| `crimson` \| `teal` \| `sunset` |
+
 ### Environment
 
 | Variable | Default Value | Description |
 | :--- | :--- | :--- |
 | `NODE_ENV` | `production` | Set to "production" for production mode |
-| `ADMIN_KEY` | *(empty)* | Optional host owner dashboard password (defaults to LAVA_PASS) |
 
 ---
 
 ## 📄 `application.yml` Core Sections
 
-The `application.yml` file is the **single source of truth** for Lavalink Java server configuration. The TypeScript supervisor reads this file at startup to determine ports and addresses.
+The `application.yml` file is the **single source of truth** for Lavalink Java server configuration. The TypeScript gateway derives ports/addresses from environment variables and passes them to the Java process at spawn time.
 
 ### 1. Server & Networking
 ```yaml
@@ -85,8 +90,8 @@ server:
       io: 4
       worker: 32
 ```
-- **`port`**: Lavalink Java server port (from `LAVA_PORT` or `LAVA_INTERNAL_URL`)
-- **`address`**: Lavalink bind address (from `LAVA_HOST` or `LAVA_INTERNAL_URL`)
+- **`port`**: Lavalink Java server port (from `LAVA_PORT`)
+- **`address`**: Lavalink bind address (from `LAVA_HOST`)
 - **`undertow`**: High-performance non-blocking HTTP/WebSocket Undertow engine
 
 ### 2. Lavalink Core & Plugins
@@ -186,24 +191,24 @@ java -Xmx512M -Djdk.tls.client.protocols=TLSv1.2,TLSv1.3 -Dspring.profiles.activ
 
 ## 🔄 Configuration Loading Order
 
-1. **`application.yml`** - Base configuration (ports, plugins, Lavalink settings)
+1. **`application.yml`** - Base configuration (plugins, Lavalink settings)
 2. **`.env`** - Overrides for secrets (passwords, tokens, API keys)
 3. **System environment** - Highest priority, overrides `.env`
 
-The TypeScript supervisor parses `application.yml` at startup and resolves `${VAR:default}` placeholders with environment variables.
+The TypeScript config (`src/config.ts`) reads environment variables directly via `env()`/`envInt()`/`envBool()` helpers — it does NOT parse `application.yml`.
 
 ---
 
 ## 🌐 URL Structure
 
-The server uses **internal URLs** (with ports) for local communication and **public URLs** (without ports) for external access via reverse proxies/Cloudflare tunnels:
+The server uses a single port for both Lavalink and the dashboard. Derived URLs are built in `src/config.ts`:
 
-| Type | Variable | Example |
+| Type | Source | Example |
 | :--- | :--- | :--- |
-| Lavalink Internal | `LAVA_INTERNAL_URL` | `http://localhost:2333` |
-| Dashboard Internal | `DASHBOARD_INTERNAL_URL` | `http://localhost:2334` |
-| Lavalink Public | `LAVA_PUBLIC_URL` | `https://lavalink.yourdomain.com` |
-| Dashboard Public | `DASHBOARD_PUBLIC_URL` | `https://lavalink.yourdomain.com` |
+| Lavalink Internal | `internalUrl` (`protocol://host:port`) | `http://localhost:2333` |
+| Lavalink Public | `publicUrl` (`https://domain`) | `https://lavalink.yourdomain.com` |
+| Dashboard Public | `${publicUrl}/dashboard` | `https://lavalink.yourdomain.com/dashboard` |
 
-**Internal URLs** include ports for direct service-to-service communication.
-**Public URLs** omit ports since reverse proxies/Cloudflare tunnels handle port mapping.
+- **Lavalink** keeps its port visible publicly (e.g., `https://domain.com:2333`).
+- **Dashboard** is served at `/dashboard` on the same port and its public port is masked by reverse proxies/Cloudflare tunnels.
+- When `LAVA_DOMAIN` is localhost, `publicUrl` falls back to `http://host:port`.
