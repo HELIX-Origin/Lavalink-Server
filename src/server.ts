@@ -112,7 +112,7 @@ export function createProxyServer(options: ProxyOptions = {}): { server: http.Se
           port: botPort,
           password: config.pass,
           secure: isSsl,
-          websocketUrl: `${isSsl ? 'wss' : 'ws'}://${config.domain}${isSsl ? '' : `:${config.port}`}/v4/websocket`,
+          websocketUrl: `${isSsl ? 'wss' : 'ws'}://${config.host}${isSsl ? '' : `:${config.port}`}/v4/websocket`,
           lavalinkPublicUrl: config.publicUrl,
           dashboardPublicUrl: config.dashboardUrl,
           dashboardPort: config.dashboardPort
