@@ -26,8 +26,7 @@ graph TD
         P2[LavaSrc<br/>lavasrc-plugin:4.8.3<br/>maven.topi.wtf<br/>Spotify metadata]
         P3[SponsorBlock<br/>sponsorblock-plugin:3.0.1<br/>maven.topi.wtf]
         P4[LavaSearch<br/>lavasearch-plugin:1.0.0<br/>maven.topi.wtf]
-        P5[LavaLyrics<br/>lavalyrics-plugin:1.0.0<br/>maven.topi.wtf<br/>needs GENIUS_ACCESS_TOKEN]
-        P6[Skybot<br/>skybot-plugin:1.7.1<br/>jitpack.io<br/>OCRemix + Mixcloud]
+        P5[LavaLyrics<br/>lavalyrics-plugin:1.1.0<br/>maven.topi.wtf<br/>needs GENIUS_ACCESS_TOKEN]
     end
 ```
 
@@ -47,11 +46,9 @@ lavalink:
     - dependency: "com.github.topi314.lavasearch:lavasearch-plugin:1.0.0"
       repository: "https://maven.topi.wtf/releases"
       snapshot: false
-    - dependency: "com.github.topi314.lavalyrics:lavalyrics-plugin:1.0.0"
+    - dependency: "com.github.topi314.lavalyrics:lavalyrics-plugin:1.1.0"
       repository: "https://maven.topi.wtf/releases"
       snapshot: false
-    - dependency: "com.github.DuncteBot.skybot:skybot-lavalink-plugin:1.7.1"
-      repository: "https://jitpack.io"
 
 plugins:
   youtube:
@@ -90,18 +87,6 @@ plugins:
   lavalyrics:
     enabled: true
     geniusToken: "${GENIUS_ACCESS_TOKEN:}"
-  skybot:
-    sources:
-      getyarn: false
-      tts: false
-      pornhub: false
-      reddit: false
-      ocremix: true
-      tiktok: false
-      mixcloud: true
-      soundgasm: false
-      pixeldrain: false
-      tumblr: false
 ```
 
 ## Plugin Details
@@ -112,8 +97,7 @@ plugins:
 | LavaSrc | `com.github.topi314.lavasrc:lavasrc-plugin:4.8.3` | maven.topi.wtf | `plugins.lavasrc` | `SPOTIFY_CLIENT_ID`, `SPOTIFY_CLIENT_SECRET` |
 | SponsorBlock | `com.github.topi314.sponsorblock:sponsorblock-plugin:3.0.1` | maven.topi.wtf | (auto) | None |
 | LavaSearch | `com.github.topi314.lavasearch:lavasearch-plugin:1.0.0` | maven.topi.wtf | (auto) | None |
-| LavaLyrics | `com.github.topi314.lavalyrics:lavalyrics-plugin:1.0.0` | maven.topi.wtf | `plugins.lavalytics` | `GENIUS_ACCESS_TOKEN` |
-| Skybot | `com.github.DuncteBot.skybot:skybot-lavalink-plugin:1.7.1` | jitpack.io | `plugins.skybot` | None |
+| LavaLyrics | `com.github.topi314.lavalyrics:lavalyrics-plugin:1.1.0` | maven.topi.wtf | `plugins.lavalyrics` | `GENIUS_ACCESS_TOKEN` |
 
 ## Workflow for Changes
 

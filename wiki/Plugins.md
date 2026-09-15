@@ -135,7 +135,7 @@ LavaLyrics fetches synchronized lyrics for tracks from Genius.com.
 ```yaml
 lavalink:
   plugins:
-    - dependency: "com.github.topi314.lavalyrics:lavalyrics-plugin:1.0.0"
+    - dependency: "com.github.topi314.lavalyrics:lavalyrics-plugin:1.1.0"
       repository: "https://maven.topi.wtf/releases"
       snapshot: false
 ```
@@ -159,44 +159,6 @@ plugins:
 
 ---
 
-## ☁️ 6. Skybot Plugin (`com.github.DuncteBot.skybot`)
-
-Skybot adds support for additional audio sources including OCRemix and Mixcloud.
-
-### Dependency Declaration
-```yaml
-lavalink:
-  plugins:
-    - dependency: "com.github.DuncteBot.skybot:skybot-lavalink-plugin:1.7.1"
-      repository: "https://jitpack.io"
-```
-
-### Configuration
-```yaml
-plugins:
-  skybot:
-    sources:
-      getyarn: false
-      tts: false
-      pornhub: false
-      reddit: false
-      ocremix: true
-      tiktok: false
-      mixcloud: true
-      soundgasm: false
-      pixeldrain: false
-      tumblr: false
-```
-
-### Enabled Sources
-- **OCRemix** — Video game music remixes from OverClocked ReMix
-- **Mixcloud** — DJ mixes, podcasts, and radio shows
-
-### Available Sources (disabled by default)
-- GetYarn, TTS, Pornhub, Reddit, TikTok, Soundgasm, Pixeldrain, Tumblr
-
----
-
 ## ➕ Adding Additional Plugins
 
 To add another plugin (e.g. Apple Music, Deezer, Yandex), add its maven coordinates under `lavalink.plugins` in `application.yml`:
@@ -215,11 +177,9 @@ lavalink:
     - dependency: "com.github.topi314.lavasearch:lavasearch-plugin:1.0.0"
       repository: "https://maven.topi.wtf/releases"
       snapshot: false
-    - dependency: "com.github.topi314.lavalyrics:lavalyrics-plugin:1.0.0"
+    - dependency: "com.github.topi314.lavalyrics:lavalyrics-plugin:1.1.0"
       repository: "https://maven.topi.wtf/releases"
       snapshot: false
-    - dependency: "com.github.DuncteBot.skybot:skybot-lavalink-plugin:1.7.1"
-      repository: "https://jitpack.io"
     # Example: Apple Music Plugin
     # - dependency: "com.github.topi314.lavaapple:lavaapple-plugin:1.0.0"
     #   repository: "https://maven.topi.wtf/releases"

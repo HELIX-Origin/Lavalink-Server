@@ -310,8 +310,7 @@ graph TD
         P2[LavaSrc<br/>lavasrc-plugin:4.8.3<br/>Spotify metadata]
         P3[SponsorBlock<br/>sponsorblock-plugin:3.0.1]
         P4[LavaSearch<br/>lavasearch-plugin:1.0.0]
-        P5[LavaLyrics<br/>lavalyrics-plugin:1.0.0<br/>needs GENIUS_ACCESS_TOKEN]
-        P6[Skybot<br/>skybot-plugin:1.7.1<br/>OCRemix + Mixcloud]
+        P5[LavaLyrics<br/>lavalyrics-plugin:1.1.0<br/>needs GENIUS_ACCESS_TOKEN]
     end
 ```
 
@@ -319,8 +318,7 @@ graph TD
 2. LavaSrc (`lavasrc-plugin:4.8.3`) - Spotify metadata
 3. SponsorBlock (`sponsorblock-plugin:3.0.1`)
 4. LavaSearch (`lavasearch-plugin:1.0.0`)
-5. LavaLyrics (`lavalyrics-plugin:1.0.0`) - needs `GENIUS_ACCESS_TOKEN`
-6. Skybot (`skybot-plugin:1.7.1`) - OCRemix + Mixcloud enabled
+5. LavaLyrics (`lavalyrics-plugin:1.1.0`) - needs `GENIUS_ACCESS_TOKEN`
 
 ### 8. DEPLOYMENT
 - **Docker**: Dockerfile downloads Lavalink JAR at build time

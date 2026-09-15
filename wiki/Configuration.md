@@ -109,11 +109,9 @@ lavalink:
     - dependency: "com.github.topi314.lavasearch:lavasearch-plugin:1.0.0"
       repository: "https://maven.topi.wtf/releases"
       snapshot: false
-    - dependency: "com.github.topi314.lavalyrics:lavalyrics-plugin:1.0.0"
+    - dependency: "com.github.topi314.lavalyrics:lavalyrics-plugin:1.1.0"
       repository: "https://maven.topi.wtf/releases"
       snapshot: false
-    - dependency: "com.github.DuncteBot.skybot:skybot-lavalink-plugin:1.7.1"
-      repository: "https://jitpack.io"
   server:
     password: "${LAVA_PASS:youshallnotpass}"
     sources:
@@ -165,18 +163,6 @@ plugins:
   lavalyrics:
     enabled: true
     geniusToken: "${GENIUS_ACCESS_TOKEN:}"
-  skybot:
-    sources:
-      getyarn: false
-      tts: false
-      pornhub: false
-      reddit: false
-      ocremix: true
-      tiktok: false
-      mixcloud: true
-      soundgasm: false
-      pixeldrain: false
-      tumblr: false
 ```
 
 ### 3. JVM Flags & Tuning

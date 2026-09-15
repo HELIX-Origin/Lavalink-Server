@@ -57,7 +57,6 @@ For high-throughput WebRTC audio transcoding and unblocked YouTube streaming (av
 - 🟣 **SponsorBlock (`sponsorblock-plugin`):** Automatically skips sponsorships, intros, outros using the community SponsorBlock API.
 - 🔍 **LavaSearch (`lavasearch-plugin`):** Enhanced search capabilities across multiple sources.
 - 🎵 **LavaLyrics (`lavalyrics-plugin`):** Fetches synchronized lyrics from Genius.com (requires `GENIUS_ACCESS_TOKEN`).
-- ☁️ **Skybot (`skybot-plugin`):** Additional audio sources — **OCRemix** and **Mixcloud** enabled by default.
 - 🌐 **Internal/Public URL Separation:** Internal URLs (with ports) for service-to-service communication; Public URLs (without ports) for Cloudflare tunnels/reverse proxies.
 - 🪶 **Resource Efficient:** Tuned with low memory footprint and JVM GC optimization for smooth playback on 1GB+ VPS nodes.
 
