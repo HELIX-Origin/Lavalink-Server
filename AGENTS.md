@@ -72,7 +72,7 @@ NODE_ENV="production"                                        # Set to "productio
 
 ## Removed (NEVER USE)
 
-- `YOUTUBE_API_KEY`, `YOUTUBE_API_SECRET`
+- `YOUTUBE_API_KEY`, `YOUTUBE_API_SECRET` (YouTube's API key/secret are a *different* credential mechanism; this server uses OAuth — use `YOUTUBE_CLIENT_ID`/`YOUTUBE_CLIENT_SECRET`)
 - `DASHBOARD_PORT`, `LAVA_INTERNAL_URL`, `DASHBOARD_INTERNAL_URL`
 - `LAVA_PUBLIC_URL`, `DASHBOARD_PUBLIC_URL`, `KEEP_ALIVE_ENABLED`
 - `YOUTUBE_SKIP_INIT`, `YOUTUBE_CIPHER_URL`, `YOUTUBE_CIPHER_PASSWORD`

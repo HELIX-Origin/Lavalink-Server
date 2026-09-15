@@ -101,7 +101,7 @@ graph LR
 - ❌ `INTERNAL_URL` / `LAVA_INTERNAL_URL` / `LAVA_PUBLIC_URL`
 - ❌ `ADMIN_KEY` / `ADMIN_PASSWORD`
 - ❌ `KEEP_ALIVE_ENABLED` / `KEEP_ALIVE_INTERVAL_MS`
-- ❌ `YOUTUBE_API_KEY` / `YOUTUBE_API_SECRET`
+- ❌ `YOUTUBE_API_KEY` / `YOUTUBE_API_SECRET` — **NEVER USE.** These are YouTube's *API key / API secret* (a separate credential mechanism). This server uses **OAuth** credentials, so the correct keys are `YOUTUBE_CLIENT_ID` / `YOUTUBE_CLIENT_SECRET`. Reintroducing the old names creates confusion with YouTube's unrelated API credentials.
 - ❌ `YOUTUBE_SKIP_INIT` / `YOUTUBE_CIPHER_URL` / `YOUTUBE_CIPHER_PASSWORD`
 - ❌ `DOMAIN` / `HOST` / `PORT` / `SERVER_PORT`
 
