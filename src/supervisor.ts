@@ -20,16 +20,16 @@ export class LavalinkSupervisor {
     this.isShuttingDown = false;
     await setCachedStatus('starting');
     logSystemEvent('info', 'Lavalink supervisor starting Java process', {
-      port: config.port,
-      address: config.host
+      port: config.internalPort,
+      address: config.internalHost
     });
 
     const javaArgs = [
       '-Xmx512M',
       '-Djdk.tls.client.protocols=TLSv1.2,TLSv1.3',
       '-Dspring.profiles.active=prod',
-      `-Dserver.port=${config.port}`,
-      `-Dserver.address=${config.host}`,
+      `-Dserver.port=${config.internalPort}`,
+      `-Dserver.address=${config.internalHost}`,
       '-jar',
       'Lavalink.jar'
     ];
@@ -41,8 +41,8 @@ export class LavalinkSupervisor {
       stdio: ['ignore', 'pipe', 'pipe'],
       env: {
         ...process.env,
-        PORT: String(config.port),
-        SERVER_PORT: String(config.port)
+        PORT: String(config.internalPort),
+        SERVER_PORT: String(config.internalPort)
       }
     });
 
@@ -162,8 +162,8 @@ export class LavalinkSupervisor {
     return new Promise((resolve, reject) => {
       const req = http.request(
         {
-          hostname: config.host,
-          port: config.port,
+          hostname: config.internalHost,
+          port: config.internalPort,
           path: pathName,
           method: 'GET',
           headers: {

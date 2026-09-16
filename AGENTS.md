@@ -41,14 +41,18 @@ This project uses an agent-based development workflow. All agents, rules, and sk
 ## Current Valid Environment Variables
 
 ```
-# Lavalink Auth & Security
-LAVA_DOMAIN=""                                               # Public URL/domain for the Lavalink server (e.g. "https://lavalink.example.com"). Scheme is stripped automatically.
-LAVA_HOST="127.0.0.1"                                        # Internal host the Lavalink server binds to.
-LAVA_PORT="2333"                                             # Internal port the Lavalink server binds to.
+# Lavalink Connection & Security
+LAVA_INTERNAL_URL="0.0.0.0:2333"                             # Internal network URL: host + port the Lavalink Java node binds to ("0.0.0.0:2333"). The gateway/dashboard port is auto-derived as internal port + 1.
+LAVA_PUBLIC_URL="https://lavalink.example.com"               # Public network URL (e.g. "https://lavalink.example.com"). Port is masked in the URL (behind Cloudflare/tunnel). Bots append endpoints to this base URL.
+LAVA_INTERNAL_WS_URI="ws://0.0.0.0:2333/v4/websocket"        # Internal WebSocket URI. Host + port + path are parsed as the upstream proxy target.
+LAVA_PUBLIC_WS_URI="ws://lavalink.example.com/v4/websocket"  # Public WebSocket URI (port masked in URL).
 LAVA_PASS="youshallnotpass"                                  # Lavalink authentication password.
-LAVA_SECURE=false                                            # Use HTTPS for Lavalink (true/false).
 LAVA_CIPHER_URL="https://cipher.kikkia.dev/"                 # Remote cipher endpoint for YouTube signature deciphering.
 LAVA_CIPHER_PASSWORD=""                                      # Optional password for self-hosted cipher. Automatically provisioned by the cipher.kikkia.dev remote cipher server.
+
+# Reverse Proxy
+REVERSE_PROXY_ENABLED="false"                                # Set to "true" when the public URL is served via a Cloudflare tunnel or reverse proxy that masks the public port. When enabled the dashboard labels the public port as masked.
+REVERSE_PROXY_TYPE="cloudflare"                              # Label for the masking indicator: cloudflare | nginx | caddy | custom (used only when REVERSE_PROXY_ENABLED=true).
 
 # YouTube OAuth
 YOUTUBE_CLIENT_ID=""                                         # REQUIRED - YouTube OAuth Client ID (app type: "TVs and Limited Input devices").
@@ -72,15 +76,15 @@ NODE_ENV="production"                                        # Set to "productio
 # Dashboard Theme
 DASHBOARD_THEME="dark"                                       # Dashboard theme: glassmorphism | dark | light | cyberpunk | dracula | nord | emerald (default: dark).
 DASHBOARD_COLOR_SCHEME="default"                             # Accent color scheme: default | cyan | purple | blue | emerald | rose | amber | indigo | crimson | teal | sunset.
-DASHBOARD_PUBLIC_URL=""                                      # Public URL for the dashboard (e.g. "https://dashboard.example.com"). Leave empty to fall back to DASHBOARD_INTERNAL_URL.
-DASHBOARD_INTERNAL_URL=""                                    # Internal bind URL for the dashboard (e.g. "http://127.0.0.1:2334"). Controls the gateway bind host/port. Leave empty to default to LAVA_HOST:LAVA_PORT+1.
 ```
 
 ## Removed (NEVER USE)
 
 - `YOUTUBE_API_KEY`, `YOUTUBE_API_SECRET` (YouTube's API key/secret are a *different* credential mechanism; this server uses OAuth — use `YOUTUBE_CLIENT_ID`/`YOUTUBE_CLIENT_SECRET`)
-- `DASHBOARD_PORT`, `LAVA_INTERNAL_URL`
-- `LAVA_PUBLIC_URL`, `KEEP_ALIVE_ENABLED`
+- `LAVA_DOMAIN`, `LAVA_HOST`, `LAVA_PORT`, `LAVA_SECURE` (replaced by `LAVA_INTERNAL_URL` + `LAVA_PUBLIC_URL`, which carry host and port together)
+- `DASHBOARD_PUBLIC_URL`, `DASHBOARD_INTERNAL_URL` (dashboard/gateway port is auto-derived as internal port + 1; served at `/dashboard`)
+- `DASHBOARD_PORT`, `LAVA_INTERNAL_URL` (old stand-alone placeholder)
+- `KEEP_ALIVE_ENABLED`
 - `YOUTUBE_SKIP_INIT`, `YOUTUBE_CIPHER_URL`, `YOUTUBE_CIPHER_PASSWORD`
 - `DOMAIN`, `HOST`, `PORT`, `SERVER_PORT`, `ADMIN_KEY`, `ADMIN_PASSWORD`
 
@@ -91,7 +95,7 @@ DASHBOARD_INTERNAL_URL=""                                    # Internal bind URL
 - Old (broken) install-service script - replaced by `scripts/install-service.sh`
 - CLIENT_SECRET.ts
 - Lavalink.jar in repo
-- Old `DASHBOARD_PORT` env var - replaced by `DASHBOARD_INTERNAL_URL` (bind host/port) and `DASHBOARD_PUBLIC_URL` (public dashboard URL)
+- Old `DASHBOARD_PORT` env var - replaced by auto-derived gateway port (internal port + 1) served at `/dashboard`
 
 ## Documentation
 

@@ -13,11 +13,11 @@ This page documents common issues encountered when deploying and connecting to t
   - Make sure there are no trailing whitespace or hidden characters in your environment variables.
 
 ### `WebSocket connection failed: Error 1006 / Connection Refused`
-- **Cause:** Port mismatch or SSL/TLS protocol mismatch.
+- **Cause:** Wrong host/port or SSL/TLS protocol mismatch. The public port is masked by design, so bots must connect to `LAVA_PUBLIC_URL` as-is (e.g. `ws://lavalink.yourdomain.com/v4/websocket`).
 - **Fix:**
-  - When fronted by an Nginx/SSL reverse proxy, incoming connections route through port **`443`** (HTTPS/WSS).
-  - In your bot, set `LAVA_PORT=443` and `LAVA_SECURE=true`.
-  - When connecting directly to your VPS or Docker host, use port **`2333`** with `LAVA_SECURE=false`.
+  - When fronted by a Cloudflare tunnel / Nginx SSL reverse proxy, bots reach the domain on standard **`443`** and should be configured with the public host (e.g. `lavalink.yourdomain.com`) + `LAVA_PORT=443` + `LAVA_SECURE=true`.
+  - When connecting directly to your VPS or Docker host on the exposed raw node port, use that IP + port **`2333`** with `LAVA_SECURE=false`.
+  - Bots should never be given the internal bind address (`LAVA_INTERNAL_URL`).
 
 ---
 

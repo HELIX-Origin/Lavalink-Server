@@ -54,7 +54,7 @@ For high-throughput WebRTC audio transcoding and unblocked YouTube streaming (av
 
 ## ⚡ Features & Pre-Configured Plugins
 
-- 📊 **ESM TypeScript Management Dashboard:** Real-time web dashboard at `/` tracking node health, JVM memory, CPU utilization, active players, and uptime.
+- 📊 **ESM TypeScript Management Dashboard:** Real-time web dashboard at `/dashboard` tracking node health, JVM memory, CPU utilization, active players, uptime, and separate internal/public connection details with live SSE updates.
 - ⚡ **Pure Node.js Supervisor (No Shell Scripts):** Robust ESM TypeScript supervisor managing Java process lifecycle, port/domain binding, and graceful signal handling without shell scripts.
 - 💾 **SQLite Persistence & ioredis-mock:** Embedded SQLite database for historical metrics and client audit sessions, paired with in-memory `ioredis-mock` for instant pub/sub and state caching.
 - 📺 **YouTube Plugin (`youtube-plugin`):** Multi-client support (TV, MUSIC, ANDROID_VR, IOS, WEB, WEBEMBEDDED) with remote cipher decoding and OAuth2 refresh token compatibility.
@@ -62,7 +62,8 @@ For high-throughput WebRTC audio transcoding and unblocked YouTube streaming (av
 - 🟣 **SponsorBlock (`sponsorblock-plugin`):** Automatically skips sponsorships, intros, outros using the community SponsorBlock API.
 - 🔍 **LavaSearch (`lavasearch-plugin`):** Enhanced search capabilities across multiple sources.
 - 🎵 **LavaLyrics (`lavalyrics-plugin`):** Fetches synchronized lyrics from Genius.com (requires `GENIUS_ACCESS_TOKEN`).
-- 🌐 **Internal/Public URL Separation:** Internal URLs (with ports) for service-to-service communication; Public URLs (without ports) for Cloudflare tunnels/reverse proxies.
+- 🌐 **Advanced Internal/Public Connection Handling:** `LAVA_INTERNAL_URL` + `LAVA_PUBLIC_URL` separate bind-level internals from Cloudflare/tunnel-facing publics. Public ports are **masked** — bots appraise the public URL as-is and simply append the required endpoint.
+- 📦 **Importable as a Library/Submodule:** The server exposes a clean API (`startServer`, `configure`, feature toggles) so host projects can embed it via Git submodule with the dashboard automatically disabled.
 - 🪶 **Resource Efficient:** Tuned with low memory footprint and JVM GC optimization for smooth playback on 1GB+ VPS nodes.
 
 ---
@@ -75,13 +76,15 @@ The Lavalink server resolves configuration from internal/public URLs and environ
 
 | Variable | Default | Description |
 | :--- | :--- | :--- |
-| `LAVA_DOMAIN` | *(empty)* | Public domain for the Lavalink server (e.g. `https://lavalink.yourdomain.com`). Scheme stripped automatically |
-| `LAVA_HOST` | `127.0.0.1` | Bind address for Lavalink |
-| `LAVA_PORT` | `2333` | Lavalink server port |
+| `LAVA_INTERNAL_URL` | `0.0.0.0:2333` | Internal network URL: host + port the Lavalink Java node binds to (e.g. `0.0.0.0:2333`). The gateway/dashboard port is auto-derived as internal port + 1 |
+| `LAVA_PUBLIC_URL` | *(empty)* | Public network URL (e.g. `https://lavalink.yourdomain.com`). The port is **masked** in the URL (behind Cloudflare/tunnel/reverse proxy). Bots append endpoints to this base URL. Defaults to `LAVA_INTERNAL_URL` when empty |
+| `LAVA_INTERNAL_WS_URI` | `ws://0.0.0.0:2333/v4/websocket` | Internal WebSocket URI. Host + port + path are parsed as the upstream proxy target |
+| `LAVA_PUBLIC_WS_URI` | *(derived)* | Public WebSocket URI (e.g. `ws://lavalink.yourdomain.com/v4/websocket`). Port masked in URL. Defaults to the internal WebSocket URI when no public URL is configured |
 | `LAVA_PASS` | `youshallnotpass` | Authentication password for WebSocket/REST API |
-| `LAVA_SECURE` | `false` | Use HTTPS for Lavalink (true/false) |
 | `LAVA_CIPHER_URL` | `https://cipher.kikkia.dev/` | Remote cipher endpoint for YouTube signature deciphering |
 | `LAVA_CIPHER_PASSWORD` | *(empty)* | Optional password for self-hosted cipher |
+| `REVERSE_PROXY_ENABLED` | `false` | Set to `true` when the public URL is served via a Cloudflare tunnel or reverse proxy that masks the public port. When enabled the dashboard labels the public port as masked |
+| `REVERSE_PROXY_TYPE` | `cloudflare` | Masking indicator label: `cloudflare` \| `nginx` \| `caddy` \| `custom` (used only when `REVERSE_PROXY_ENABLED=true`) |
 
 ### YouTube OAuth
 
@@ -124,12 +127,7 @@ The Lavalink server resolves configuration from internal/public URLs and environ
 | `DASHBOARD_THEME` | `dark` | Dashboard theme: `glassmorphism` \| `dark` \| `light` \| `cyberpunk` \| `dracula` \| `nord` \| `emerald` |
 | `DASHBOARD_COLOR_SCHEME` | `default` | Dashboard accent color: `default` \| `cyan` \| `purple` \| `blue` \| `emerald` \| `rose` \| `amber` \| `indigo` \| `crimson` \| `teal` \| `sunset` |
 
-### Dashboard
-
-| Variable | Default | Description |
-| :--- | :--- | :--- |
-| `DASHBOARD_PUBLIC_URL` | *(empty)* | Public URL for the dashboard (e.g. `https://dashboard.yourdomain.com`). Leave empty to default to `http://<dashboardHost>:<dashboardPort>` |
-| `DASHBOARD_INTERNAL_URL` | *(empty)* | Gateway bind URL (e.g. `http://127.0.0.1:2334`). Leave empty to default to `LAVA_HOST:LAVA_PORT+1` |
+> ℹ️ **Notice:** The dashboard is served at `/dashboard` on the gateway port (auto-derived as `internal port + 1`). There are no separate dashboard URL variables — the gateway port always follows `LAVA_INTERNAL_URL`.
 
 > ℹ️ **Notice:** Variables like `LAVA_EXTERNAL` or `LAVA_ENABLED` are **client-side bot settings** used by Discord bots (e.g. Master-Bot) to determine connection modes. They are not server variables and are never set on this Lavalink instance.
 
@@ -137,19 +135,13 @@ The Lavalink server resolves configuration from internal/public URLs and environ
 
 ## 🤖 Connecting to Your Discord Bot (e.g. Master-Bot)
 
-Once your Lavalink server is running, configure your Discord bot's `.env` configuration:
+Once your Lavalink server is running, configure your Discord bot to use the public URL **as-is** — the bot simply appends the endpoint it needs (e.g. `/v4/websocket`). No internal ports are exposed to your bot.
 
-### For Dedicated VPS or Local Docker:
-```env
-LAVA_ENABLED=true
-LAVA_EXTERNAL=true
-LAVA_HOST=your-vps-ip
-LAVA_PORT=2333
-LAVA_PASS=youshallnotpass
-LAVA_SECURE=false
-```
+### Two-network model
+- **Public:** `LAVA_PUBLIC_URL` — this is what bots connect to. It is typically fronted by **Cloudflare/Tunnel** or an SSL reverse proxy, so no port is visible.
+- **Internal:** `LAVA_INTERNAL_URL` — the bind address + port the Lavalink node and gateway actually listen on. Only used for server-to-server communication, never shared with bots.
 
-### For VPS with Domain & SSL Reverse Proxy:
+### For bots (public topology with masked port):
 ```env
 LAVA_ENABLED=true
 LAVA_EXTERNAL=true
@@ -160,8 +152,9 @@ LAVA_SECURE=true
 ```
 
 > 💡 **Note on Ports and SSL:**
-> - If connecting directly to your VPS or Docker host, use port **`2333`** with `LAVA_SECURE=false`.
-> - If fronted by an Nginx/SSL reverse proxy, connect via port **`443`** with `LAVA_SECURE=true`.
+> - The server's public port is **masked** by design (Cloudflare/tunnel), so bot-side config uses standard `443` (`wss://`) or `80` (`ws://`).
+> - The bot appends the endpoint to `LAVA_PUBLIC_URL`: e.g. `ws://lavalink.yourdomain.com/v4/websocket` or `http://lavalink.yourdomain.com/v4/info`.
+> - If you expose the raw node port directly (no tunnel), connect via the internal port (e.g. `2333`) with `LAVA_SECURE=false`.
 
 See the [Client Integration Wiki](../../wiki/Client-Integration) for code snippets with Lavalink-Client, Shoukaku, Kazagumo, Poru, and NodeLink.
 
@@ -179,12 +172,45 @@ Or build and run manually:
 
 ```bash
 docker build -t lavalink-server .
-docker run -p 2333:2333 \
+docker run -p 2333:2333 -p 2334:2334 \
+  -e LAVA_INTERNAL_URL="0.0.0.0:2333" \
+  -e LAVA_PUBLIC_URL="https://lavalink.yourdomain.com" \
+  -e LAVA_INTERNAL_WS_URI="ws://0.0.0.0:2333/v4/websocket" \
+  -e LAVA_PUBLIC_WS_URI="ws://lavalink.yourdomain.com/v4/websocket" \
   -e LAVA_PASS=youshallnotpass \
   -e YOUTUBE_CLIENT_ID=your_client_id \
   -e YOUTUBE_CLIENT_SECRET=your_client_secret \
   lavalink-server
 ```
+
+---
+
+## 📦 Importing as a Library / Submodule
+
+The server can be embedded in other projects via **Git submodule** (no NPM publishing required):
+
+```bash
+git submodule add https://github.com/HELIX-Origin/Lavalink-Server.git lavalink-server
+```
+
+```ts
+import { startServer, configure } from 'lavalink-server';
+
+const handle = await startServer({
+  overrides: { dbPath: './my-data/database.db' },
+  features: {
+    dashboard: false,                 // dashboard disabled by default when imported
+    supervisor: true,                 // supervise the Lavalink Java process
+    youtubeOAuth: true,
+  },
+});
+
+handle.server.listen(handle.config.gatewayPort, handle.config.gatewayHost);
+```
+
+> ⚠️ **You must provide your own `Lavalink.jar`.** The supervisor launches `Lavalink.jar` from the host project's working directory. Download it from the [official Lavalink releases](https://github.com/lavalink-devs/Lavalink/releases) and place it in your project root — starting with a missing JAR throws a descriptive `LavalinkConfigError`.
+
+See the [Importing as a Library wiki page](../../wiki/Importing) for the full API reference.
 
 ---
 

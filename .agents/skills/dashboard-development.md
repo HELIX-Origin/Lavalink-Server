@@ -19,7 +19,7 @@ flowchart TD
 ```
 
 ## Purpose
-Manage the dashboard and static pages. All dashboard code lives under `src/pages/` — one file per page, with a shared layout and a pluggable theme system.
+Manage the dashboard and static pages. All dashboard code lives under `src/pages/` — one file per page, with a shared layout and a pluggable theme system. The dashboard is served under the `/dashboard` prefix on the gateway port (`internalPort + 1`).
 
 ## Current Dashboard Structure
 
@@ -46,10 +46,10 @@ flowchart TD
     Privacy --> Layout
     TOS --> Layout
 
-    Server[src/server.ts] -->|Routes| Dash
-    Server -->|Routes| Docs
-    Server -->|Routes| Privacy
-    Server -->|Routes| TOS
+    Server[src/server.ts] -->|Routes /dashboard/*| Dash
+    Server -->|Routes /dashboard/docs| Docs
+    Server -->|Routes /dashboard/privacy| Privacy
+    Server -->|Routes /dashboard/tos| TOS
 
     Index[src/pages/index.ts<br/>barrel export] --> Dashboard
 ```
@@ -57,15 +57,18 @@ flowchart TD
 ## Current Implementation
 
 ### Main Dashboard (`src/pages/dashboard.ts` → `renderDashboardHtml()`)
-- **HTML**: Status card, connection details, YouTube OAuth panel, metrics chart, system events list
-- **JS**: Polls `/api/status` every 5s, `/api/metrics` every 30s; chart reads CSS vars via `getComputedStyle`
+- **HTML**: Status badge, 6 stat cards (players/playing/uptime/memory/cpu/frames), two connection cards (INTERNAL + PUBLIC), metrics chart
+- **JS**: `refreshStatus()` polls `/dashboard/api/status` every 5s, `refreshMetrics()` polls `/dashboard/api/metrics` every 30s; chart reads CSS vars via `getComputedStyle`
+- **JS**: `EventSource('/dashboard/api/events')` SSE listener re-renders the connection cards in real time (`event: connection`); on error falls back to 5s polling (`sseAvailable = false`)
+- Connection cards clearly labeled **INTERNAL** vs **PUBLIC** — internal shows host/port/url/ws uri; public shows host/url/ws uri/secure, a `Port masked — Cloudflare` hint, and a masked password with Show/Hide toggle reading from the API payload
 - Uses theme CSS variables (`--card-inner`, `--border`, `--emerald`/`--amber`/`--red`, `--primary`)
 
 ### Shared Layout (`src/pages/layout.ts` → `renderPage(title, content)`)
 - Full HTML shell with `<html class="${theme.id} scheme-${scheme.id}">`
 - Injects `getThemeCss()` + `getBaseStyles()` + layout CSS (all driven by theme vars)
-- Header brand icon + nav to `/`, `/docs`, `/privacy`, `/tos`
-- Footer with websocket URL (from `config.secure` / `config.domain` / `config.port`)
+- Header brand icon + nav to `/dashboard`, `/dashboard/docs`, `/dashboard/privacy`, `/dashboard/tos`
+- Footer with public websocket URL (from `config.publicWsUri`)
+- `/` 302-redirects to `/dashboard`
 
 ### Theme System (`src/pages/theme.ts` + `src/pages/themes/*.ts`)
 - `getThemeInfo(theme)` → `{id, name, icon}` (glass/glassmorphism, light, cyberpunk, dracula, nord, emerald, default dark)
@@ -75,46 +78,53 @@ flowchart TD
 - Selected via `config.dashboardTheme` / `config.dashboardColorScheme` (from `.env`)
 
 ### Static Pages
-- `src/pages/docs.ts` → `/docs`
-- `src/pages/privacy.ts` → `/privacy`
-- `src/pages/tos.ts` → `/tos`
+- `src/pages/docs.ts` → `/dashboard/docs`
+- `src/pages/privacy.ts` → `/dashboard/privacy`
+- `src/pages/tos.ts` → `/dashboard/tos`
 - All use `renderPage()` with `.card` / `.section-title` / `.section-desc` classes and `var(--border)` list styling
 
 ## Configuration Usage (from src/config.ts)
 ```typescript
-config.secure       // boolean, LAVA_SECURE
-config.domain       // string, LAVA_DOMAIN (scheme stripped)
-config.port         // number, LAVA_PORT
-config.pass         // string, LAVA_PASS
-config.publicUrl    // http(s)://domain (Lavalink public)
-config.internalUrl  // http://host:port (Lavalink internal)
-config.dashboardPort        // number, from DASHBOARD_INTERNAL_URL or LAVA_PORT + 1
-config.dashboardInternalUrl // http://<dashboardHost>:<dashboardPort> (gateway bind)
-config.dashboardUrl         // DASHBOARD_PUBLIC_URL or http://<dashboardHost>:<dashboardPort>
+config.internalHost    // string, internal bind host (from LAVA_INTERNAL_URL)
+config.internalPort    // number, internal Lavalink port (from LAVA_INTERNAL_URL)
+config.internalUrl     // internalHost:internalPort
+config.internalWsUri   // LAVA_INTERNAL_WS_URI
+config.publicHost      // string, public host (LAVA_PUBLIC_URL scheme stripped)
+config.publicUrl       // LAVA_PUBLIC_URL
+config.publicWsUri     // LAVA_PUBLIC_WS_URI
+config.secure          // boolean, true when public URL is https
+config.gatewayHost     // gateway bind host (internalHost, 0.0.0.0 when wildcard)
+config.gatewayPort     // gateway/dashboard bind port = internalPort + 1
+config.pass            // string, LAVA_PASS
+config.dashboardEnabled // boolean, true when standalone; false when imported as library
 config.dashboardTheme        // 'dark' | 'light' | 'cyberpunk' | ...
 config.dashboardColorScheme  // 'default' | 'purple' | ...
 ```
 
 ### Routes
-- `/` - Main dashboard (gateway root)
-- `/docs` - Documentation
-- `/tos` - Terms of Service
-- `/privacy` - Privacy Policy
+- `/` - 302 → `/dashboard` (404 JSON when dashboard disabled)
+- `/dashboard` - Main dashboard
+- `/dashboard/docs` - Documentation
+- `/dashboard/tos` - Terms of Service
+- `/dashboard/privacy` - Privacy Policy
 
 ## Public API Endpoints Used
 | Endpoint | Purpose |
 |----------|---------|
-| `GET /api/status` | Node status, stats, connection info, OAuth state |
-| `GET /api/metrics` | Historical performance metrics |
-| `GET /api/oauth/youtube/status` | YouTube OAuth status |
-| `POST /api/oauth/youtube/start` | Initiate device flow |
-| `POST /api/oauth/youtube/manual` | Apply manual token |
+| `GET /dashboard/api/status` | Node status, stats, connection info (internal/public), OAuth state |
+| `GET /dashboard/api/metrics` | Historical performance metrics |
+| `GET /dashboard/api/events` | SSE stream (event: `connection`, every 5s) for real-time updates |
+| `GET /dashboard/api/oauth/youtube/status` | YouTube OAuth status |
+| `POST /dashboard/api/oauth/youtube/start` | Initiate device flow |
+| `POST /dashboard/api/oauth/youtube/manual` | Apply manual token |
 
 ## Dashboard JS Key Functions
 | Function | Purpose |
 |----------|---------|
-| `pollStatus()` | Fetches `/api/status` every 5s |
-| `pollMetrics()` | Fetches `/api/metrics` every 30s |
+| `refreshStatus()` | Fetches `/dashboard/api/status` every 5s |
+| `refreshMetrics()` | Fetches `/dashboard/api/metrics` every 30s |
+| `renderConnection(conn)` | Re-renders internal/public connection cards from API data |
+| `renderChart()` | Draws player-count metrics chart |
 | `updateOAuthUi(oauth)` | Updates OAuth panel |
 | `startYouTubeOAuth()` | Triggers device flow |
 | `formatUptime(seconds)` | Formats uptime string |
@@ -134,7 +144,7 @@ config.dashboardColorScheme  // 'default' | 'purple' | ...
 ### JS Logic Changes
 1. Edit the `<script>` section in `src/pages/dashboard.ts`
 2. Add new API calls if needed (update `src/server.ts`)
-3. Test polling, OAuth flow, copy buttons
+3. Test polling/SSE, OAuth flow, copy buttons
 
 ### Static Pages
 1. Create the page function in a new file under `src/pages/`
@@ -143,11 +153,13 @@ config.dashboardColorScheme  // 'default' | 'purple' | ...
 4. Update navigation in `src/pages/layout.ts` if needed
 
 ## Validation Checklist
-- [ ] Uses `config.publicUrl`, `config.internalUrl`, `config.dashboardUrl`, `config.dashboardInternalUrl`, `config.secure`, `config.domain`, `config.port` only (no `lavaPublicUrl`/`lavaInternalUrl`)
-- [ ] No `/dashboard` route prefix (dashboard at gateway root `/`, static pages at `/docs`, `/privacy`, `/tos`)
+- [ ] Uses `config.internalHost`, `config.internalPort`, `config.internalUrl`, `config.internalWsUri`, `config.publicUrl`, `config.publicPort`, `config.publicWsUri`, `config.gatewayPort`, `config.pass` — NO old `config.domain`/`config.port`/`config.dashboardUrl`
+- [ ] Dashboard routes carry the `/dashboard` prefix (root `/` 302-redirects; static pages at `/dashboard/docs`, `/dashboard/privacy`, `/dashboard/tos`)
+- [ ] Connection info shows separated INTERNAL vs PUBLIC cards (public port masked hint driven by `config.reverseProxyEnabled`, proxy type label from `config.reverseProxyType`, port value from `config.publicPort`)
+- [ ] Real-time updates via `/dashboard/api/events` SSE with 5s polling fallback
 - [ ] Colors come from theme CSS variables, not hardcoded values
 - [ ] No references to removed features (keep-alive, admin console, owner login, manual token modal)
-- [ ] OAuth UI works with public `/api/oauth/youtube/*` endpoints
-- [ ] Public `/api/status` provides connection config
+- [ ] OAuth UI works with public `/dashboard/api/oauth/youtube/*` endpoints
+- [ ] Public `/dashboard/api/status` provides connection config
 - [ ] `pnpm build` passes
 - [ ] Tested in browser (desktop + mobile)

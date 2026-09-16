@@ -1,9 +1,24 @@
 {
   "name": "lavalink-server",
   "version": "1.0.0",
-  "description": "Standalone Lavalink v4 audio server with ESM TypeScript management dashboard and supervisor",
+  "description": "Standalone and embeddable Lavalink v4 audio server with ESM TypeScript management dashboard and supervisor",
   "type": "module",
-  "main": "dist/index.js",
+  "main": "dist/app.js",
+  "types": "dist/app.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/app.d.ts",
+      "import": "./dist/app.js"
+    },
+    "./config": {
+      "types": "./dist/config.d.ts",
+      "import": "./dist/config.js"
+    },
+    "./index": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
   "scripts": {
     "build": "tsc",
     "start": "node dist/index.js",

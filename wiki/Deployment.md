@@ -30,7 +30,9 @@ nano .env
 ```
 Key settings to customize:
 - `LAVA_PASS`: Choose a strong, secret authentication password (e.g. `MySuperSecretLavaPass123!`).
-- `LAVA_DOMAIN`: Your public domain/host for the server (e.g. `https://lavalink.yourdomain.com`).
+- `LAVA_INTERNAL_URL`: Internal bind host + port (default `0.0.0.0:2333`). The gateway/dashboard port is auto-derived as internal port + 1.
+- `LAVA_PUBLIC_URL`: Your public domain for the server (e.g. `https://lavalink.yourdomain.com`). The port is **masked** — bots use this URL as-is and append endpoints.
+- `LAVA_INTERNAL_WS_URI` / `LAVA_PUBLIC_WS_URI`: Internal and public WebSocket URIs (default port masked in the public one).
 - `YOUTUBE_CLIENT_ID`: **Required** — YouTube OAuth Client ID (app type: "TVs and Limited Input devices").
 - `YOUTUBE_CLIENT_SECRET`: YouTube OAuth Client Secret for the Client ID above.
 - `YOUTUBE_REFRESH_TOKEN`: *(Optional)* Pre-authorized refresh token (auto-saved after device flow).
@@ -50,9 +52,9 @@ docker compose logs -f
 
 You can view the real-time web dashboard at:
 ```
-http://<your-server-ip>:2334
+http://<your-server-ip>:2334/dashboard
 ```
-*(Note: The dashboard runs on its own port — from `DASHBOARD_INTERNAL_URL` (default `LAVA_PORT + 1` = 2334) — served at the gateway root `/`. Configure `DASHBOARD_PUBLIC_URL` for public access via a reverse proxy/Cloudflare tunnel.)*
+*(Note: The gateway runs on the auto-derived port `internal port + 1` (= 2334 by default) and serves everything under one port: the dashboard at `/dashboard`, the Lavalink proxy at `/server`, and `/v4/*`. For public access, point your Cloudflare tunnel / reverse proxy at this gateway — the public port stays masked.)*
 
 ---
 
@@ -85,19 +87,20 @@ newgrp docker
 ```
 
 ### Step 2: Configure Firewall (`ufw`)
-Ensure ports `2333` (Lavalink) + `2334` (dashboard) and SSH are allowed:
+Allow the internal node port, the gateway port (internal + 1), and SSH:
 ```bash
 sudo ufw allow OpenSSH
-# Lavalink Java server port
+# Lavalink Java server port (from LAVA_INTERNAL_URL)
 sudo ufw allow 2333/tcp
-# Dashboard port (LAVA_PORT + 1, gateway root)
+# Gateway port (internal port + 1) — dashboard + /server proxy
 sudo ufw allow 2334/tcp
-# If using Nginx reverse proxy with SSL:
+# If you expose via Nginx reverse proxy with SSL:
 sudo ufw allow 80/tcp
 sudo ufw allow 443/tcp
 
 sudo ufw enable
 ```
+> 💡 If the public side is fronted by Cloudflare, bots never touch these ports directly — only the tunnel domain.
 
 ### Step 3: Run with Docker Compose
 Follow the steps in [Quick Start: Docker Compose](#1--quick-start-docker-compose-recommended-for-vps) above.
@@ -236,7 +239,8 @@ server {
     ssl_ciphers "ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384";
 
     location / {
-        # Gateway on dashboard port (LAVA_PORT + 1); it proxies /v4/* to Lavalink
+        # Gateway on the auto-derived port (internal port + 1 = 2334);
+        # it serves /dashboard, /server, /v4/* and /health
         proxy_pass http://127.0.0.1:2334;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
@@ -263,19 +267,9 @@ sudo systemctl reload nginx
 
 ## 4. 🤖 Connecting Your Discord Bot
 
-Once your server is running, update your Discord bot's configuration (e.g. Master-Bot `.env`):
+Once your server is running, update your Discord bot's configuration (e.g. Master-Bot `.env`). The server exposes **two networks**: the internal bind URL (`LAVA_INTERNAL_URL`) used only server-side, and the public URL (`LAVA_PUBLIC_URL`) that bots connect to. The public port is **masked** — bots use the public URL as-is and append the endpoint.
 
-### Option A: Direct VPS Connection (Raw IP / Port 2333)
-```env
-LAVA_ENABLED=true
-LAVA_EXTERNAL=true
-LAVA_HOST=your-vps-ip
-LAVA_PORT=2333
-LAVA_PASS=your-chosen-password
-LAVA_SECURE=false
-```
-
-### Option B: VPS with Domain & SSL Reverse Proxy (Port 443)
+### Option A: Public domain via Cloudflare/Tunnel (masked port)
 ```env
 LAVA_ENABLED=true
 LAVA_EXTERNAL=true
@@ -283,6 +277,16 @@ LAVA_HOST=lavalink.yourdomain.com
 LAVA_PORT=443
 LAVA_PASS=your-chosen-password
 LAVA_SECURE=true
+```
+
+### Option B: Direct VPS connection (raw IP / exposed node port)
+```env
+LAVA_ENABLED=true
+LAVA_EXTERNAL=true
+LAVA_HOST=your-vps-ip
+LAVA_PORT=2333
+LAVA_PASS=your-chosen-password
+LAVA_SECURE=false
 ```
 
 For more details on connecting with popular client libraries, see the [Client Integration Guide](Client-Integration).

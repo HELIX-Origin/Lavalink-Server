@@ -20,56 +20,42 @@ Manage `src/config.ts` and `.env.example`. Configuration is read directly from e
 ```mermaid
 flowchart LR
     subgraph Env[".env File"]
-        E1[LAVA_DOMAIN]
-        E2[LAVA_HOST]
-        E3[LAVA_PORT]
-        E4[LAVA_PASS]
-        E5[LAVA_SECURE]
+        E1[LAVA_INTERNAL_URL]
+        E2[LAVA_PUBLIC_URL]
+        E3[LAVA_INTERNAL_WS_URI]
+        E4[LAVA_PUBLIC_WS_URI]
+        E5[LAVA_PASS]
         E6[LAVA_CIPHER_URL]
-        E6[LAVA_CIPHER_PASSWORD]
-        E7[YOUTUBE_CLIENT_ID]
-        E8[YOUTUBE_CLIENT_SECRET]
-        E8[YOUTUBE_REFRESH_TOKEN]
-        E9[SPOTIFY_CLIENT_ID]
-        E9[SPOTIFY_CLIENT_SECRET]
-        E9[GENIUS_ACCESS_TOKEN]
-        E10[NODE_ENV]
-        E10[DB_URI]
-        E10[DB_PATH]
-        E11[DASHBOARD_THEME]
-        E11[DASHBOARD_COLOR_SCHEME]
-        E12[DASHBOARD_PUBLIC_URL]
-        E12[DASHBOARD_INTERNAL_URL]
+        E7[LAVA_CIPHER_PASSWORD]
+        E8[YOUTUBE_CLIENT_ID]
+        E9[YOUTUBE_CLIENT_SECRET]
+        E10[YOUTUBE_REFRESH_TOKEN]
+        E11[SPOTIFY_CLIENT_ID]
+        E12[SPOTIFY_CLIENT_SECRET]
+        E13[GENIUS_ACCESS_TOKEN]
+        E14[NODE_ENV]
+        E15[DB_URI]
+        E16[DB_PATH]
+        E17[DASHBOARD_THEME]
+        E18[DASHBOARD_COLOR_SCHEME]
     end
 
     subgraph Config["src/config.ts"]
         C1[env / envInt / envBool helpers]
-        C2[Derived URL builders]
+        C2[parseHostPort / parseWsUri / buildConfig / configure]
     end
 
     subgraph ServerConfig["ServerConfig Interface"]
-        SC1[port: number]
-        SC2[host: string]
-        SC3[domain: string]
-        SC4[pass: string]
-        SC5[secure: boolean]
-        SC6[cipherUrl: string]
-        SC7[cipherPassword: string]
-        SC8[youtubeClientId: string]
-        SC9[youtubeClientSecret: string]
-        SC10[spotifyClientId: string]
-        SC11[spotifyClientSecret: string]
-        SC12[geniusToken: string]
-        SC13[dbPath: string]
-        SC14[isProduction: boolean]
-        SC15[dashboardTheme: string]
-        SC16[dashboardColorScheme: string]
-        SC17[internalUrl: string]
-        SC18[publicUrl: string]
-        SC19[dashboardPort: number]
-        SC20[dashboardHost: string]
-        SC21[dashboardInternalUrl: string]
-        SC22[dashboardUrl: string]
+        SC1[internalHost / internalPort / internalUrl]
+        SC2[internalWsUri / protocol / host / port / path]
+        SC3[publicHost / publicUrl / publicWsUri]
+        SC4[secure / gatewayHost / gatewayPort]
+        SC5[pass / cipherUrl / cipherPassword]
+        SC6[youtubeClientId / youtubeClientSecret]
+        SC7[spotifyClientId / spotifyClientSecret]
+        SC8[geniusToken / dbPath / isProduction]
+        SC9[dashboardTheme / dashboardColorScheme]
+        SC10[dashboardEnabled / supervisorEnabled / youtubeOAuthEnabled]
     end
 
     Env --> Config
@@ -79,12 +65,21 @@ flowchart LR
 ### ServerConfig Interface (src/config.ts)
 ```typescript
 interface ServerConfig {
-  port: number;              // LAVA_PORT (Lavalink server)
-  dashboardPort: number;     // Dashboard port (from DASHBOARD_INTERNAL_URL or LAVA_PORT + 1)
-  host: string;              // LAVA_HOST (bind address)
-  domain: string;            // LAVA_DOMAIN (public Lavalink domain, scheme stripped)
+  internalHost: string;      // from LAVA_INTERNAL_URL (Lavalink node bind host)
+  internalPort: number;      // from LAVA_INTERNAL_URL (Lavalink node port)
+  internalUrl: string;       // internalHost:internalPort (verbatim)
+  internalWsUri: string;     // LAVA_INTERNAL_WS_URI (verbatim, trailing / stripped)
+  internalWsProtocol: 'ws' | 'wss'; // parsed from internal WS URI
+  internalWsHost: string;    // parsed from internal WS URI
+  internalWsPort: number;    // parsed from internal WS URI
+  internalWsPath: string;    // parsed from internal WS URI (default /v4/websocket)
+  publicHost: string;        // LAVA_PUBLIC_URL scheme stripped
+  publicUrl: string;         // LAVA_PUBLIC_URL (verbatim, trailing / stripped)
+  publicWsUri: string;       // LAVA_PUBLIC_WS_URI or derived (secure?'wss':'ws')://publicHost/v4/websocket
+  secure: boolean;           // true when LAVA_PUBLIC_URL uses https/wss
+  gatewayHost: string;       // internalHost (0.0.0.0 when wildcard)
+  gatewayPort: number;       // internalPort + 1 (dashboard/gateway bind)
   pass: string;              // LAVA_PASS
-  secure: boolean;           // LAVA_SECURE (true/false)
   cipherUrl: string;         // LAVA_CIPHER_URL (default https://cipher.kikkia.dev/)
   cipherPassword: string;    // LAVA_CIPHER_PASSWORD
   youtubeClientId: string;   // YOUTUBE_CLIENT_ID
@@ -96,11 +91,9 @@ interface ServerConfig {
   isProduction: boolean;     // NODE_ENV === 'production'
   dashboardTheme: string;    // DASHBOARD_THEME (default 'dark')
   dashboardColorScheme: string; // DASHBOARD_COLOR_SCHEME (default 'default')
-  internalUrl: string;       // http(s)://host:port
-  publicUrl: string;         // https://domain (or http(s)://host:port if localhost)
-  dashboardHost: string;     // Gateway bind host (from DASHBOARD_INTERNAL_URL or LAVA_HOST)
-  dashboardInternalUrl: string; // http://<dashboardHost>:<dashboardPort>
-  dashboardUrl: string;      // DASHBOARD_PUBLIC_URL or http://<dashboardHost>:<dashboardPort>
+  dashboardEnabled: boolean; // false when imported as a library
+  supervisorEnabled: boolean; // false to disable Lavalink process supervision
+  youtubeOAuthEnabled: boolean; // false to disable the OAuth flow
 }
 ```
 
@@ -108,35 +101,34 @@ interface ServerConfig {
 
 ```mermaid
 flowchart TD
-    LAVA_PORT[LAVA_PORT] --> Port[port]
-    LAVA_HOST[LAVA_HOST] --> Host[host]
-    LAVA_DOMAIN[LAVA_DOMAIN] --> Domain[domain scheme stripped]
-    LAVA_DOMAIN --> PublicURL[publicUrl]
-    LAVA_HOST & LAVA_PORT --> Internal[internalUrl]
-    LAVA_SECURE[LAVA_SECURE] --> Proto[protocol http/https]
-    Proto --> Internal
-    DASHBOARD_INTERNAL_URL[DASHBOARD_INTERNAL_URL] --> DashHost[dashboardHost + dashboardPort]
-    LAVA_HOST & LAVA_PORT --> DashHost
-    DASHBOARD_PUBLIC_URL[DASHBOARD_PUBLIC_URL] --> DashPublic[dashboardUrl]
-    DashHost --> DashPublic
+    LAVA_INTERNAL_URL[LAVA_INTERNAL_URL] --> parseHostPort[parseHostPort default port 2333]
+    parseHostPort --> HostPort[internalHost + internalPort]
+    LAVA_INTERNAL_WS_URI[LAVA_INTERNAL_WS_URI] --> parseWsUri[parseWsUri]
+    parseWsUri --> WS[internalWsUri + protocol/host/port/path]
+    LAVA_PUBLIC_URL[LAVA_PUBLIC_URL] --> Public[publicHost + publicUrl + secure]
+    LAVA_PUBLIC_WS_URI[LAVA_PUBLIC_WS_URI] --> PublicWS[publicWsUri]
+    LAVA_PUBLIC_URL --> Secure{https?}
+    Secure -->|yes| SSL[secure=true / wss]
+    internalPort --> Gateway[gatewayPort = internalPort + 1]
+    internalHost --> GatewayHost[gatewayHost]
 ```
 
 ### Environment Variables (src/config.ts)
 
 Key helpers (no YAML parsing):
 - `env(name, fallback)` - Reads `process.env[name]` with fallback
-- `envInt(name, fallback)` - Parses integer env var
+- `envInt(name, fallback)` - Parses integer env var (1..65535)
 - `envBool(name, fallback)` - Parses boolean env var
-- `stripProtocol(url)` - Strips `http://`/`https://` prefix from LAVA_DOMAIN
-- `parseBaseUrl(raw)` - Parses a URL string into `{hostname, port}` (used for DASHBOARD_INTERNAL_URL)
-- Derived: `internalUrl = ${protocol}://${host}:${port}`, `publicUrl` from LAVA_DOMAIN's scheme (falls back to `http://host:port` when domain is localhost), `dashboardPort` from DASHBOARD_INTERNAL_URL or `port + 1`, `dashboardUrl` from DASHBOARD_PUBLIC_URL (falls back to `dashboardInternalUrl`)
+- `parseHostPort(raw, defaultPort)` - Parses `"host:port"` (prefixes `http://` when scheme-less) → `{hostname, port}`
+- `parseWsUri(raw, fallbackProtocol, fallbackHostname, fallbackPort, fallbackPath)` - Parses a full WS URI → `{uri, protocol, hostname, port, pathname}`
+- `buildConfig(envSource)` - Builds a fresh `ServerConfig` from an env source (defaults `process.env`)
+- `configure(overrides, envSource)` - Merges `buildConfig(source)` + overrides into the live `config` export via `Object.assign` (in-place, propagates to all importers)
+- Derived: `internalProtocol = internalWsProtocol === 'wss' ? 'https' : 'http'`, `publicUrl` falls back to `internalUrl` when LAVA_PUBLIC_URL empty, public WS derived as `(secure?'wss':'ws')://publicHost/v4/websocket`, `gatewayPort = internalPort + 1`
 
 ## .env.example Format
 All current valid keys must be documented. See rules.md for complete list. Theme + dashboard section at the bottom:
 - `DASHBOARD_THEME="dark"` — glassmorphism | dark | light | cyberpunk | dracula | nord | emerald
 - `DASHBOARD_COLOR_SCHEME="default"` — default | cyan | purple | blue | emerald | rose | amber | indigo | crimson | teal | sunset
-- `DASHBOARD_PUBLIC_URL=""` — public dashboard URL (e.g. `https://dashboard.example.com`)
-- `DASHBOARD_INTERNAL_URL=""` — gateway bind URL (e.g. `http://127.0.0.1:2334`), defaults to `LAVA_HOST:LAVA_PORT+1`
 
 ## application.yml Integration
 
@@ -148,8 +140,9 @@ flowchart LR
 ```
 
 - Lavalink JAR reads `application.yml` with Spring-style `${VAR:default}` placeholders
-- TypeScript supervisor spawns `java -jar Lavalink.jar` with `-Dserver.port=${config.port}` and `-Dserver.address=${config.host}` and passes relevant env vars to the child process
+- TypeScript supervisor spawns `java -jar Lavalink.jar` with `-Dserver.port=${config.internalPort}` and `-Dserver.address=${config.internalHost}` and passes `SERVER_PORT`/`PORT` env vars to the child process
 - TypeScript config does NOT parse application.yml
+- `application.yml` `server.port` placeholder is `${SERVER_PORT:2333}` (supervisor sets `SERVER_PORT`)
 
 ## Workflow for Changes
 1. Read current `.env` file FIRST
@@ -163,11 +156,13 @@ flowchart LR
 |------|-------|
 | **Add new env var** | Add to config.ts parsing → .env.example → application.yml (if Lavalink needs it) |
 | **Remove env var** | Remove from ALL files (config.ts, .env.example, application.yml, docs, rules.md) |
-| **Change URL structure** | Update derived `internalUrl`/`publicUrl` logic in config.ts |
+| **Change URL structure** | Update derived internal/public URL logic in config.ts (`parseHostPort`/`parseWsUri`) |
 | **New plugin config** | Add to application.yml only (Java side) |
 
 ## Validation Checklist
 - [ ] Only uses current .env keys (see rules.md)
+- [ ] `LAVA_INTERNAL_URL` / `LAVA_PUBLIC_URL` / `LAVA_INTERNAL_WS_URI` / `LAVA_PUBLIC_WS_URI` used; NO `LAVA_DOMAIN`/`LAVA_HOST`/`LAVA_PORT`/`LAVA_SECURE`/`DASHBOARD_*_URL`
+- [ ] `REVERSE_PROXY_ENABLED` / `REVERSE_PROXY_TYPE` parsed (config.publicPort / reverseProxyEnabled / reverseProxyType) when masking is supported
 - [ ] No references to removed features
 - [ ] No hardcoded values
 - [ ] No dead code

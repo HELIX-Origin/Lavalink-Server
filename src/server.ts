@@ -1,11 +1,10 @@
-import http, { IncomingMessage, ServerResponse } from 'node:http';
-import crypto from 'node:crypto';
+import http from 'node:http';
+import type { IncomingMessage, ServerResponse } from 'node:http';
 import { WebSocketServer, WebSocket } from 'ws';
 import { config } from './config.js';
-import { getCachedStatus, getCachedStats, getCachedInfo, getRecentLogs } from './redis.js';
-import { recordClientSessionStart, recordClientSessionEnd, getRecentMetrics, getRecentSystemEvents, logSystemEvent } from './db.js';
+import { getCachedStatus, getCachedStats, getCachedInfo } from './redis.js';
+import { recordClientSessionStart, recordClientSessionEnd, getRecentMetrics } from './db.js';
 import { renderDashboardHtml, renderDocsHtml, renderPrivacyHtml, renderTosHtml } from './pages/index.js';
-
 import { getOAuthState, initiateDeviceFlow, applyManualToken } from './youtube-oauth.js';
 
 export interface ProxyOptions {
@@ -33,171 +32,249 @@ function parseJsonBody<T = Record<string, unknown>>(req: IncomingMessage): Promi
   });
 }
 
+function sendJson(res: ServerResponse, statusCode: number, payload: unknown): void {
+  res.writeHead(statusCode, { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache' });
+  res.end(JSON.stringify(payload));
+}
+
+function sendHtml(res: ServerResponse, html: string): void {
+  res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache' });
+  res.end(html);
+}
+
+async function buildStatusPayload(): Promise<Record<string, unknown>> {
+  const [status, stats, info] = await Promise.all([
+    getCachedStatus(),
+    getCachedStats(),
+    getCachedInfo()
+  ]);
+
+  const payload: Record<string, unknown> = {
+    status,
+    stats,
+    info,
+    connection: {
+      internal: {
+        host: config.internalHost,
+        port: config.internalPort,
+        url: config.internalUrl,
+        websocketUri: config.internalWsUri
+      },
+      public: {
+        host: config.publicHost,
+        port: config.publicPort,
+        url: config.publicUrl,
+        websocketUri: config.publicWsUri,
+        secure: config.secure,
+        portMasked: config.reverseProxyEnabled,
+        proxyType: config.reverseProxyType,
+        password: config.pass
+      },
+      gateway: {
+        host: config.gatewayHost,
+        port: config.gatewayPort
+      }
+    }
+  };
+
+  if (config.youtubeOAuthEnabled) {
+    payload.youtubeOAuth = getOAuthState();
+  }
+
+  return payload;
+}
+
 export function createProxyServer(options: ProxyOptions = {}): { server: http.Server; wss: WebSocketServer } {
   const server = http.createServer(async (req: IncomingMessage, res: ServerResponse) => {
     const url = new URL(req.url || '/', `http://${req.headers.host || 'localhost'}`);
     const pathname = url.pathname;
 
-    // 1. Dashboard UI
+    // Root redirects to the dashboard endpoint
     if (pathname === '/') {
-      res.writeHead(200, {
-        'Content-Type': 'text/html; charset=utf-8',
-        'Cache-Control': 'no-cache'
-      });
-      res.end(renderDashboardHtml());
+      if (!config.dashboardEnabled) {
+        sendJson(res, 404, { error: 'Dashboard disabled' });
+        return;
+      }
+      res.writeHead(302, { Location: '/dashboard' });
+      res.end();
       return;
     }
 
-    // 2. Static Pages (Docs, Privacy, TOS)
-    if (pathname === '/docs') {
-      res.writeHead(200, {
-        'Content-Type': 'text/html; charset=utf-8',
-        'Cache-Control': 'no-cache'
-      });
-      res.end(renderDocsHtml());
+    // Dashboard UI + static pages
+    if (pathname === '/dashboard') {
+      if (!config.dashboardEnabled) {
+        sendJson(res, 404, { error: 'Dashboard disabled' });
+        return;
+      }
+      sendHtml(res, renderDashboardHtml());
       return;
     }
 
-    if (pathname === '/privacy') {
-      res.writeHead(200, {
-        'Content-Type': 'text/html; charset=utf-8',
-        'Cache-Control': 'no-cache'
-      });
-      res.end(renderPrivacyHtml());
+    if (pathname === '/dashboard/docs') {
+      if (!config.dashboardEnabled) {
+        sendJson(res, 404, { error: 'Dashboard disabled' });
+        return;
+      }
+      sendHtml(res, renderDocsHtml());
       return;
     }
 
-    if (pathname === '/tos') {
-      res.writeHead(200, {
-        'Content-Type': 'text/html; charset=utf-8',
-        'Cache-Control': 'no-cache'
-      });
-      res.end(renderTosHtml());
+    if (pathname === '/dashboard/privacy') {
+      if (!config.dashboardEnabled) {
+        sendJson(res, 404, { error: 'Dashboard disabled' });
+        return;
+      }
+      sendHtml(res, renderPrivacyHtml());
       return;
     }
 
-    // 3. Health check endpoint for liveness probes
+    if (pathname === '/dashboard/tos') {
+      if (!config.dashboardEnabled) {
+        sendJson(res, 404, { error: 'Dashboard disabled' });
+        return;
+      }
+      sendHtml(res, renderTosHtml());
+      return;
+    }
+
+    // Health check for liveness probes
     if (pathname === '/health') {
       const status = await getCachedStatus();
       const isHealthy = status === 'online' || status === 'starting';
-      res.writeHead(isHealthy ? 200 : 503, { 'Content-Type': 'application/json' });
+      res.writeHead(isHealthy ? 200 : 503, { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache' });
       res.end(JSON.stringify({
         status: isHealthy ? 'ok' : 'degraded',
         nodeStatus: status,
-        domain: config.domain,
+        connection: {
+          internal: { url: config.internalUrl },
+          public: {
+            url: config.publicUrl,
+            secure: config.secure,
+            portMasked: config.reverseProxyEnabled,
+            proxyType: config.reverseProxyType
+          }
+        },
         timestamp: Date.now()
       }));
       return;
     }
 
-    // 4. API Status (Public connection details)
-    if (pathname === '/api/status') {
-      const [status, stats, info] = await Promise.all([
-        getCachedStatus(),
-        getCachedStats(),
-        getCachedInfo()
-      ]);
+    // Dashboard API: full status (internal + public connection details)
+    if (pathname === '/dashboard/api/status') {
+      if (!config.dashboardEnabled) {
+        sendJson(res, 404, { error: 'Dashboard disabled' });
+        return;
+      }
+      sendJson(res, 200, await buildStatusPayload());
+      return;
+    }
 
-      const isSsl = config.secure;
-      const botPort = isSsl ? 443 : config.port;
+    // Dashboard API: metrics history from SQLite
+    if (pathname === '/dashboard/api/metrics') {
+      if (!config.dashboardEnabled) {
+        sendJson(res, 404, { error: 'Dashboard disabled' });
+        return;
+      }
+      sendJson(res, 200, getRecentMetrics(30));
+      return;
+    }
 
-      const payload: Record<string, unknown> = {
-        status,
-        domain: config.domain,
-        port: config.port,
-        stats,
-        info,
-        connection: {
-          host: config.domain,
-          port: botPort,
-          password: config.pass,
-          secure: isSsl,
-          websocketUrl: `${isSsl ? 'wss' : 'ws'}://${config.host}${isSsl ? '' : `:${config.port}`}/v4/websocket`,
-          lavalinkPublicUrl: config.publicUrl,
-          dashboardPublicUrl: config.dashboardUrl,
-          dashboardPort: config.dashboardPort
-        },
-        youtubeOAuth: getOAuthState()
+    // Dashboard API: real-time connection events (SSE)
+    if (pathname === '/dashboard/api/events') {
+      if (!config.dashboardEnabled) {
+        sendJson(res, 404, { error: 'Dashboard disabled' });
+        return;
+      }
+      res.writeHead(200, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        Connection: 'keep-alive'
+      });
+      res.write('retry: 5000\n\n');
+
+      const sendConnectionEvent = async () => {
+        const payload = await buildStatusPayload();
+        res.write(`event: connection\ndata: ${JSON.stringify(payload.connection)}\n\n`);
       };
 
-      res.writeHead(200, {
-        'Content-Type': 'application/json',
-        'Cache-Control': 'no-cache'
-      });
-      res.end(JSON.stringify(payload));
+      sendConnectionEvent().catch(() => {});
+      const timer = setInterval(() => sendConnectionEvent().catch(() => {}), 5000);
+      req.on('close', () => clearInterval(timer));
       return;
     }
 
-    // 5. API Metrics History from SQLite (Publicly available performance metrics)
-    if (pathname === '/api/metrics') {
-      const history = getRecentMetrics(30);
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify(history));
-      return;
-    }
-
-    // 6. YouTube OAuth Management Routes (Public)
-    if (pathname.startsWith('/api/oauth/youtube')) {
-      if (pathname === '/api/oauth/youtube/status' && req.method === 'GET') {
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ success: true, oauth: getOAuthState() }));
+    // Dashboard API: YouTube OAuth
+    if (config.dashboardEnabled && pathname.startsWith('/dashboard/api/oauth/youtube')) {
+      if (pathname === '/dashboard/api/oauth/youtube/status' && req.method === 'GET') {
+        if (!config.youtubeOAuthEnabled) {
+          sendJson(res, 404, { error: 'YouTube OAuth disabled' });
+          return;
+        }
+        sendJson(res, 200, { success: true, oauth: getOAuthState() });
         return;
       }
 
-      if (pathname === '/api/oauth/youtube/start' && req.method === 'POST') {
+      if (pathname === '/dashboard/api/oauth/youtube/start' && req.method === 'POST') {
+        if (!config.youtubeOAuthEnabled) {
+          sendJson(res, 404, { error: 'YouTube OAuth disabled' });
+          return;
+        }
         try {
           const oauth = await initiateDeviceFlow();
-          res.writeHead(200, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ success: true, oauth }));
+          sendJson(res, 200, { success: true, oauth });
         } catch (err: any) {
-          res.writeHead(500, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ success: false, error: err?.message || 'Failed to start device flow' }));
+          sendJson(res, 500, { success: false, error: err?.message || 'Failed to start device flow' });
         }
         return;
       }
 
-      if (pathname === '/api/oauth/youtube/manual' && req.method === 'POST') {
+      if (pathname === '/dashboard/api/oauth/youtube/manual' && req.method === 'POST') {
+        if (!config.youtubeOAuthEnabled) {
+          sendJson(res, 404, { error: 'YouTube OAuth disabled' });
+          return;
+        }
         try {
           const { token } = await parseJsonBody<{ token?: string }>(req);
           if (!token || typeof token !== 'string') {
-            res.writeHead(400, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ success: false, error: 'A valid refresh token string is required' }));
+            sendJson(res, 400, { success: false, error: 'A valid refresh token string is required' });
             return;
           }
 
           const ok = await applyManualToken(token);
           if (ok) {
-            res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ success: true, oauth: getOAuthState() }));
+            sendJson(res, 200, { success: true, oauth: getOAuthState() });
           } else {
-            res.writeHead(400, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ success: false, error: 'Invalid refresh token format' }));
+            sendJson(res, 400, { success: false, error: 'Invalid refresh token format' });
           }
         } catch (err: any) {
-          res.writeHead(400, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ success: false, error: err?.message || 'Malformed request body' }));
+          sendJson(res, 400, { success: false, error: err?.message || 'Malformed request body' });
         }
         return;
       }
     }
 
-    // 7. Proxy REST API to internal Lavalink (e.g. /v4/*, /version, /youtube/*)
+    // Server endpoint: the internal Lavalink node, mounted at /server (and its API surface)
+    if (pathname === '/server' || pathname === '/server/' || pathname.startsWith('/server/')) {
+      const targetPath = pathname.startsWith('/server/') ? pathname.slice('/server'.length) : '/v4/info';
+      proxyHttpRequest(req, res, targetPath);
+      return;
+    }
+
+    // Client-facing Lavalink API mounted at the root (matches LAVA_PUBLIC_WS_URI paths)
     if (pathname.startsWith('/v4/') || pathname === '/version' || pathname.startsWith('/youtube')) {
       proxyHttpRequest(req, res);
       return;
     }
 
-    // 404 Fallback
-    res.writeHead(404, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ error: 'Not Found', path: pathname }));
+    sendJson(res, 404, { error: 'Not Found', path: pathname });
   });
 
-  // WebSocket Reverse Proxy for /v4/websocket
+  // WebSocket reverse proxy — client-facing /v4/websocket and /server/v4/websocket
   const wss = new WebSocketServer({ noServer: true });
 
   server.on('upgrade', (req: IncomingMessage, socket, head) => {
     const url = new URL(req.url || '/', `http://${req.headers.host || 'localhost'}`);
-    if (url.pathname === '/v4/websocket') {
+    if (url.pathname === '/v4/websocket' || url.pathname === '/server/v4/websocket') {
       wss.handleUpgrade(req, socket, head, (clientWs) => {
         handleWebSocketProxy(clientWs, req);
       });
@@ -209,15 +286,16 @@ export function createProxyServer(options: ProxyOptions = {}): { server: http.Se
   return { server, wss };
 }
 
-function proxyHttpRequest(clientReq: IncomingMessage, clientRes: ServerResponse): void {
+function proxyHttpRequest(clientReq: IncomingMessage, clientRes: ServerResponse, targetPath?: string): void {
+  const upstreamPath = targetPath ?? clientReq.url ?? '/';
   const options: http.RequestOptions = {
-    hostname: config.host,
-    port: config.port,
-    path: clientReq.url,
+    hostname: config.internalWsHost,
+    port: config.internalWsPort,
+    path: upstreamPath,
     method: clientReq.method,
     headers: {
       ...clientReq.headers,
-      host: `${config.host}:${config.port}`
+      host: `${config.internalWsHost}:${config.internalWsPort}`
     }
   };
 
@@ -245,7 +323,10 @@ function handleWebSocketProxy(clientWs: WebSocket, req: IncomingMessage): void {
   recordClientSessionStart(sessionId, clientName, remoteIp);
   console.log(`[WS Proxy] Client connected: ${clientName} (${remoteIp})`);
 
-  // Target internal Lavalink WebSocket
+  // Rewrite the /server/prefix so the internal node always receives its native WS path
+  const targetPath = (req.url || '/').replace(/^\/server/, '') || '/v4/websocket';
+  const targetUrl = `${config.internalWsProtocol ?? 'ws'}://${config.internalWsHost}:${config.internalWsPort}${targetPath}`;
+
   const headers: Record<string, string> = {};
   for (const [key, value] of Object.entries(req.headers)) {
     if (value && typeof value === 'string' && key.toLowerCase() !== 'host') {
@@ -253,9 +334,7 @@ function handleWebSocketProxy(clientWs: WebSocket, req: IncomingMessage): void {
     }
   }
 
-  const targetWs = new WebSocket(`ws://${config.host}:${config.port}${req.url}`, {
-    headers
-  });
+  const targetWs = new WebSocket(targetUrl, { headers });
 
   // Active Keep-Alive Ping frames every 30s to keep reverse proxies from terminating idle connections
   const keepAlivePingTimer = setInterval(() => {
@@ -272,7 +351,6 @@ function handleWebSocketProxy(clientWs: WebSocket, req: IncomingMessage): void {
   };
 
   targetWs.on('open', () => {
-    // Bi-directional pipe
     clientWs.on('message', (data, isBinary) => {
       if (targetWs.readyState === WebSocket.OPEN) {
         targetWs.send(data, { binary: isBinary });

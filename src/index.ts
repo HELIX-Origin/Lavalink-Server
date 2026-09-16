@@ -1,73 +1,30 @@
 import 'dotenv/config';
+import { pathToFileURL } from 'node:url';
+import { startServer } from './app.js';
 import { config } from './config.js';
-import { initDatabase, logSystemEvent } from './db.js';
-import { LavalinkSupervisor } from './supervisor.js';
-import { createProxyServer } from './server.js';
-import { loadSavedOAuthToken, initiateDeviceFlow, waitForDeviceFlow } from './youtube-oauth.js';
+import { logSystemEvent } from './db.js';
 
 async function main(): Promise<void> {
   console.log('==================================================');
   console.log('🔊 Lavalink v4 Audio Server & Dashboard');
-  console.log(`🌐 Resolved Host Domain: ${config.domain}`);
-  console.log(`🔌 Lavalink Port:        ${config.port}`);
-  console.log(`📊 Dashboard Port:       ${config.dashboardPort}`);
-  console.log(`📍 Internal Node:        ${config.host}:${config.port}`);
-  console.log(`💾 SQLite Persistence:   ${config.dbPath}`);
-  console.log(`⚡ Mode:                 ${config.isProduction ? 'production' : 'development'}`);
+  console.log(`🌐 Public Host:         ${config.publicHost}`);
+  console.log(`🔌 Internal Node:       ${config.internalHost}:${config.internalPort}`);
+  console.log(`📊 Gateway Port:        ${config.gatewayHost}:${config.gatewayPort}`);
+  console.log(`📍 Internal WS:         ${config.internalWsUri}`);
+  console.log(`🌍 Public WS:           ${config.publicWsUri}`);
+  console.log(`💾 SQLite Persistence:  ${config.dbPath}`);
+  console.log(`⚡ Mode:                ${config.isProduction ? 'production' : 'development'}`);
   console.log('==================================================');
 
-  if (!config.youtubeClientId) {
-    console.error('======================================================================');
-    console.error('❌ [Fatal] YOUTUBE_CLIENT_ID is required (YouTube OAuth Client ID).');
-    console.error('It must be an OAuth Client ID of app type "TVs and Limited Input devices";');
-    console.error('the YouTube authorization URL cannot be issued without it,');
-    console.error('so the YouTube plugin cannot authenticate and Lavalink playback fails.');
-    console.error('Set YOUTUBE_CLIENT_ID in your environment (e.g. .env) and restart.');
-    console.error('======================================================================');
-    process.exit(1);
-  }
+  const handle = await startServer({ features: { dashboard: true } });
 
-  // 1. Initialize SQLite Database & Load In-Live Memory State
-  initDatabase();
-  const token = await loadSavedOAuthToken();
-  if (!token) {
-    console.log('[YouTube OAuth] No refresh token configured. Initiating OAuth device grant...');
-    await initiateDeviceFlow();
-    console.log('[YouTube OAuth] Waiting for authorization...');
-    try {
-      await waitForDeviceFlow();
-      console.log('[YouTube OAuth] Authorization successful!');
-    } catch (err: any) {
-      console.error('[YouTube OAuth] Authorization failed:', err.message);
-      process.exit(1);
-    }
-  }
-
-  logSystemEvent('info', 'Lavalink TypeScript gateway initialized', {
-    domain: config.domain,
-    port: config.port
+  handle.server.listen(config.gatewayPort, config.gatewayHost, () => {
+    console.log(`[Gateway] Server listening on http://${config.gatewayHost}:${config.gatewayPort}`);
+    console.log(`[Gateway] Dashboard:   ${config.publicUrl}/dashboard (or http://${config.gatewayHost}:${config.gatewayPort}/dashboard)`);
+    console.log(`[Gateway] Server:      ${config.publicUrl}/server`);
+    console.log(`[Gateway] Internal:    ${config.internalUrl} (WS: ${config.internalWsUri})`);
   });
 
-  // 2. Start Lavalink Java Supervisor
-  const supervisor = new LavalinkSupervisor();
-  await supervisor.start();
-
-  // 3. Start Public Gateway Server (Dashboard + Audio Proxy)
-  const { server } = createProxyServer({
-    onRestart: async () => {
-      await supervisor.restart();
-    }
-  });
-
-  server.listen(config.dashboardPort, config.dashboardHost, () => {
-    console.log(`[Gateway] Server listening on http://${config.dashboardHost}:${config.dashboardPort}`);
-    console.log(`[Gateway] Dashboard internal: ${config.dashboardInternalUrl}`);
-    console.log(`[Gateway] Dashboard public:   ${config.dashboardUrl}`);
-    console.log(`[Gateway] Lavalink internal:  ${config.internalUrl}`);
-    console.log(`[Gateway] Lavalink public:    ${config.publicUrl}`);
-  });
-
-  // 4. Graceful Shutdown Handlers
   let isShuttingDown = false;
   const handleShutdown = async (signal: string) => {
     if (isShuttingDown) return;
@@ -75,11 +32,7 @@ async function main(): Promise<void> {
     console.log(`\n[Gateway] Received ${signal}. Shutting down gracefully...`);
     logSystemEvent('info', `Server shutting down via ${signal}`);
 
-    server.close(() => {
-      console.log('[Gateway] HTTP server closed.');
-    });
-
-    await supervisor.stop();
+    await handle.stop();
     console.log('[Gateway] Shutdown complete.');
     process.exit(0);
   };
@@ -88,7 +41,14 @@ async function main(): Promise<void> {
   process.on('SIGTERM', () => handleShutdown('SIGTERM'));
 }
 
-main().catch((err) => {
-  console.error('[Fatal] Failed to start server:', err);
-  process.exit(1);
-});
+// Only auto-run when invoked directly (node dist/index.js / npm start / tsx src/index.ts).
+// When imported as a library, hosts use `startServer` from app.js instead.
+const isMainModule =
+  !!process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
+
+if (isMainModule) {
+  main().catch((err) => {
+    console.error('[Fatal] Failed to start server:', err instanceof Error ? err.message : err);
+    process.exit(1);
+  });
+}

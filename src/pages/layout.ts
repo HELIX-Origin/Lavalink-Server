@@ -3,8 +3,7 @@ import { getThemeAndScheme, getThemeCss, getBaseStyles } from './theme.js';
 
 export function renderPage(title: string, content: string): string {
   const { theme, colorScheme } = getThemeAndScheme();
-  const wsProto = config.secure ? 'wss' : 'ws';
-  const wsUrl = `${wsProto}://${config.domain}${config.secure ? '' : `:${config.port}`}/v4/websocket`;
+  const wsUrl = config.publicWsUri;
 
   return `<!DOCTYPE html>
 <html lang="en" class="${theme.id} scheme-${colorScheme.id}">
@@ -137,10 +136,10 @@ export function renderPage(title: string, content: string): string {
         </div>
       </div>
       <nav>
-        <a href="/">Dashboard</a>
-        <a href="/docs">Docs</a>
-        <a href="/privacy">Privacy</a>
-        <a href="/tos">Terms</a>
+        <a href="/dashboard">Dashboard</a>
+        <a href="/dashboard/docs">Docs</a>
+        <a href="/dashboard/privacy">Privacy</a>
+        <a href="/dashboard/tos">Terms</a>
       </nav>
     </header>
 

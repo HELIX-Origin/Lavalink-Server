@@ -5,15 +5,15 @@ services:
     build: .
     restart: unless-stopped
     ports:
-      - "${LAVA_PORT:-2333}:2333"
-      - "2334:2334"  # Dashboard (LAVA_PORT + 1)
+      - "${LAVA_INTERNAL_PORT:-2333}:2333"  # Lavalink node (internal)
+      - "${LAVA_GATEWAY_PORT:-2334}:2334"  # Dashboard/Gateway (internal + 1)
     environment:
-      # Lavalink Auth & Security
-      - LAVA_DOMAIN=${LAVA_DOMAIN:-}
-      - LAVA_HOST=${LAVA_HOST:-127.0.0.1}
-      - LAVA_PORT=${LAVA_PORT:-2333}
+      # Lavalink Connection & Security
+      - LAVA_INTERNAL_URL=${LAVA_INTERNAL_URL:-0.0.0.0:2333}
+      - LAVA_PUBLIC_URL=${LAVA_PUBLIC_URL:-}
+      - LAVA_INTERNAL_WS_URI=${LAVA_INTERNAL_WS_URI:-ws://0.0.0.0:2333/v4/websocket}
+      - LAVA_PUBLIC_WS_URI=${LAVA_PUBLIC_WS_URI:-}
       - LAVA_PASS=${LAVA_PASS:-youshallnotpass}
-      - LAVA_SECURE=${LAVA_SECURE:-false}
       - LAVA_CIPHER_URL=${LAVA_CIPHER_URL:-https://cipher.kikkia.dev/}
       - LAVA_CIPHER_PASSWORD=${LAVA_CIPHER_PASSWORD:-}
       # YouTube OAuth
@@ -31,8 +31,6 @@ services:
       # Dashboard
       - DASHBOARD_THEME=${DASHBOARD_THEME:-dark}
       - DASHBOARD_COLOR_SCHEME=${DASHBOARD_COLOR_SCHEME:-default}
-      - DASHBOARD_PUBLIC_URL=${DASHBOARD_PUBLIC_URL:-}
-      - DASHBOARD_INTERNAL_URL=${DASHBOARD_INTERNAL_URL:-}
       # Environment
       - NODE_ENV=${NODE_ENV:-production}
     volumes:

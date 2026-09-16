@@ -169,8 +169,8 @@ async function notifyLavalinkNode(refreshToken: string): Promise<void> {
 
     const req = http.request(
       {
-        hostname: config.host,
-        port: config.port,
+        hostname: config.internalHost,
+        port: config.internalPort,
         path: '/youtube',
         method: 'POST',
         headers: {

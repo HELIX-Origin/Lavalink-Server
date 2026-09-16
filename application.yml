@@ -3,8 +3,8 @@
 # Maintained by HELIX Origin
 
 server:
-  port: ${LAVA_PORT:2333}
-  address: ${LAVA_HOST:0.0.0.0}
+  port: ${SERVER_PORT:2333}
+  address: 0.0.0.0
   undertow:
     buffer-size: 1024
     direct-buffers: true

@@ -1,12 +1,8 @@
 import { renderPage } from './layout.js';
-import { config } from '../config.js';
 import { getThemeAndScheme } from './theme.js';
 
 export function renderDashboardHtml(): string {
   const { theme } = getThemeAndScheme();
-  const wsProto = config.secure ? 'wss' : 'ws';
-  const wsUrl = `${wsProto}://${config.domain}${config.secure ? '' : `:${config.port}`}/v4/websocket`;
-  const botPort = config.secure ? 443 : config.port;
 
   return renderPage('Dashboard', `
     <div class="card status-card">
@@ -52,14 +48,29 @@ export function renderDashboardHtml(): string {
       </div>
     </div>
 
-    <div class="card">
-      <h2 class="section-title">Connection Details</h2>
-      <p class="section-desc">Use these credentials to connect your Discord music bot.</p>
-      <pre class="code-block">Host: <b>${config.domain}</b>
-Port: <b>${botPort}</b>
-Secure: <b>${config.secure}</b>
+    <div class="conn-grid">
+      <div class="card conn-card">
+        <h2 class="section-title title-internal"><i class="fas fa-server"></i> Internal Network</h2>
+        <p class="section-desc">Direct connection to the Lavalink node. Use this when your bot runs on the same private network as the server.</p>
+        <pre class="code-block">Host: <b id="int-host">—</b>
+Port: <b id="int-port">—</b>
+URL: <b id="int-url">—</b>
+WebSocket: <b id="int-ws">—</b>
+</pre>
+      </div>
+
+      <div class="card conn-card">
+        <h2 class="section-title title-public"><i class="fas fa-globe"></i> Public Network</h2>
+        <p class="section-desc">Public connection for external bots. When hosting behind a reverse proxy or Cloudflare tunnel the port is masked.</p>
+        <div class="masked-flag" id="pub-masked"><i class="fas fa-cloud"></i><span>Port masked — Reverse proxy</span></div>
+        <pre class="code-block">Host: <b id="pub-host">—</b>
+Port: <b id="pub-port">—</b>
+URL: <b id="pub-url">—</b>
+WebSocket: <b id="pub-ws">—</b>
+Secure: <b id="pub-secure">—</b>
 Password: <b><span id="oa-pass">••••••••</span></b> <button id="toggle-pass" class="btn btn-sm btn-ghost">Show</button>
 </pre>
+      </div>
     </div>
 
     <div class="card">
@@ -113,6 +124,31 @@ Password: <b><span id="oa-pass">••••••••</span></b> <button id="
         color: var(--text);
       }
 
+      .conn-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+      }
+
+      .title-internal { color: var(--primary); }
+      .title-public { color: var(--primary-hover); }
+
+      .masked-flag {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        padding: 0.25rem 0.625rem;
+        border-radius: 999px;
+        color: var(--text);
+        background: var(--card-inner);
+        border: 1px solid var(--border);
+        margin-top: 0.25rem;
+      }
+      .masked-flag i { color: var(--primary); }
+
       .code-block {
         background: var(--card-inner);
         border: 1px solid var(--border);
@@ -122,6 +158,7 @@ Password: <b><span id="oa-pass">••••••••</span></b> <button id="
         font-family: 'JetBrains Mono', monospace;
         font-size: 0.875rem;
         color: var(--text);
+        margin-top: 1rem;
       }
       .code-block b { color: var(--primary); }
 
@@ -132,8 +169,9 @@ Password: <b><span id="oa-pass">••••••••</span></b> <button id="
       const state = {
         status: 'checking',
         stats: null,
-        metrics: []
+        connection: null
       };
+      let sseAvailable = true;
 
       async function fetchJSON(url) {
         const res = await fetch(url);
@@ -142,6 +180,7 @@ Password: <b><span id="oa-pass">••••••••</span></b> <button id="
       }
 
       function formatUptime(ms) {
+        if (!ms && ms !== 0) return '—';
         const s = Math.floor(ms / 1000);
         const d = Math.floor(s / 86400);
         const h = Math.floor((s % 86400) / 3600);
@@ -165,22 +204,57 @@ Password: <b><span id="oa-pass">••••••••</span></b> <button id="
         el.textContent = status || 'unknown';
       }
 
+      function renderConnection(conn) {
+        if (!conn) return;
+        const int = conn.internal || {};
+        const pub = conn.public || {};
+
+        document.getElementById('int-host').textContent = int.host || '—';
+        document.getElementById('int-port').textContent = int.port ?? '—';
+        document.getElementById('int-url').textContent = int.url || '—';
+        document.getElementById('int-ws').textContent = int.websocketUri || '—';
+
+        document.getElementById('pub-host').textContent = pub.host || '—';
+        document.getElementById('pub-port').textContent = pub.port ?? '—';
+        document.getElementById('pub-url').textContent = pub.url || '—';
+        document.getElementById('pub-ws').textContent = pub.websocketUri || '—';
+        document.getElementById('pub-secure').textContent = pub.secure ? 'true' : 'false';
+
+        const flag = document.getElementById('pub-masked');
+        const flagText = flag?.querySelector('span');
+        if (flagText) {
+          const type = String(pub.proxyType || '').trim();
+          flagText.textContent = type
+            ? 'Port masked — ' + type.charAt(0).toUpperCase() + type.slice(1)
+            : 'Port masked — Reverse proxy';
+        }
+        if (flag && pub.portMasked) flag.style.display = 'inline-flex';
+        if (flag && !pub.portMasked) flag.style.display = 'none';
+
+        if (document.getElementById('oa-pass').dataset.loaded !== '1' && pub.password) {
+          document.getElementById('oa-pass').dataset.password = pub.password;
+          document.getElementById('oa-pass').dataset.loaded = '1';
+        }
+      }
+
       async function refreshStatus() {
         try {
-          const data = await fetchJSON('/api/status');
+          const data = await fetchJSON('/dashboard/api/status');
           state.status = data.status || 'unknown';
           state.stats = data.stats || {};
+          state.connection = data.connection || null;
           setBadge(state.status);
 
           const st = state.stats;
           document.getElementById('stat-players').textContent = st.players ?? 0;
           document.getElementById('stat-playing').textContent = st.playingPlayers ?? 0;
-          document.getElementById('stat-uptime').textContent = st.uptime ? formatUptime(st.uptime) : '—';
+          document.getElementById('stat-uptime').textContent = formatUptime(st.uptime);
           document.getElementById('stat-memory').textContent = st.memory ? (formatBytes(st.memory.used) + ' / ' + formatBytes(st.memory.allocated)) : '—';
           document.getElementById('stat-cpu').textContent = st.cpu ? ((st.cpu.lavalinkLoad * 100).toFixed(1) + '%') : '—';
           document.getElementById('stat-frames').textContent = st.frames?.sent ?? '—';
           document.getElementById('last-updated').textContent = new Date().toLocaleTimeString();
 
+          renderConnection(state.connection);
         } catch (err) {
           setBadge('red');
           document.getElementById('last-updated').textContent = 'error';
@@ -189,7 +263,7 @@ Password: <b><span id="oa-pass">••••••••</span></b> <button id="
 
       async function refreshMetrics() {
         try {
-          const data = await fetchJSON('/api/metrics');
+          const data = await fetchJSON('/dashboard/api/metrics');
           state.metrics = Array.isArray(data) ? data : [];
           renderChart(state.metrics);
         } catch { /* ignore */ }
@@ -246,7 +320,7 @@ Password: <b><span id="oa-pass">••••••••</span></b> <button id="
         const el = document.getElementById('oa-pass');
         const btn = document.getElementById('toggle-pass');
         if (btn.textContent === 'Show') {
-          el.textContent = '${config.pass}';
+          el.textContent = el.dataset.password || '—';
           btn.textContent = 'Hide';
         } else {
           el.textContent = '••••••••';
@@ -254,10 +328,31 @@ Password: <b><span id="oa-pass">••••••••</span></b> <button id="
         }
       });
 
+      // Real-time connection updates via SSE, falling back to polling
+      function connectEvents() {
+        try {
+          const es = new EventSource('/dashboard/api/events');
+          es.addEventListener('connection', (e) => {
+            try {
+              renderConnection(JSON.parse(e.data));
+            } catch { /* ignore malformed */ }
+          });
+          es.onerror = () => {
+            es.close();
+            sseAvailable = false;
+          };
+        } catch {
+          sseAvailable = false;
+        }
+      }
+
+      if (typeof EventSource !== 'undefined') connectEvents();
+
       refreshStatus();
       refreshMetrics();
       setInterval(refreshStatus, 5000);
       setInterval(refreshMetrics, 30000);
+      setInterval(() => { if (!sseAvailable) refreshStatus(); }, 5000);
     </script>
   `);
 }

@@ -2,23 +2,15 @@
 
 This guide explains how to connect various Discord bot frameworks and libraries to this external Lavalink v4 server.
 
+> 💡 **Two-network model.** The server has an **internal** bind URL (`LAVA_INTERNAL_URL`, host + port on the box) and a **public** URL (`LAVA_PUBLIC_URL`, e.g. `https://lavalink.yourdomain.com`). Bots connect to the **public** URL — its port is **masked** by design (Cloudflare/tunnel), so clients use the host as-is and append the endpoint (`/v4/websocket`, `/v4/info`, etc.). Never give bots the internal bind port unless you are exposing the raw node directly.
+
 ---
 
 ## 1. Master-Bot (Sapphire Framework)
 
 In Master-Bot, simply update your root `.env` file (or hosting dashboard environment variables):
 
-### Example A: Dedicated VPS or Local Docker (Port 2333)
-```env
-LAVA_ENABLED=true
-LAVA_EXTERNAL=true
-LAVA_HOST="your-vps-ip"
-LAVA_PORT=2333
-LAVA_PASS="youshallnotpass"
-LAVA_SECURE=false
-```
-
-### Example B: VPS with Domain & SSL Reverse Proxy (Port 443)
+### Example A: Public domain (masked port behind Cloudflare/tunnel)
 ```env
 LAVA_ENABLED=true
 LAVA_EXTERNAL=true
@@ -26,6 +18,16 @@ LAVA_HOST="lavalink.yourdomain.com"
 LAVA_PORT=443
 LAVA_PASS="youshallnotpass"
 LAVA_SECURE=true
+```
+
+### Example B: Direct VPS or exposed node port
+```env
+LAVA_ENABLED=true
+LAVA_EXTERNAL=true
+LAVA_HOST="your-vps-ip"
+LAVA_PORT=2333
+LAVA_PASS="youshallnotpass"
+LAVA_SECURE=false
 ```
 
 > [!IMPORTANT]
