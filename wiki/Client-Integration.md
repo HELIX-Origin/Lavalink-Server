@@ -6,9 +6,9 @@ This guide explains how to connect various Discord bot frameworks and libraries 
 
 ---
 
-## 1. Master-Bot (Sapphire Framework)
+## 1. Generic Discord Bot (`.env`-based config)
 
-In Master-Bot, simply update your root `.env` file (or hosting dashboard environment variables):
+Most Discord bots that support Lavalink resolve the node from their own `.env` (or hosting dashboard environment variables). Update those to point at this server:
 
 ### Example A: Public domain (masked port behind Cloudflare/tunnel)
 ```env
@@ -31,7 +31,7 @@ LAVA_SECURE=false
 ```
 
 > [!IMPORTANT]
-> Notice that `LAVA_EXTERNAL=true` is only set here in Master-Bot's `.env`. The Lavalink server itself does not use or need this variable.
+> Notice that `LAVA_EXTERNAL=true` is only set here in the bot's `.env`. The Lavalink server itself does not use or need this variable.
 
 ---
 
@@ -57,7 +57,7 @@ const client = new LavalinkManager({
   },
   client: {
     id: process.env.DISCORD_CLIENT_ID!,
-    username: "Master-Bot",
+    username: "Discord Bot",
   },
 });
 ```

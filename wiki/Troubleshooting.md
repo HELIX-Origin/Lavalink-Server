@@ -29,7 +29,7 @@ This page documents common issues encountered when deploying and connecting to t
   1. Ensure `YOUTUBE_CIPHER_URL` is set to an active remote cipher server (default: `https://cipher.kikkia.dev/`).
   2. Ensure `YOUTUBE_CLIENT_ID` is set — it is required to issue the YouTube authorization URL; the server refuses to start without it.
   3. Complete the built-in OAuth device flow (it auto-starts on boot): open the printed authorization URL, enter the displayed code, and the server captures the refresh token, prints it to the console, and persists it to the database.
-  4. (Optional) Or supply a pre-existing `YOUTUBE_REFRESH_TOKEN` (e.g. from Master-Bot's `/youtube-auth`) in your server environment and restart.
+  4. (Optional) Or supply a pre-existing `YOUTUBE_REFRESH_TOKEN` (e.g. from your bot's YouTube auth flow) in your server environment and restart.
 
 ### `This video is unavailable in your country`
 - **Cause:** Content is geo-blocked in the server's region.
@@ -55,7 +55,7 @@ This page documents common issues encountered when deploying and connecting to t
 ## 4. FAQ
 
 ### Q: Why does the server repository not use `LAVA_EXTERNAL`?
-**A:** `LAVA_EXTERNAL` is a client-side setting for Discord bots (like Master-Bot). It tells the bot client whether to look for a local Java process or connect outwards to an external node. The Lavalink server itself is the node, so it has no concept of being "external" to itself.
+**A:** `LAVA_EXTERNAL` is a client-side setting for Discord bots. It tells the bot client whether to look for a local Java process or connect outwards to an external node. The Lavalink server itself is the node, so it has no concept of being "external" to itself.
 
 ### Q: Can I run multiple Discord bots on one Lavalink server?
 **A:** Yes! A single Lavalink v4 server can easily handle multiple Discord bots simultaneously. Simply configure each bot to connect to the same host, port, and password.

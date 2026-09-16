@@ -48,7 +48,7 @@ flowchart LR
     end
 
     subgraph BotClient ["Discord Bot Client"]
-        MasterBot["Master-Bot / Discord.js<br/>(uses LAVA_PUBLIC_URL)"]
+        DiscordBot["Discord Bot<br/>(uses LAVA_PUBLIC_URL)"]
     end
 
     subgraph Tunnel ["Public Edge"]
@@ -62,7 +62,7 @@ flowchart LR
     Proxy --- Server
     Proxy --- OAuth
     OAuth --- DB
-    MasterBot <-->|"wss://desktop + /v4/* "| CF
+    DiscordBot <-->|"wss://desktop + /v4/* "| CF
     CF <-->|"port 443"| Proxy
     YT -->|"Stream Audio"| Lavalink
     LavaSrc -->|"Metadata Lookup"| Lavalink

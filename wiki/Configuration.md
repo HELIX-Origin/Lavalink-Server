@@ -11,7 +11,7 @@ It is critical to distinguish between **Lavalink Server Variables** and **Discor
 | Variable Type | Examples | Where It Is Configured | Purpose |
 | :--- | :--- | :--- | :--- |
 | **Server Variable** | `LAVA_PASS`, `YOUTUBE_CLIENT_ID`, `SPOTIFY_CLIENT_ID`, `LAVA_INTERNAL_URL`, `LAVA_PUBLIC_URL` | Lavalink Server (`application.yml`, `.env`, `docker-compose.yml`) | Tells Lavalink what port to bind to, what password to demand, and which external APIs to query. |
-| **Bot Client Variable** | `LAVA_ENABLED`, `LAVA_EXTERNAL`, `LAVA_HOST`, `LAVA_SECURE` | Discord Bot (`Master-Bot` `.env`) | Tells your Discord bot how to reach this external Lavalink server. **Never configured on the Lavalink server.** |
+| **Bot Client Variable** | `LAVA_ENABLED`, `LAVA_EXTERNAL`, `LAVA_HOST`, `LAVA_SECURE` | Discord Bot (`.env` on the bot host) | Tells your Discord bot how to reach this external Lavalink server. **Never configured on the Lavalink server.** |
 
 ---
 

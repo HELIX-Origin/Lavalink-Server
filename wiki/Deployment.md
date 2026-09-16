@@ -267,7 +267,7 @@ sudo systemctl reload nginx
 
 ## 4. 🤖 Connecting Your Discord Bot
 
-Once your server is running, update your Discord bot's configuration (e.g. Master-Bot `.env`). The server exposes **two networks**: the internal bind URL (`LAVA_INTERNAL_URL`) used only server-side, and the public URL (`LAVA_PUBLIC_URL`) that bots connect to. The public port is **masked** — bots use the public URL as-is and append the endpoint.
+Once your server is running, update your Discord bot's configuration (`.env` on the bot host). The server exposes **two networks**: the internal bind URL (`LAVA_INTERNAL_URL`) used only server-side, and the public URL (`LAVA_PUBLIC_URL`) that bots connect to. The public port is **masked** — bots use the public URL as-is and append the endpoint.
 
 ### Option A: Public domain via Cloudflare/Tunnel (masked port)
 ```env

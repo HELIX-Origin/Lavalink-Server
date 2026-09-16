@@ -129,11 +129,11 @@ The Lavalink server resolves configuration from internal/public URLs and environ
 
 > ℹ️ **Notice:** The dashboard is served at `/dashboard` on the gateway port (auto-derived as `internal port + 1`). There are no separate dashboard URL variables — the gateway port always follows `LAVA_INTERNAL_URL`.
 
-> ℹ️ **Notice:** Variables like `LAVA_EXTERNAL` or `LAVA_ENABLED` are **client-side bot settings** used by Discord bots (e.g. Master-Bot) to determine connection modes. They are not server variables and are never set on this Lavalink instance.
+> ℹ️ **Notice:** Variables like `LAVA_EXTERNAL` or `LAVA_ENABLED` are **client-side bot settings** used by Discord bots to determine connection modes. They are not server variables and are never set on this Lavalink instance.
 
 ---
 
-## 🤖 Connecting to Your Discord Bot (e.g. Master-Bot)
+## 🤖 Connecting to Your Discord Bot
 
 Once your Lavalink server is running, configure your Discord bot to use the public URL **as-is** — the bot simply appends the endpoint it needs (e.g. `/v4/websocket`). No internal ports are exposed to your bot.
 
@@ -222,7 +222,7 @@ Explore our detailed documentation pages:
 - [**Deployment Guide**](../../wiki/Deployment): Detailed guides for VPS, Docker Compose, and systemd.
 - [**Configuration Reference**](../../wiki/Configuration): In-depth breakdown of `application.yml` and environment parameters.
 - [**Plugins Guide**](../../wiki/Plugins): Configuring YouTube, SponsorBlock, LavaSrc, LavaSearch, LavaLyrics, Skybot.
-- [**Client Integration**](../../wiki/Client-Integration): Connecting Master-Bot and popular Discord.js Lavalink wrappers.
+- [**Client Integration**](../../wiki/Client-Integration): Connecting Discord.js and other popular Lavalink wrappers.
 - [**Troubleshooting**](../../wiki/Troubleshooting): Diagnosing 401s, YouTube rate-limiting, and WebSocket disconnects.
 
 ---
